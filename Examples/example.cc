@@ -6,11 +6,12 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TMath.h"
+#include "TVector3.h"
 
 #include "reader.h"
 #include "node.h"
 #include "bank.h"
-//#include "particle.h"
+#include "particle.h"
 //#include "detector.h"
 
 using namespace std;
@@ -34,26 +35,6 @@ int main(int argc, char** argv) {
 		std::cout << " *** please provide a file name..." << std::endl;
 		exit(0);
 	}
-
-	/*
-	   hipo::reader  reader;
-	   reader.open(inputFile);
-
-	   while(reader.next()==true){
-	   cout << "One more" << endl;
-
-	   int size = particles.getSize();
-	   for(int i = 0; i < size; i++){
-	   int pid = particles.getPid(i);
-	   if(pid==11){
-	   particles.getVector4(i,electron,0.0005);
-	   clas12::vector4 w2 = beam + target - electron;
-	   printf("w2 = %12.5f\n",w2.m());
-	   }
-	   }
-
-	   }
-	 */
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
@@ -169,22 +150,36 @@ int main(int argc, char** argv) {
 	double Ebeam = 10.6; //GeV
 	double mtar    = mD;
 
-	hipo::reader  reader;
+	hipo::reader reader;
 	reader.open(inputFile);
 
-	hipo::bank bank_particle    ("REC::Particle"    ,reader);
-	hipo::bank bank_calorimeter ("REC::Calorimeter" ,reader);
-	hipo::bank bank_scintillator("REC::Scintillator",reader);
-	hipo::bank bank_event       ("REC::Event"       ,reader);
+	//hipo::bank bank_particle    ("REC::Particle"    ,reader);
+	//hipo::bank bank_calorimeter ("REC::Calorimeter" ,reader);
+	//hipo::bank bank_scintillator("REC::Scintillator",reader);
+	//hipo::bank bank_event       ("REC::Event"       ,reader);
+
+	particle::particle particles("REC::Particle",reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
 	// Loop over events and print them on the screen
 	while(reader.next()==true){
-		//bank_particle.show();
+		//particles.show();
 		//bank_event.show();
-		bank_scintillator.show();
+		//bank_scintillator.show();
 
+		int   pid0    = particles.getPid(0);  // electron candidate id assigned by clas
+		//float epx     = particles.getPx (0);  // electron candidate momentum x-component [GeV]                
+		//float epy     = particles.getPy (0);  // electron candidate momentum y-component [GeV]
+                //float epz     = particles.getPz (0);  // electron candidate momentum z-component [GeV]
+	      	//float evx     = particles.getVx (0);  // electron candidate vertex x coordinate [cm]
+		//float evy     = particles.getVy (0);  // electron candidate vertex y coordinate [cm]
+                //float evz     = particles.getVz (0);  // electron candidate vertex z coordinate [cm]
+
+		TVector3 V3_ez = particles.getV3v(0);		
+		TVector3 V3_ep = particles.getV3P(0);
+
+		/*
 		if(event_counter%1000000==0) cout << "event: " << event_counter << endl;
 		event_counter++;
 
@@ -211,6 +206,7 @@ int main(int argc, char** argv) {
 		double Epcal = 0;
 		double Eecin = 0;
 		double Eecou = 0;
+		*/
 
 		/*
 		// Calorimeter bank

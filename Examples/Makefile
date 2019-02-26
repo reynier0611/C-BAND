@@ -3,10 +3,11 @@ ROOTLDFLAGS := $(shell root-config --ldflags)
 ROOTLIBS    := $(shell root-config --libs) -lEG
 ROOTGLIBS   := $(shell root-config --glibs)
 
-HIPOCFLAGS  := -I../Hipo
-HIPOLIBS    := -L../lib -lhipo
+HIPOCFLAGS  := -I../Hipo -I../Banks
+HIPOLIBS    := -L../lib -lhipo -lclas12banks
 
-LZ4LIBS     := -llz4
+LZ4LIBS     := -L../Lz4/lib -llz4
+LZ4INCLUDES := -I../Lz4/lib
 
 CXX       := g++
 CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
@@ -24,4 +25,4 @@ clean:
 	@rm -rf *.o readParticles readBanks analysis clas12event_example *~
 
 %.o: %.cc
-	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS)
+	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
