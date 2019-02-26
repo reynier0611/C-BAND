@@ -53,7 +53,6 @@ namespace hipo {
       void   initBranches(const char *bank, hipo::reader &r);
       
     public:
-
         bank();
         // constructor initializes the nodes in the bank
         // and they will be filled automatically by reader.next()

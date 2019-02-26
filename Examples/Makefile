@@ -24,5 +24,5 @@ clean:
 	@echo 'Removing all build files'
 	@rm -rf *.o readParticles readBanks analysis clas12event_example *~
 
-%.o: %.cc
+%.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
