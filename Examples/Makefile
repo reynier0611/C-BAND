@@ -6,13 +6,12 @@ ROOTGLIBS   := $(shell root-config --glibs)
 HIPOCFLAGS  := -I../Hipo -I../Banks
 HIPOLIBS    := -L../lib -lhipo -lclas12banks
 
-LZ4LIBS     := -llz4
+LZ4FLAGS    := -llz4
 
-CXX       := g++
-CXXFLAGS  := $(HIPOCFLAGS) $(ROOTLDFLAGS) $(ROOTCFLAGS)
-#COMPILER_FLAGS = $(HIPOCFLAGS) $(CXXFLAGS) $(ROOTCFLAGS) $(ROOTLDFLAGS)
-LDFLAGS   := $(ROOTLDFLAGS)
-LD	  := g++
+CXX         := g++
+CXXFLAGS    := $(HIPOCFLAGS) $(ROOTLDFLAGS) $(ROOTCFLAGS)
+LDFLAGS     := $(ROOTLDFLAGS)
+LD	    := g++
 
 SRC_FILES   := $(wildcard *.cxx)
 EXE_FILES   := $(SRC_FILES:%.cxx=%)
@@ -22,7 +21,7 @@ EXE_FILES   := $(SRC_FILES:%.cxx=%)
 all: $(EXE_FILES)
 
 %: %.o
-	$(LD) $(LDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS) $^ -o $@
+	$(LD) $(LDFLAGS) $(HIPOLIBS) $(LZ4FLAGS) $(ROOTLIBS) $^ -o $@
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS)  -c $< 
