@@ -9,21 +9,23 @@ HIPOLIBS    := -L../lib -lhipo -lclas12banks
 LZ4LIBS     := -llz4
 
 CXX       := g++
-CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
-LD        := g++
+CXXFLAGS  := $(HIPOCFLAGS) $(ROOTLDFLAGS) $(ROOTCFLAGS)
+#COMPILER_FLAGS = $(HIPOCFLAGS) $(CXXFLAGS) $(ROOTCFLAGS) $(ROOTLDFLAGS)
 LDFLAGS   := $(ROOTLDFLAGS)
+LD	  := g++
 
-all: example eppPi
+SRC_FILES   := $(wildcard *.cxx)
+EXE_FILES   := $(SRC_FILES:%.cxx=%)
 
-example: example.o
-	$(CXX) -o example $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+.PHONY: all clean
 
-eppPi: eppPi.o
-	$(CXX) -o eppPi $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+all: $(EXE_FILES)
+
+%: %.o
+	$(LD) $(LDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS) $^ -o $@
+
+%.o: %.cxx
+	$(CXX) $(CXXFLAGS)  -c $< 
 
 clean:
-	@echo 'Removing all build files'
-	@rm -rf *.o readParticles readBanks analysis clas12event_example *~
-
-%.o: %.cpp
-	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS)
+	rm -f $(EXE_FILES:%=%.o) $(EXE_FILES)
