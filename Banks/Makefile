@@ -8,14 +8,12 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-
 SOURCES := $(wildcard *.cpp)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 LIBDIR  = ../lib
-BINDIR  = ../bin
 
-LZ4INCLUDES := -I../Lz4/lib/ -I../Hipo
+HIPOINCLUDES := -I../Hipo
 
 libhipo: checkdirs $(OBJECTS)
 	ar cr ../lib/libclas12banks.a $(OBJECTS)
@@ -34,5 +32,5 @@ clean:
 	@rm -rf *~ *.o
 
 %.o: %.cpp
-	$(CXX) -fPIC -c $< -O2 -D__LZ4__ $(LZ4INCLUDES) $(ROOTCFLAGS)
+	$(CXX) -fPIC -c $< -O2 -D__LZ4__ $(HIPOINCLUDES) $(ROOTCFLAGS)
 
