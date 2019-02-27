@@ -151,8 +151,8 @@ int main(int argc, char** argv) {
 	hipo::bank bank_scintillator("REC::Scintillator",reader);
 	hipo::bank bank_event       ("REC::Event"       ,reader);
 
-	particle   ::particle     particles  ("REC::Particle"    ,reader);
-	calorimeter::calorimeter  calo("REC::Calorimeter" ,reader);
+	particle     particles  ("REC::Particle"    ,reader);
+	calorimeter  calo("REC::Calorimeter" ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
