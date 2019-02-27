@@ -556,45 +556,63 @@ int main(int argc, char** argv) {
 	c10 -> cd(3);	h1_e_lw -> Draw();
 	c10 -> Modified();
 	c10 -> Update();
-	/*
-	   TCanvas c11 = new TCanvas("c11", 1024, 768);
-	   c11.draw(h1_p_num);
 
-	   TCanvas c12 = new TCanvas("c12", 1024, 768);
-	   c12.draw(h1_Mmiss);
+	TCanvas * c11 = new TCanvas();
+	h1_p_num -> Draw();
+	c11 -> Modified();
+	c11 -> Update();
 
-	   TCanvas c13 = new TCanvas("c13", 1024, 768);
-	   c13.divide(2, 1);
-	   c13.cd(0);	c13.draw(h2_e_vz_phi);
-	   c13.cd(1);	c13.draw(h2_p_vz_phi);
+	TCanvas * c12 = new TCanvas();
+	h1_Mmiss -> Draw();
+	c12 -> Modified();
+	c12 -> Update();
 
-	   TCanvas c14 = new TCanvas("c14", 1024, 768);
-	   c14.divide(2, 1);
-	   c14.cd(0);	c14.draw(h1_e_tof  );
-	   c14.cd(1);	c14.draw(h2_e_tof_p);
+	TCanvas * c13 = new TCanvas();
+	c13 -> Divide(2,1);
+	c13 -> cd(1);	h2_e_vz_phi-> Draw("COLZ");
+	c13 -> cd(2);	h2_p_vz_phi-> Draw("COLZ");
+	c13 -> Modified();
+	c13 -> Update();
 
-	   EmbeddedCanvas c15 = new EmbeddedCanvas();
-	   c15.divide(2, 1);
-	   c15.getPad(0).getAxisZ().setLog(true);	c15.cd(0);	c15.draw(h2_p_dtT_p_0);
-	   c15.getPad(1).getAxisZ().setLog(true);	c15.cd(1);	c15.draw(h2_p_dtT_p_1);
-	   CanvasMaker(c15,"c15",800,600);
+	TCanvas * c14 = new TCanvas();
+	c14 -> Divide(2,1);
+	c14 -> cd(1);	h1_e_tof  -> Draw(      );
+	c14 -> cd(2);	h2_e_tof_p-> Draw("COLZ");
+	c14 -> Modified();
+	c14 -> Update();
 
-	   TCanvas c16 = new TCanvas("c16", 1024, 768);
-	   c16.draw(h2_p_tof_det);
+	TCanvas * c15 = new TCanvas();
+	c15 -> Divide(2, 1);
+	c15 -> cd(1);	gPad -> SetLogz();	h2_p_dtT_p_0 -> Draw("COLZ");
+	c15 -> cd(2);	gPad -> SetLogz();	h2_p_dtT_p_1 -> Draw("COLZ");
+	c15 -> Modified();
+	c15 -> Update();
 
-	   TCanvas c17 = new TCanvas("c17", 1024, 768);
-	   c17.draw(h2_p_dtT_det);
+	TCanvas * c16 = new TCanvas();
+	h2_p_tof_det -> Draw("COLZ");
+	c16 -> Modified();
+	c16 -> Update();
 
-	   TCanvas c18 = new TCanvas("c18", 1024, 768);
-	   c18.draw(h1_Em);
+	TCanvas * c17 = new TCanvas();
+	h2_p_dtT_det -> Draw("COLZ");
+	c17 -> Modified();
+	c17 -> Update();
 
-	   TCanvas c20 = new TCanvas("c20", 1024, 768);
-	   c20.draw(h2_Em_Pm);
+	TCanvas * c18 = new TCanvas();
+	h1_Em -> Draw();
+	c18 -> Modified();
+	c18 -> Update();
 
-	   TCanvas c21 = new TCanvas("c21", 1024, 768);
-	   c21.draw(h2_pe_pp);
+	TCanvas * c19 = new TCanvas();
+	h2_Em_Pm -> Draw("COLZ");
+	c19 -> Modified();
+	c19 -> Update();
 
-	 */
+	TCanvas * c20 = new TCanvas();
+	h2_pe_pp -> Draw("COLZ");
+	c20 -> Modified();
+	c20 -> Update();
+
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
 
@@ -607,7 +625,18 @@ int main(int argc, char** argv) {
 	c7  -> Print("c5.pdf" );
 	c8  -> Print("c5.pdf" );
 	c9  -> Print("c5.pdf" );
-	c10 -> Print("c5.pdf)");
+	c10 -> Print("c5.pdf" );
+	c11 -> Print("c5.pdf" );
+	c12 -> Print("c5.pdf" );
+	c13 -> Print("c5.pdf" );
+	c14 -> Print("c5.pdf" );
+	c15 -> Print("c5.pdf" );
+	c16 -> Print("c5.pdf" );
+	c17 -> Print("c5.pdf" );
+	c18 -> Print("c5.pdf" );
+	c19 -> Print("c5.pdf" );
+	c20 -> Print("c5.pdf)");
+
 	return 0;
 }
 // ========================================================================================================================================
