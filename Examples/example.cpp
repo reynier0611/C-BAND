@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 	hipo::bank bank_event       ("REC::Event"       ,reader);
 
 	particle   ::particle     particles  ("REC::Particle"    ,reader);
-	calorimeter::calorimeter  calorimeter("REC::Calorimeter" ,reader);
+	calorimeter::calorimeter  calo("REC::Calorimeter" ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
 		event_counter++;
 
 		//particles.show();
-		//calorimeter.show();
+		//calo.show();
 		//bank_event.show();
 		//bank_scintillator.show();	
 
@@ -174,11 +174,11 @@ int main(int argc, char** argv) {
 		int eStatus    = particles.getStatus (0);	// electron candidate status
 
 		// Calorimeter bank	
-		float Epcal = calorimeter.getPcalE(0); 
-		float Ee    = calorimeter.getTotE (0);
-		float lU    = calorimeter.getLU   (0);	// electron candidate distance on U-side [cm?]
-		float lV    = calorimeter.getLV   (0);	// electron candidate distance on V-side [cm?]
-		float lW    = calorimeter.getLW   (0);	// electron candidate distance on W-side [cm?]
+		float Epcal = calo.getPcalE(0); 
+		float Ee    = calo.getTotE (0);
+		float lU    = calo.getLU   (0);	// electron candidate distance on U-side [cm?]
+		float lV    = calo.getLV   (0);	// electron candidate distance on V-side [cm?]
+		float lW    = calo.getLW   (0);	// electron candidate distance on W-side [cm?]
 
 		if(Ee==0) continue;
 
