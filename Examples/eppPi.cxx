@@ -28,13 +28,13 @@ int main(int argc, char** argv) {
 
 	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
 
-	char inputFile[256];
-	char outputFile[256];
+	TString inputFile;
 
-	if(argc>1) {
-		sprintf(inputFile,"%s",argv[1]);
-	} else {
-		std::cout << " *** please provide a file name..." << std::endl;
+	if(argc==2) {
+		inputFile = argv[1];
+	}
+	else {
+		cout << "=========================\nRun this code as:\n./code path/to/input/file\n=========================" << endl;
 		exit(0);
 	}
 
@@ -531,26 +531,26 @@ int main(int argc, char** argv) {
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
 
-	c0  -> Print("c5.pdf(");
-	c1  -> Print("c5.pdf" );
-	c2  -> Print("c5.pdf" );
-	c3  -> Print("c5.pdf" );
-	c5  -> Print("c5.pdf" );
-	c6  -> Print("c5.pdf" );
-	c7  -> Print("c5.pdf" );
-	c8  -> Print("c5.pdf" );
-	c9  -> Print("c5.pdf" );
-	c10 -> Print("c5.pdf" );
-	c11 -> Print("c5.pdf" );
-	c12 -> Print("c5.pdf" );
-	c13 -> Print("c5.pdf" );
-	c14 -> Print("c5.pdf" );
-	c15 -> Print("c5.pdf" );
-	c16 -> Print("c5.pdf" );
-	c17 -> Print("c5.pdf" );
-	c18 -> Print("c5.pdf" );
-	c19 -> Print("c5.pdf" );
-	c20 -> Print("c5.pdf)");
+	c0  -> Print("eppPi.pdf(");
+	c1  -> Print("eppPi.pdf" );
+	c2  -> Print("eppPi.pdf" );
+	c3  -> Print("eppPi.pdf" );
+	c5  -> Print("eppPi.pdf" );
+	c6  -> Print("eppPi.pdf" );
+	c7  -> Print("eppPi.pdf" );
+	c8  -> Print("eppPi.pdf" );
+	c9  -> Print("eppPi.pdf" );
+	c10 -> Print("eppPi.pdf" );
+	c11 -> Print("eppPi.pdf" );
+	c12 -> Print("eppPi.pdf" );
+	c13 -> Print("eppPi.pdf" );
+	c14 -> Print("eppPi.pdf" );
+	c15 -> Print("eppPi.pdf" );
+	c16 -> Print("eppPi.pdf" );
+	c17 -> Print("eppPi.pdf" );
+	c18 -> Print("eppPi.pdf" );
+	c19 -> Print("eppPi.pdf" );
+	c20 -> Print("eppPi.pdf)");
 
 	return 0;
 }
