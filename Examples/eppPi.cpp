@@ -258,20 +258,14 @@ int main(int argc, char** argv) {
 
 		// Proton variables
 		int nProtons = 0;
-		int tmp_fast_p_idx  = 0;	// index of the fastest proton
-		double tmp_fast_p_p = 0;	// momentum of the fastest proton
-
-		// pi+ variables
-		int nPip = 0;
-		int tmp_fast_pip_idx  = 0;	// index of the fastest proton
-		double tmp_fast_pip_p = 0;	// momentum of the fastest proton
+		int tmp_fast_p1_idx  = 0;	// index of the proton 1
+		int tmp_fast_p2_idx  = 0;        // index of the proton 2
 
 		// pi- variables
 		int nPim = 0;
 		int tmp_fast_pim_idx  = 0;	// index of the fastest proton
-		double tmp_fast_pim_p = 0;	// momentum of the fastest proton
 
-		int nParticles = particles.getSize();
+		int nParticles = particles.getSize();	
 
 		for(int par = 1; par < nParticles; par++) {
 			// Particle bank
@@ -281,47 +275,10 @@ int main(int argc, char** argv) {
 			TVector3 V3_hp = particles.getV3P    (par);       // momentum vector
 			float chri     = particles.getCharge (par);       // charge
 			float beta_p   = particles.getBeta   (par);       // beta = v/c
-			float chi2pid  = particles.getChi2pid(par);       // goodness of pid fit
-			int eStatus    = particles.getStatus (par);       // status
-
-			float ppx    = V3_hp.X();
-			float ppy    = V3_hp.Y();
-			float ppz    = V3_hp.Z();
-			float pvx    = V3_hv.X();
-			float pvy    = V3_hv.Y();
-			float pvz    = V3_hv.Z();
-
 			double pp     = V3_hp.Mag();
 
-			double mSq    = pp*pp*(1-beta_p*beta_p)/(beta_p*beta_p);
-			bool alreadyGotHit = false;
-			double t_p      = -1000;
-			double tof_p    = -1000;
-			double delta_tP = -1000;
-			int detectorID = -1;
-			/*
-			// Scintillator bank
-			int nScin = bank_scintillator.getNode("pindex").getDataSize();
-			for(int scin = 1 ; scin < nScin ; scin++ ) {
-			int scint_id = bank_scintillator.getNode("pindex").getInt(scin);
-			if(scint_id==par&&!alreadyGotHit) {
-			alreadyGotHit=true;
-			detectorID = bank_scintillator.getNode("detector").getInt  (scin);
-			t_p        = bank_scintillator.getNode("time"    ).getFloat(scin);
-			tof_p  = t_p - t_vtx;
-			delta_tP = tof_p*(1-Math.sqrt((pp*pp+mp*mp)/(pp*pp+mSq)));
-			}
-			}
-			 */
 			if     (chri== 1) h2_beta_p_pos -> Fill(pp, beta_p  );
 			else if(chri==-1) h2_beta_p_neg -> Fill(pp, beta_p  );
-			/*
-			   if(delta_tP!=-1000&&chri>0) {
-			   h2_p_dtT_p_0 -> Fill(pp, delta_tP);
-			   h2_p_tof_det -> Fill((double)(detectorID),tof_p);
-			   h2_p_dtT_det -> Fill((double)(detectorID),delta_tP);
-			   }
-			 */
 
 			// -------------------------------------------------------------------------
 			// Proton PID from Dan Carman
@@ -342,54 +299,38 @@ int main(int argc, char** argv) {
 					(pp<Ebeam  )
 			  ) {
 				nProtons++;
-				if(pp>tmp_fast_p_p) {
-					tmp_fast_p_p = pp;
-					tmp_fast_p_idx=par;
-				}
-			}
-			// pi+
-			if(             (pidi==211)&&
-					(chri==1   )&&
-					(pp<Ebeam  )
-			  ) {
-				nPip++;
-				if(pp>tmp_fast_pip_p) {
-					tmp_fast_pip_p = pp;
-					tmp_fast_pip_idx=par;
-				}
+				if(nProtons==1) tmp_fast_p1_idx=par;
+				if(nProtons==2) tmp_fast_p2_idx=par;
 			}
 			// pi-
 			if(             (pidi==-211)&&
 					(chri==-1  )&&
 					(pp<Ebeam  )
 			  ) {
-				nPim++;
-				if(pp>tmp_fast_pim_p) {
-					tmp_fast_pim_p = pp;
-					tmp_fast_pim_idx=par;
-				}
+				nPim++;	
+				tmp_fast_pim_idx=par;
 			}
 			// ----------------------------------------------------------------------
 
 		}
 
-		if(nProtons==1&&nPip==1&&nPim==1&&nParticles==4) {
+		if(nProtons==2&&nPim==1) {
 
-			TVector3 V3_pv = particles.getV3v    (tmp_fast_p_idx);       // proton vertex vector [cm]
-			TVector3 V3_pp = particles.getV3P    (tmp_fast_p_idx);       // proton momentum vector [GeV]
-			float beta_p   = particles.getBeta   (tmp_fast_p_idx);       // proton beta = v/c
+			TVector3 V3_pv = particles.getV3v    (tmp_fast_p1_idx);       // proton vertex vector [cm]
+			TVector3 V3_pp = particles.getV3P    (tmp_fast_p1_idx);       // proton momentum vector [GeV]
+			float beta_p   = particles.getBeta   (tmp_fast_p1_idx);       // proton beta = v/c
 			float ppx    = V3_pp.X();
 			float ppy    = V3_pp.Y();
 			float ppz    = V3_pp.Z();
 			float pvz    = V3_pv.Z();
 
-			TVector3 V3_pipv = particles.getV3v    (tmp_fast_pip_idx);       // pi+ vertex vector [cm]
-			TVector3 V3_pipp = particles.getV3P    (tmp_fast_pip_idx);       // pi+ momentum vector [GeV]
-			float beta_pip  = particles.getBeta    (tmp_fast_pip_idx);       // pi+ beta = v/c
-			float pip_px    = V3_pipp.X();
-			float pip_py    = V3_pipp.Y();
-			float pip_pz    = V3_pipp.Z();
-			float pip_vz    = V3_pipv.Z();
+			TVector3 V3_pipv = particles.getV3v    (tmp_fast_p2_idx);       // proton 2 vertex vector [cm]
+			TVector3 V3_pipp = particles.getV3P    (tmp_fast_p2_idx);       // proton 2 momentum vector [GeV]
+			float beta_pip  = particles.getBeta    (tmp_fast_p2_idx);       // proton 2 beta = v/c
+			float p2_px    = V3_pipp.X();
+			float p2_py    = V3_pipp.Y();
+			float p2_pz    = V3_pipp.Z();
+			float p2_vz    = V3_pipv.Z();
 
 			TVector3 V3_pimv = particles.getV3v    (tmp_fast_pim_idx);       // pi- vertex vector [cm]
 			TVector3 V3_pimp = particles.getV3P    (tmp_fast_pim_idx);       // pi- momentum vector [GeV]
@@ -405,32 +346,32 @@ int main(int argc, char** argv) {
 			double th_p   = V3_pp.Theta();										// proton candidate theta [rad]
 			double phi_p  = V3_pp.Phi();										// proton candidate phi [rad]
 
-			double pPip   = TMath::Sqrt(pip_px*pip_px + pip_py*pip_py + pip_pz*pip_pz);
-			double EPip   = TMath::Sqrt(pPip*pPip+mPiC*mPiC);
+			double pp2   = TMath::Sqrt(p2_px*p2_px + p2_py*p2_py + p2_pz*p2_pz);
+			double Ep2   = TMath::Sqrt(pp2*pp2+mPiC*mPiC);
 
 			double pPim   = TMath::Sqrt(pim_px*pim_px + pim_py*pim_py + pim_pz*pim_pz);
 			double EPim   = TMath::Sqrt(pPim*pPim+mPiC*mPiC);		
 
 			// Missing momentum components
-			double pmx = ppx + pip_px + pim_px - V3_q.X();
-			double pmy = ppy + pip_py + pim_py - V3_q.Y();
-			double pmz = ppz + pip_pz + pim_pz - V3_q.Z();
+			double pmx = ppx + p2_px + pim_px - V3_q.X();
+			double pmy = ppy + p2_py + pim_py - V3_q.Y();
+			double pmz = ppz + p2_pz + pim_pz - V3_q.Z();
 			double Pm = TMath::Sqrt(pmx*pmx + pmy*pmy + pmz*pmz);
 
 			// Missing mass
-			double E_mmiss = Ebeam + mtar - ep - Ep - EPip - EPim;
+			double E_mmiss = Ebeam + mtar - ep - Ep - Ep2 - EPim;
 			double Mmiss = TMath::Sqrt(E_mmiss*E_mmiss - Pm*Pm);
 
 			//double Emiss = fn_Emiss( Pm, nu, mtar, Ep, mp);
 
-			if(             (TMath::Abs(pvz    - V3_ev.Z() + 4.219763e-01) < 3*5.139898e+00)&&
-					(TMath::Abs(pip_vz - V3_ev.Z() - 2.137405e+00) < 3*4.259259e+00)&&
-					(TMath::Abs(pim_vz - V3_ev.Z() - 2.230033e+00) < 3*3.190657e+00)
-			  ) {
+			//if(             (TMath::Abs(pvz    - V3_ev.Z() + 4.219763e-01) < 3*5.139898e+00)&&
+			//		(TMath::Abs(p2_vz - V3_ev.Z() - 2.137405e+00) < 3*4.259259e+00)&&
+			//		(TMath::Abs(pim_vz - V3_ev.Z() - 2.230033e+00) < 3*3.190657e+00)
+			//  ) {
 
 				h1_p_vz        -> Fill(pvz          );
 				h1_dlt_vz_ep   -> Fill(pvz    - V3_ev.Z() );
-				h1_dlt_vz_epip -> Fill(pip_vz - V3_ev.Z() );
+				h1_dlt_vz_epip -> Fill(p2_vz - V3_ev.Z() );
 				h1_dlt_vz_epim -> Fill(pim_vz - V3_ev.Z() );
 				h1_p_px        -> Fill(ppx          );
 				h1_p_py        -> Fill(ppy          );
@@ -449,14 +390,14 @@ int main(int argc, char** argv) {
 				h2_p_vz_phi  -> Fill(rad2deg*phi_p, pvz         );
 
 				h2_beta_p_p   -> Fill(pp           , beta_p      );
-				h2_beta_p_pip -> Fill(pPip         , beta_pip    );
+				h2_beta_p_pip -> Fill(pp2         , beta_pip    );
 				h2_beta_p_pim -> Fill(pPim         , beta_pim    );
 
 				//h2_p_dtT_p_1 -> Fill(pp           , delta_tP    );
 
 				//h2_Em_Pm     -> Fill(Pm           , Emiss       );
 				h2_pe_pp     -> Fill(pp           , ep          );
-			}
+			//}
 
 		}
 

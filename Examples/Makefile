@@ -15,10 +15,13 @@ LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
 
-all: example
+all: example eppPi
 
 example: example.o
 	$(CXX) -o example $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+
+eppPi: eppPi.o
+	$(CXX) -o eppPi $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 clean:
 	@echo 'Removing all build files'
