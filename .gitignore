@@ -1,1 +1,7 @@
+Banks/old/
+*.pdf
+Examples/eppPi
+Examples/example
+lib/libclas12banks.a
+lib/libhipo.a
 *.o
