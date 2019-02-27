@@ -4,8 +4,6 @@ OBJECTS := $(SOURCES:.cpp=.o)
 
 LIBDIR  = ../lib
 
-LZ4INCLUDES := -I../Lz4/lib/
-
 CXXFLAGS = -std=c++11
 
 libhipo: checkdirs $(OBJECTS)
@@ -26,4 +24,4 @@ clean:
 	@rm -rf *~ *.o
 
 %.o: %.cpp
-	$(CXX) -fPIC -c $< -O2 -D__LZ4__ $(CXXFLAGS) $(LZ4INCLUDES)
+	$(CXX) -fPIC -c $< -O2 -D__LZ4__ $(CXXFLAGS)
