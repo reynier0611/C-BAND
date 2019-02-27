@@ -3,7 +3,6 @@ SOURCES := $(wildcard *.cpp)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 LIBDIR  = ../lib
-BINDIR  = ../bin
 
 LZ4INCLUDES := -I../Lz4/lib/
 
