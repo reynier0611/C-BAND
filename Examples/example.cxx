@@ -12,8 +12,8 @@
 #include "reader.h"
 #include "node.h"
 #include "bank.h"
-#include "particle.h"
-#include "calorimeter.h"
+#include "BParticle.h"
+#include "BCalorimeter.h"
 
 using namespace std;
 
@@ -148,8 +148,8 @@ int main(int argc, char** argv) {
 	hipo::bank bank_scintillator("REC::Scintillator",reader);
 	hipo::bank bank_event       ("REC::Event"       ,reader);
 
-	particle     particles  ("REC::Particle"    ,reader);
-	calorimeter  calo("REC::Calorimeter" ,reader);
+	BParticle     particles  ("REC::Particle"    ,reader);
+	BCalorimeter  calo("REC::Calorimeter" ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------

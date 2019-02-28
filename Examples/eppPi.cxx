@@ -13,8 +13,8 @@
 #include "reader.h"
 #include "node.h"
 #include "bank.h"
-#include "particle.h"
-#include "calorimeter.h"
+#include "BParticle.h"
+#include "BCalorimeter.h"
 
 using namespace std;
 
@@ -151,8 +151,8 @@ int main(int argc, char** argv) {
 	hipo::bank bank_scintillator("REC::Scintillator",reader);
 	hipo::bank bank_event       ("REC::Event"       ,reader);
 
-	particle     particles  ("REC::Particle"    ,reader);
-	calorimeter  calo("REC::Calorimeter" ,reader);
+	BParticle     particles  ("REC::Particle"    ,reader);
+	BCalorimeter  calo("REC::Calorimeter" ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -531,26 +531,26 @@ int main(int argc, char** argv) {
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
 
-	c0  -> Print("eppPi.pdf(");
-	c1  -> Print("eppPi.pdf" );
-	c2  -> Print("eppPi.pdf" );
-	c3  -> Print("eppPi.pdf" );
-	c5  -> Print("eppPi.pdf" );
-	c6  -> Print("eppPi.pdf" );
-	c7  -> Print("eppPi.pdf" );
-	c8  -> Print("eppPi.pdf" );
-	c9  -> Print("eppPi.pdf" );
-	c10 -> Print("eppPi.pdf" );
-	c11 -> Print("eppPi.pdf" );
-	c12 -> Print("eppPi.pdf" );
-	c13 -> Print("eppPi.pdf" );
-	c14 -> Print("eppPi.pdf" );
-	c15 -> Print("eppPi.pdf" );
-	c16 -> Print("eppPi.pdf" );
-	c17 -> Print("eppPi.pdf" );
-	c18 -> Print("eppPi.pdf" );
-	c19 -> Print("eppPi.pdf" );
-	c20 -> Print("eppPi.pdf)");
+	c0  -> Print("results_eppPi.pdf(");
+	c1  -> Print("results_eppPi.pdf" );
+	c2  -> Print("results_eppPi.pdf" );
+	c3  -> Print("results_eppPi.pdf" );
+	c5  -> Print("results_eppPi.pdf" );
+	c6  -> Print("results_eppPi.pdf" );
+	c7  -> Print("results_eppPi.pdf" );
+	c8  -> Print("results_eppPi.pdf" );
+	c9  -> Print("results_eppPi.pdf" );
+	c10 -> Print("results_eppPi.pdf" );
+	c11 -> Print("results_eppPi.pdf" );
+	c12 -> Print("results_eppPi.pdf" );
+	c13 -> Print("results_eppPi.pdf" );
+	c14 -> Print("results_eppPi.pdf" );
+	c15 -> Print("results_eppPi.pdf" );
+	c16 -> Print("results_eppPi.pdf" );
+	c17 -> Print("results_eppPi.pdf" );
+	c18 -> Print("results_eppPi.pdf" );
+	c19 -> Print("results_eppPi.pdf" );
+	c20 -> Print("results_eppPi.pdf)");
 
 	return 0;
 }

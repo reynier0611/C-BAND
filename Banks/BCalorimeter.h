@@ -1,5 +1,5 @@
-#ifndef CALORIMETER_H
-#define CALORIMETER_H
+#ifndef BCALORIMETER_H
+#define BCALORIMETER_H
 
 #include <iostream>
 #include <cstdlib>
@@ -12,7 +12,7 @@
 
 #include "TVector3.h"
 
-class calorimeter : public hipo::bank {
+class BCalorimeter : public hipo::bank {
 
 	private:
 		int pindex_order   ;
@@ -31,9 +31,9 @@ class calorimeter : public hipo::bank {
 
 	public:
 
-		calorimeter(){};
+		BCalorimeter(){};
 
-		calorimeter(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
+		BCalorimeter(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
 			pindex_order   = getEntryOrder("pindex"   );
 			detector_order = getEntryOrder("detector" );
 			sector_order   = getEntryOrder("sector"   );
@@ -49,7 +49,7 @@ class calorimeter : public hipo::bank {
 			lw_order       = getEntryOrder("lw"       );
 		}
 
-		~calorimeter();
+		~BCalorimeter();
 
 		void  init(const char *bankName, hipo::reader &r);
 		int   getIndex   (int index) { return getInt  (pindex_order    ,index);}

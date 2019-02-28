@@ -1,7 +1,7 @@
-#include "calorimeter.h"
+#include "BCalorimeter.h"
 #include "TVector3.h"
 // ==============================================================
-void   calorimeter::init(const char *bankName, hipo::reader &r){
+void   BCalorimeter::init(const char *bankName, hipo::reader &r){
 	initBranches(bankName,r);
 	pindex_order   = getEntryOrder("pindex"   );
 	detector_order = getEntryOrder("detector" );
@@ -18,43 +18,43 @@ void   calorimeter::init(const char *bankName, hipo::reader &r){
 	lw_order       = getEntryOrder("lw"       );
 }
 // ==============================================================
-calorimeter::~calorimeter(){}
+BCalorimeter::~BCalorimeter(){}
 // ==============================================================
-float calorimeter::getPcalE (int index)
+float BCalorimeter::getPcalE (int index)
 {
 	int nCal = getSize();
 	for(int i = 0 ; i < nCal ; i++){
-		if(calorimeter::getIndex(i)==index&&calorimeter::getLayer(i)==1){
-			return calorimeter::getEnergy(i);
+		if(BCalorimeter::getIndex(i)==index&&BCalorimeter::getLayer(i)==1){
+			return BCalorimeter::getEnergy(i);
 		}
 	}
 	return 0;
 }
 // ==============================================================
-float calorimeter::getECinE (int index)
+float BCalorimeter::getECinE (int index)
 {
 	int nCal = getSize();
         for(int i = 0 ; i < nCal ; i++){
-                if(calorimeter::getIndex(i)==index&&calorimeter::getLayer(i)==4){
-                        return calorimeter::getEnergy(i);
+                if(BCalorimeter::getIndex(i)==index&&BCalorimeter::getLayer(i)==4){
+                        return BCalorimeter::getEnergy(i);
                 }
         }
         return 0;
 }
 // ==============================================================
-float calorimeter::getECoutE(int index)
+float BCalorimeter::getECoutE(int index)
 {
 	int nCal = getSize();
         for(int i = 0 ; i < nCal ; i++){
-                if(calorimeter::getIndex(i)==index&&calorimeter::getLayer(i)==7){
-                        return calorimeter::getEnergy(i);
+                if(BCalorimeter::getIndex(i)==index&&BCalorimeter::getLayer(i)==7){
+                        return BCalorimeter::getEnergy(i);
                 }
         }
         return 0;
 }
 // ==============================================================
-float calorimeter::getTotE  (int index)
+float BCalorimeter::getTotE  (int index)
 {
-	return calorimeter::getPcalE(index) + calorimeter::getECinE(index) + calorimeter::getECoutE(index);
+	return BCalorimeter::getPcalE(index) + BCalorimeter::getECinE(index) + BCalorimeter::getECoutE(index);
 }
 // ==============================================================

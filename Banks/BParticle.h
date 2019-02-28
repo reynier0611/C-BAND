@@ -1,5 +1,5 @@
-#ifndef PARTICLE_H
-#define PARTICLE_H
+#ifndef BPARTICLE_H
+#define BPARTICLE_H
 
 #include <iostream>
 #include <cstdlib>
@@ -12,7 +12,7 @@
 
 #include "TVector3.h"
 
-class particle : public hipo::bank {
+class BParticle : public hipo::bank {
 
 	private:
 
@@ -30,9 +30,9 @@ class particle : public hipo::bank {
 
 	public:
 
-		particle(){};
+		BParticle(){};
 
-		particle(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
+		BParticle(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
 			pid_order     = getEntryOrder("pid"    );
 			px_order      = getEntryOrder("px"     );
 			py_order      = getEntryOrder("py"     );
@@ -46,7 +46,7 @@ class particle : public hipo::bank {
 			status_order  = getEntryOrder("status" );
 		}
 
-		~particle();
+		~BParticle();
 
 		void  init(const char *bankName, hipo::reader &r);
 		int   getPid    (int index) { return getInt  (pid_order    ,index);}

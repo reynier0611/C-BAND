@@ -1,7 +1,7 @@
-#include "particle.h"
+#include "BParticle.h"
 #include "TVector3.h"
 // ==============================================================
-void   particle::init(const char *bankName, hipo::reader &r){
+void   BParticle::init(const char *bankName, hipo::reader &r){
 	initBranches(bankName,r);
 	pid_order     = getEntryOrder("pid"    );
 	px_order      = getEntryOrder("px"     );
@@ -16,24 +16,24 @@ void   particle::init(const char *bankName, hipo::reader &r){
 	status_order  = getEntryOrder("status" );
 }
 // ==============================================================
-particle::~particle(){}
+BParticle::~BParticle(){}
 // ==============================================================
-TVector3 particle::getV3v(int index)
+TVector3 BParticle::getV3v(int index)
 {
 	TVector3 * V3v = new TVector3();
-        float vx = particle::getVx(index);
-        float vy = particle::getVy(index);
-        float vz = particle::getVz(index);
+        float vx = BParticle::getVx(index);
+        float vy = BParticle::getVy(index);
+        float vz = BParticle::getVz(index);
         V3v -> SetXYZ(vx,vy,vz);
         return * V3v;
 }
 // ==============================================================
-TVector3 particle::getV3P(int index)
+TVector3 BParticle::getV3P(int index)
 {
 	TVector3 * V3P = new TVector3();
-	float px = particle::getPx(index);
-	float py = particle::getPy(index);
-	float pz = particle::getPz(index);
+	float px = BParticle::getPx(index);
+	float py = BParticle::getPy(index);
+	float pz = BParticle::getPz(index);
 	V3P -> SetXYZ(px,py,pz);
 	return * V3P;
 }
