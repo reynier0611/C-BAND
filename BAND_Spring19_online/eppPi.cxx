@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "TRint.h"
+#include "TApplication.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
@@ -29,6 +31,12 @@ double fn_Emiss(double Pmiss, double omega, double M_tar, double Enuc, double Mn
 
 // ========================================================================================================================================
 int main(int argc, char** argv) {
+
+#ifdef WITHRINT
+        TRint *myapp = new TRint("RootSession",&argc,argv,NULL,0);
+#else
+        TApplication *myapp = new TApplication("myapp",0,0);
+#endif
 
 	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
 
@@ -555,6 +563,7 @@ int main(int argc, char** argv) {
 	c19 -> Print("results_eppPi.pdf" );
 	c20 -> Print("results_eppPi.pdf)");
 
+	myapp -> Run();
 	return 0;
 }
 // ========================================================================================================================================
