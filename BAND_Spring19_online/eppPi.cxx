@@ -15,6 +15,8 @@
 #include "bank.h"
 #include "BParticle.h"
 #include "BCalorimeter.h"
+#include "BScintillator.h"
+#include "BBand.h"
 
 using namespace std;
 
@@ -148,11 +150,11 @@ int main(int argc, char** argv) {
 	hipo::reader reader;
 	reader.open(inputFile);
 
-	hipo::bank bank_scintillator("REC::Scintillator",reader);
 	hipo::bank bank_event       ("REC::Event"       ,reader);
 
-	BParticle     particles  ("REC::Particle"    ,reader);
-	BCalorimeter  calo("REC::Calorimeter" ,reader);
+	BParticle     particles   ("REC::Particle"    ,reader);
+	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
+	BScintillator scintillator("REC::Scintillator",reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -189,7 +191,7 @@ int main(int argc, char** argv) {
 		double t_vtx   = bank_event.getFloat( 9,0);
 
 		// Scintillator bank
-		double t_e     = bank_scintillator.getFloat(7,0);
+		double t_e     = scintillator.getTime(0);
 
 		// calculated variables
 		double ep     = V3_ep.Mag();		// electron candidate momentum magnitude [GeV]
