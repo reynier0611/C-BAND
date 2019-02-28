@@ -14,6 +14,8 @@
 #include "bank.h"
 #include "BParticle.h"
 #include "BCalorimeter.h"
+#include "BScintillator.h"
+#include "BEvent.h"
 
 using namespace std;
 
@@ -145,11 +147,10 @@ int main(int argc, char** argv) {
 	hipo::reader reader;
 	reader.open(inputFile);
 
-	hipo::bank bank_scintillator("REC::Scintillator",reader);
-	hipo::bank bank_event       ("REC::Event"       ,reader);
-
-	BParticle     particles  ("REC::Particle"    ,reader);
-	BCalorimeter  calo("REC::Calorimeter" ,reader);
+	BScintillator scintillator("REC::Scintillator",reader);
+	BEvent        event       ("REC::Event"       ,reader);
+	BParticle     particles   ("REC::Particle"    ,reader);
+	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -161,8 +162,8 @@ int main(int argc, char** argv) {
 
 		//particles.show();
 		//calo.show();
-		//bank_event.show();
-		//bank_scintillator.show();	
+		//event.show();
+		//scintillator.show();	
 
 		// Particle bank
 		int pid0       = particles.getPid    (0);	// electron candidate id assigned by clas
@@ -183,10 +184,10 @@ int main(int argc, char** argv) {
 		if(Ee==0) continue;
 
 		// Event bank
-		double t_vtx   = bank_event.getFloat( 9,0);
+		double t_vtx   = event.getSTTime(0);
 
 		// Scintillator bank
-		double t_e     = bank_scintillator.getFloat(7,0);
+		double t_e     = scintillator.getTime(0);
 
 		// calculated variables
 		double ep     = V3_ep.Mag();		// electron candidate momentum magnitude [GeV]
@@ -301,13 +302,13 @@ int main(int argc, char** argv) {
 			int detectorID = -1;
 			/*
 			// Scintillator bank
-			int nScin = bank_scintillator.getNode("pindex").getDataSize();
+			int nScin = scintillator.getNode("pindex").getDataSize();
 			for(int scin = 1 ; scin < nScin ; scin++ ) {
-			int scint_id = bank_scintillator.getNode("pindex").getInt(scin);
+			int scint_id = scintillator.getNode("pindex").getInt(scin);
 			if(scint_id==par&&!alreadyGotHit) {
 			alreadyGotHit=true;
-			detectorID = bank_scintillator.getNode("detector").getInt  (scin);
-			t_p        = bank_scintillator.getNode("time"    ).getFloat(scin);
+			detectorID = scintillator.getNode("detector").getInt  (scin);
+			t_p        = scintillator.getNode("time"    ).getFloat(scin);
 			tof_p  = t_p - t_vtx;
 			delta_tP = tof_p*(1-Math.sqrt((pp*pp+mp*mp)/(pp*pp+mSq)));
 			}

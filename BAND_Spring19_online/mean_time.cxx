@@ -15,10 +15,12 @@
 #include "reader.h"
 #include "node.h"
 #include "bank.h"
+
 #include "BParticle.h"
 #include "BCalorimeter.h"
 #include "BScintillator.h"
 #include "BBand.h"
+#include "BEvent.h"
 
 using namespace std;
 
@@ -94,7 +96,7 @@ int main(int argc, char** argv) {
 	reader.open(inputFile);
 
 
-	hipo::bank    bank_event  ("REC::Event"       ,reader);
+	BEvent        event       ("REC::Event"       ,reader);
 	BParticle     particles   ("REC::Particle"    ,reader);
 	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
 	BScintillator scintillator("REC::Scintillator",reader);
@@ -109,7 +111,7 @@ int main(int argc, char** argv) {
 		event_counter++;
 
 		//band_hits.show();
-		//bank_event.show();
+		//event.show();
 		//scintillator.show();	
 
 		// Particle bank
@@ -131,7 +133,7 @@ int main(int argc, char** argv) {
 		//if(Ee==0) continue;
 
 		// Event bank
-		double t_vtx   = bank_event.getFloat( 9,0);
+		double t_vtx   = event.getSTTime(0);
 
 		// Scintillator bank
 		double t_e     = scintillator.getTime(0);
