@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "TRint.h"
+#include "TApplication.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
@@ -26,6 +28,12 @@ double fn_Emiss(double Pmiss, double omega, double M_tar, double Enuc, double Mn
 
 // ========================================================================================================================================
 int main(int argc, char** argv) {
+
+#ifdef WITHRINT
+        TRint *myapp = new TRint("RootSession",&argc,argv,NULL,0);
+#else
+        TApplication *myapp = new TApplication("myapp",0,0);
+#endif
 
 	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
 
@@ -118,7 +126,7 @@ int main(int argc, char** argv) {
 		float lV    = calo.getLV   (0); // electron candidate distance on V-side [cm?]
 		float lW    = calo.getLW   (0); // electron candidate distance on W-side [cm?]
 
-		if(Ee==0) continue;
+		//if(Ee==0) continue;
 
 		// Event bank
 		double t_vtx   = bank_event.getFloat( 9,0);
@@ -155,18 +163,18 @@ int main(int argc, char** argv) {
 		// -------------------------------------------------------------------------
 		// Only keep events for which the first particle is an electron
 		if(             (pid0!=11              )||
-				(chr0!=-1              )||
-				(chi2pid>=cut_chi2pid  )||
-				(ep<=cut_ep            )||
-				(ep>=Ebeam             )||
-				(V3_ev.Z()>cut_max_vz  )||
-				(V3_ev.Z()<cut_min_vz  )||
-				(lU<cut_uvw            )||
-				(lV<cut_uvw            )||
-				(lW<cut_uvw            )||
-				(Epcal<cut_Epcal       )||
-				(TMath::Sqrt(W2)<=cut_W)||
-				(tof_e<cut_tof_e       )
+				(chr0!=-1              )//||
+				//(chi2pid>=cut_chi2pid  )||
+				//(ep<=cut_ep            )||
+				//(ep>=Ebeam             )||
+				//(V3_ev.Z()>cut_max_vz  )||
+				//(V3_ev.Z()<cut_min_vz  )||
+				//(lU<cut_uvw            )||
+				//(lV<cut_uvw            )||
+				//(lW<cut_uvw            )||
+				//(Epcal<cut_Epcal       )||
+				//(TMath::Sqrt(W2)<=cut_W)||
+				//(tof_e<cut_tof_e       )
 		  ) continue;
 
 		int nHits = band_hits.getSize();
@@ -239,6 +247,7 @@ int main(int argc, char** argv) {
 
 	c0 -> Print("results_mean_time.pdf");
 
+	myapp -> Run();
 	return 0;
 }
 // ========================================================================================================================================
@@ -246,7 +255,7 @@ void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color) {
 	h1 -> GetXaxis() -> SetTitle(titx);
 	h1 -> GetYaxis() -> SetTitle(tity);
 	h1 -> SetLineColor(color);
-	h1 -> SetLineWidth(3);
+	h1 -> SetLineWidth(2);
 }
 // ========================================================================================================================================
 void PrettyTH2F(TH2F * h2,TString titx,TString tity) {
