@@ -12,7 +12,7 @@ void   BBand::init(const char *bankName, hipo::reader &r){
         difftimeTdc_order  = getEntryOrder("difftimeTdc" );
         difftimeFadc_order = getEntryOrder("difftimeFadc");
         adcLcorr_order     = getEntryOrder("adcLcorr"    );
-        adcRcorr_order     = getEntryOrder(" adcRcorr"   );
+        adcRcorr_order     = getEntryOrder("adcRcorr"    );
         tFadcLcorr_order   = getEntryOrder("tFadcLcorr"  );
         tFadcRcorr_order   = getEntryOrder("tFadcRcorr"  );
         tTdcLcorr_order    = getEntryOrder("tTdcLcorr"   );
