@@ -27,3 +27,10 @@ void   BBand::init(const char *bankName, hipo::reader &r){
 // ==============================================================
 BBand::~BBand(){}
 // ==============================================================
+int BBand::getBarKey(int index)
+{
+	int s = getSector   (index);
+	int l = getLayer    (index);
+	int c = getComponent(index);
+	return s*100+l*10+c;
+}

@@ -91,6 +91,7 @@ class BBand : public hipo::bank {
 		float getUy           (int index) { return getFloat (uy_order           ,index);}
 		float getUz           (int index) { return getFloat (uz_order           ,index);}
 
+		int   getBarKey(int index);
 };
 
 #endif
