@@ -33,22 +33,10 @@ double fn_Emiss(double Pmiss, double omega, double M_tar, double Enuc, double Mn
 int main(int argc, char** argv) {
 
 #ifdef WITHRINT
-        TRint *myapp = new TRint("RootSession",&argc,argv,NULL,0);
+	TRint *myapp = new TRint("RootSession",&argc,argv,NULL,0);
 #else
-        TApplication *myapp = new TApplication("myapp",0,0);
+	TApplication *myapp = new TApplication("myapp",0,0);
 #endif
-
-	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
-
-	TString inputFile;
-
-	if(argc==2) {
-		inputFile = argv[1];
-	}
-	else {
-		cout << "=========================\nRun this code as:\n./code path/to/input/file\n=========================" << endl;
-		exit(0);
-	}
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
@@ -56,6 +44,36 @@ int main(int argc, char** argv) {
 	double mPiC    = 0.13957; //GeV (charged pion mass)
 	double mD      = 1.8756;  //GeV (deuteron mass    )
 	double rad2deg = 180./3.14159;
+
+	// ----------------------------------------------------------------------------------
+	// Getting input arguments
+	TString inputFile;
+	double Ebeam, mtar;
+
+	if(argc==3){
+		if(atoi(argv[1])==1){
+			cout << "Will assume this hipo file corresponds to: Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
+			Ebeam = 6.4; //GeV
+			mtar  = mp;
+		}
+		else if(atoi(argv[1])==2){
+			cout << "Will assume this hipo file corresponds to: Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl;
+			Ebeam = 10.6; //GeV
+			mtar  = mD;
+		}
+		inputFile = argv[2];
+	}
+	else {
+		cout << "=========================\nRun this code as:\n./code A path/to/input/file\n" << endl;
+		cout << "where: A = 1 -> Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
+		cout << "         = 2 -> Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl;
+		cout << "=========================" << endl;
+		exit(0);
+	}
+
+	TVector3 V3_Ebeam(0,0,Ebeam);
+	TLorentzVector V4_Ebeam(V3_Ebeam,Ebeam);
+	TLorentzVector V4_mtar(0,0,0,mtar);
 
 	// ----------------------------------------------------------------------------------
 	// Event selection cuts
@@ -150,12 +168,6 @@ int main(int argc, char** argv) {
 	PrettyTH2F(h2_pe_pp     ,"p p [GeV]"   ,"e p [GeV]"           );
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
-	double Ebeam = 10.6; //GeV
-	TVector3 V3_Ebeam(0,0,Ebeam);
-	TLorentzVector V4_Ebeam(V3_Ebeam,Ebeam);
-
-	double mtar    = mD;
-	TLorentzVector V4_mtar(0,0,0,mtar);
 
 	hipo::reader reader;
 	reader.open(inputFile);
@@ -313,12 +325,12 @@ int main(int argc, char** argv) {
 			}
 			// pi+
 			if(             (pidi==211          )&&
-                                        (chri== 1           )&&
-                                        (V3_hp.Mag()<Ebeam  )
-                          ) {
-                                nPip++;
-                                tmp_fast_pip_idx=par;
-                        }
+					(chri== 1           )&&
+					(V3_hp.Mag()<Ebeam  )
+			  ) {
+				nPip++;
+				tmp_fast_pip_idx=par;
+			}
 			// pi-
 			if(             (pidi==-211         )&&
 					(chri==-1           )&&

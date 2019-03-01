@@ -40,22 +40,43 @@ int main(int argc, char** argv) {
 
 	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
 
-	TString inputFile;
-
-	if(argc==2) {
-		inputFile = argv[1];
-	}
-	else {
-		cout << "=========================\nRun this code as:\n./code path/to/input/file\n=========================" << endl;
-		exit(0);
-	}
-
 	// ----------------------------------------------------------------------------------
-	// Useful variables
-	double mp      = 0.93827; //GeV
-	double mD      = 1.8756;  //GeV (deuteron mass    )
-	double rad2deg = 180./3.14159;
+        // Useful variables
+        double mp      = 0.93827; //GeV (proton mass      )
+        double mPiC    = 0.13957; //GeV (charged pion mass)
+        double mD      = 1.8756;  //GeV (deuteron mass    )
+        double rad2deg = 180./3.14159;
 	double c = 29.9792;
+
+        // ----------------------------------------------------------------------------------
+        // Getting input arguments
+        TString inputFile;
+        double Ebeam, mtar;
+
+        if(argc==3){
+                if(atoi(argv[1])==1){
+                        cout << "Will assume this hipo file corresponds to: Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
+                        Ebeam = 6.4; //GeV
+                        mtar  = mp;
+                }
+                else if(atoi(argv[1])==2){
+                        cout << "Will assume this hipo file corresponds to: Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl;
+                        Ebeam = 10.6; //GeV
+                        mtar  = mD;
+                }
+                inputFile = argv[2];
+        }
+        else {
+                cout << "=========================\nRun this code as:\n./code A path/to/input/file\n" << endl;
+                cout << "where: A = 1 -> Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
+                cout << "         = 2 -> Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl;
+                cout << "=========================" << endl;
+                exit(0);
+        }
+
+        TVector3 V3_Ebeam(0,0,Ebeam);
+        TLorentzVector V4_Ebeam(V3_Ebeam,Ebeam);
+        TLorentzVector V4_mtar(0,0,0,mtar);
 
 	// ----------------------------------------------------------------------------------
 	// Event selection cuts
@@ -97,13 +118,6 @@ int main(int argc, char** argv) {
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
-	double Ebeam = 10.6; //GeV
-	TVector3 V3_Ebeam(0,0,Ebeam);
-	TLorentzVector V4_Ebeam(V3_Ebeam,Ebeam);
-
-	double mtar    = mD;
-	TLorentzVector V4_mtar(0,0,0,mtar);
-
 	hipo::reader reader;
 	reader.open(inputFile);
 
