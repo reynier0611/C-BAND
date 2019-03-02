@@ -6,7 +6,8 @@ ROOTGLIBS   := $(shell root-config --glibs)
 HIPOCFLAGS  := -I../../Hipo -I../../Banks
 HIPOLIBS    := -L../../lib -lhipo -lclas12banks
 
-LZ4LIBS     := -llz4
+LZ4LIBS     := -L/group/clas12/packages/lz4/lib -llz4
+LZ4INCLUDES := -I/group/clas12/packages/lz4/lib
 
 CXX       := g++
 CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
@@ -23,4 +24,4 @@ clean:
 	@rm -rf *.o readParticles readBanks analysis clas12event_timeWalk *~
 
 %.o: %.cpp
-	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS)
+	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
