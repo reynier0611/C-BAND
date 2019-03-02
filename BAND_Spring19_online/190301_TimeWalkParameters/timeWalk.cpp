@@ -27,15 +27,7 @@ using namespace std;
 
 // Forward-declaring functions
 void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
-void PrettyTH2F(TH2F * h2,TString titx,TString tity);
-
-/*
-int S1_comp[] = {3,3,3,3,3,3};
-int S2_comp[] = {7,7,7,7,7,7};
-int S3_comp[] = {6,6,6,6,5,6};
-int S4_comp[] = {6,6,6,6,5,6};
-int S5_comp[] = {2,2,2,2,0,2};
-*/
+void PrettyTH2F(TH2F * h2);
 
 int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,7,6,6,2}};
 // ========================================================================================================================================
@@ -73,6 +65,9 @@ int main(int argc, char** argv) {
 	for(int i = 0 ; i < nHistos ; i++){
 		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC;t_{TDC}-t_{FADC}",200,0,30000,200,350,450);
 		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC;t_{TDC}-t_{FADC}",200,0,30000,200,350,450);
+	
+		PrettyTH2F(h2_tdc_adc_L[i]);
+		PrettyTH2F(h2_tdc_adc_R[i]);
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -148,25 +143,25 @@ int main(int argc, char** argv) {
 	// -------------------------------------------------------------------------------------------------
 	// Fitting functions
 	for(int i = 0 ; i < nHistos ; i++){
-                int notEmpty = h2_tdc_adc_L[i] -> Integral();
-                if(notEmpty){
+		int notEmpty = (h2_tdc_adc_L[i]->Integral()+h2_tdc_adc_R[i]->Integral());
+		if(notEmpty){
 			TF1 * f_timewalk_L = new TF1("f_timewalk_L","[0]/TMath::Sqrt(x)+[1]");
 			TF1 * f_timewalk_R = new TF1("f_timewalk_R","[0]/TMath::Sqrt(x)+[1]");
 
-                        h2_tdc_adc_L[i] -> Fit("f_timewalk_L");
-                        h2_tdc_adc_R[i] -> Fit("f_timewalk_R");
-                
+			h2_tdc_adc_L[i] -> Fit("f_timewalk_L","Q");
+			h2_tdc_adc_R[i] -> Fit("f_timewalk_R","Q");
+
 			parL[i][0] = f_timewalk_L -> GetParameter(0);	//A
 			parL[i][1] = f_timewalk_L -> GetParameter(1);	//B
 			parL[i][2] = f_timewalk_L -> GetParError (0);	//eA
 			parL[i][3] = f_timewalk_L -> GetParError (1);	//eB
 
 			parR[i][0] = f_timewalk_R -> GetParameter(0);   //A
-                        parR[i][1] = f_timewalk_R -> GetParameter(1);   //B
-                        parR[i][2] = f_timewalk_R -> GetParError (0);   //eA
-                        parR[i][3] = f_timewalk_R -> GetParError (1);   //eB
+			parR[i][1] = f_timewalk_R -> GetParameter(1);   //B
+			parR[i][2] = f_timewalk_R -> GetParError (0);   //eA
+			parR[i][3] = f_timewalk_R -> GetParError (1);   //eB
 		}
-        }
+	}
 
 	// -------------------------------------------------------------------------------------------------
 	// Printing results onto canvases
@@ -177,97 +172,75 @@ int main(int argc, char** argv) {
 	c0 -> Modified();
 	c0 -> Update();
 
-	TCanvas ** cS1 = new TCanvas*[5];
-	TCanvas ** cS2 = new TCanvas*[5];
-	TCanvas ** cS3 = new TCanvas*[5];
-	TCanvas ** cS4 = new TCanvas*[5];
-	TCanvas ** cS5 = new TCanvas*[5];
+	TCanvas *** cSLC = new TCanvas**[5];
 
-	for(int i = 0 ; i < 5 ; i++){
-		cS1[i] = new TCanvas(Form("S1L%i",i+1),Form("Sector 1, Layer %i",i+1),600,800);	cS1[i] -> Divide(2,7);
-		cS2[i] = new TCanvas(Form("S2L%i",i+1),Form("Sector 2, Layer %i",i+1),600,800);	cS2[i] -> Divide(2,7);
-		cS3[i] = new TCanvas(Form("S3L%i",i+1),Form("Sector 3, Layer %i",i+1),600,800);	cS3[i] -> Divide(2,7);
-		cS4[i] = new TCanvas(Form("S4L%i",i+1),Form("Sector 4, Layer %i",i+1),600,800);	cS4[i] -> Divide(2,7);
-		cS5[i] = new TCanvas(Form("S5L%i",i+1),Form("Sector 5, Layer %i",i+1),600,800);	cS5[i] -> Divide(2,7);
+	for(int is = 0 ; is < 5 ; is++){
+		cSLC[is] = new TCanvas*[6];
+		for(int il = 0 ; il < 6 ; il++){
+			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),600,600);
+			cSLC[is][il] -> Divide(2,7);
 
-		// Sector 1
-		for(int cIdx = 0 ; cIdx < 7 ; cIdx++){
-			int identifier = 100+10*(i+1)+(cIdx+1);
-			int notEmpty = h2_tdc_adc_L[identifier] -> Integral();
-			if(notEmpty){
-				cS1[i] -> cd(2*cIdx+1);	h2_tdc_adc_L[identifier] -> Draw("COLZ");
-				cS1[i] -> cd(2*cIdx+2);	h2_tdc_adc_R[identifier] -> Draw("COLZ");
+			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
+				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
+				int notEmpty = (h2_tdc_adc_L[identifier]->Integral()+h2_tdc_adc_R[identifier]->Integral());
+				if(notEmpty){
+					cSLC[is][il] -> cd(2*cIdx+1);
+					gPad -> SetBottomMargin(0.25);
+					h2_tdc_adc_L[identifier] -> Draw("COLZ");
+					
+					cSLC[is][il] -> cd(2*cIdx+2);
+					gPad -> SetBottomMargin(0.25);
+					h2_tdc_adc_R[identifier] -> Draw("COLZ");
+				}
 			}
+			cSLC[is][il] -> Modified();	cSLC[is][il] -> Update();
 		}
-		cS1[i] -> Modified();	cS1[i] -> Update();
-
-		// Sector 2
-                for(int cIdx = 0 ; cIdx < 7 ; cIdx++){
-                        int identifier = 200+10*(i+1)+(cIdx+1);
-                        int notEmpty = h2_tdc_adc_L[identifier] -> Integral();
-                        if(notEmpty){
-                                cS2[i] -> cd(2*cIdx+1);	h2_tdc_adc_L[identifier] -> Draw("COLZ");
-                                cS2[i] -> cd(2*cIdx+2);	h2_tdc_adc_R[identifier] -> Draw("COLZ");
-                        }
-                }
-                cS2[i] -> Modified();   cS2[i] -> Update();
-
-		// Sector 3
-                for(int cIdx = 0 ; cIdx < 7 ; cIdx++){
-                        int identifier = 300+10*(i+1)+(cIdx+1);
-                        int notEmpty = h2_tdc_adc_L[identifier] -> Integral();
-                        if(notEmpty){
-                                cS3[i] -> cd(2*cIdx+1);	h2_tdc_adc_L[identifier] -> Draw("COLZ");
-                                cS3[i] -> cd(2*cIdx+2);	h2_tdc_adc_R[identifier] -> Draw("COLZ");
-                        }
-                }
-                cS3[i] -> Modified();   cS3[i] -> Update();
-
-		// Sector 4
-                for(int cIdx = 0 ; cIdx < 7 ; cIdx++){
-                        int identifier = 400+10*(i+1)+(cIdx+1);
-                        int notEmpty = h2_tdc_adc_L[identifier] -> Integral();
-                        if(notEmpty){
-                                cS4[i] -> cd(2*cIdx+1);	h2_tdc_adc_L[identifier] -> Draw("COLZ");
-                                cS4[i] -> cd(2*cIdx+2);	h2_tdc_adc_R[identifier] -> Draw("COLZ");
-                        }
-                }
-                cS4[i] -> Modified();   cS4[i] -> Update();
-
-		// Sector 5
-                for(int cIdx = 0 ; cIdx < 7 ; cIdx++){
-                        int identifier = 500+10*(i+1)+(cIdx+1);
-                        int notEmpty = h2_tdc_adc_L[identifier] -> Integral();
-                        if(notEmpty){
-                                cS5[i] -> cd(2*cIdx+1);	h2_tdc_adc_L[identifier] -> Draw("COLZ");
-                                cS5[i] -> cd(2*cIdx+2);	h2_tdc_adc_R[identifier] -> Draw("COLZ");
-                        }
-                }
-                cS5[i] -> Modified();   cS5[i] -> Update();
-		
 	}
-
 	// -------------------------------------------------------------------------------------------------
 	// Saving fit values to ccdb tables
+	ofstream tabL, tabR;
+	tabL.open("timeWalkPar_L.txt");
+	tabR.open("timeWalkPar_R.txt");
+
 	for(int is = 1 ; is <= 5 ; is++){	
 		for(int il = 1 ; il <= 6 ; il++){
-                	for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
-                        	int idx = 100*is + 10*il + ic;
-                	        cout << is << "\t" << il << "\t" << ic << "\t" << "\t";
-				cout << parL[idx][0] << "\t" << parL[idx][1] << "\t" << parL[idx][2]  << "\t" << parL[idx][3] << endl;
-        	        }
-	        }
+			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
+				int idx = 100*is + 10*il + ic;
+				
+				if(parL[idx][0]!=0){
+					tabL << is << "\t" << il << "\t" << ic << "\t" << "\t";
+					tabL << parL[idx][0] << "\t" << parL[idx][1] << "\t" << parL[idx][2]  << "\t" << parL[idx][3] << endl;
+				}
+				// ---
+				if(parR[idx][0]!=0){
+                                        tabR << is << "\t" << il << "\t" << ic << "\t" << "\t";
+                                        tabR << parR[idx][0] << "\t" << parR[idx][1] << "\t" << parR[idx][2]  << "\t" << parR[idx][3] << endl;
+                                }
+			}
+		}
 	}
+	tabL.close();
+        tabR.close();
 
 	// -------------------------------------------------------------------------------------------------
 	// Deleting empty histograms
 	for(int i = 0 ; i < nHistos ; i++){
-		int notEmpty = h2_tdc_adc_L[i] -> Integral();
+		int notEmpty = (h2_tdc_adc_L[i]->Integral()+h2_tdc_adc_R[i]->Integral());
 		if(!notEmpty){
-                	delete h2_tdc_adc_L[i];
-                	delete h2_tdc_adc_R[i];
-        	}
+			delete h2_tdc_adc_L[i];
+			delete h2_tdc_adc_R[i];
+		}
 	}
+
+	// -------------------------------------------------------------------------------------------------
+        // Saving plots to a pdf file
+	c0 -> Print("results_timeWalk.pdf(");
+	for(int is = 0 ; is < 5 ; is++){
+                for(int il = 0 ; il < 6 ; il++){
+                        cSLC[is][il] -> Print("results_timeWalk.pdf");
+                }
+        }
+	c0 -> Print("results_timeWalk.pdf)");
 
 	myapp -> Run();
 	return 0;
@@ -280,8 +253,18 @@ void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color) {
 	h1 -> SetLineWidth(2);
 }
 // ========================================================================================================================================
-void PrettyTH2F(TH2F * h2,TString titx,TString tity) {
-	h2 -> GetXaxis() -> SetTitle(titx);
-	h2 -> GetYaxis() -> SetTitle(tity);
+void PrettyTH2F(TH2F * h2) {
+	h2 -> GetXaxis() -> CenterTitle();
+	h2 -> GetYaxis() -> CenterTitle();
+
+	h2 -> GetXaxis() -> SetTitleSize(0.13);
+
+	h2 -> GetXaxis() -> SetLabelSize(0.13);
+	h2 -> GetYaxis() -> SetLabelSize(0.13);
+	h2 -> GetXaxis() -> SetTitleSize(0.13);
+        h2 -> GetYaxis() -> SetTitleSize(0.13);
+	
+	h2 -> GetYaxis() -> SetTitleOffset(0.38);
+	h2 -> GetYaxis() -> SetNdivisions(509);
 }
 
