@@ -21,7 +21,7 @@ timeWalk: timeWalk.o
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o readParticles readBanks analysis clas12event_timeWalk *~
+	@rm -rf *.o timeWalk *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

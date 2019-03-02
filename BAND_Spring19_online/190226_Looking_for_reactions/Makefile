@@ -30,7 +30,7 @@ bandPhoton2CLAS: bandPhoton2CLAS.o
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o readParticles readBanks analysis clas12event *~
+	@rm -rf *.o epPipPim eppPi bandPhoton2CLAS ePip *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
