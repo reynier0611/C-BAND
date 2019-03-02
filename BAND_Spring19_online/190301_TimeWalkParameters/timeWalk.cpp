@@ -12,6 +12,7 @@
 #include "TVector3.h"
 #include "TLorentzVector.h"
 #include "TCanvas.h"
+#include "TStyle.h"
 
 #include "reader.h"
 #include "node.h"
@@ -26,7 +27,6 @@
 using namespace std;
 
 // Forward-declaring functions
-void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
 void PrettyTH2F(TH2F * h2);
 
 int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,7,6,6,2}};
@@ -38,6 +38,9 @@ int main(int argc, char** argv) {
 #else
 	TApplication *myapp = new TApplication("myapp",0,0);
 #endif
+
+	gStyle->SetTitleSize(0.3,"t");
+	gStyle->SetOptStat(0);
 
 	TString inputFile;
 
@@ -59,12 +62,16 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_L = new TH2F * [nHistos];
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
-	TH2F * h2_tdc_adc_tot_L = new TH2F("h2_tdc_adc_tot_L","Left PMTs;ADC;t_{TDC}-t_{FADC}" ,200,0,30000,200,350,450);
-	TH2F * h2_tdc_adc_tot_R = new TH2F("h2_tdc_adc_tot_R","Right PMTs;ADC;t_{TDC}-t_{FADC}",200,0,30000,200,350,450);
+	TH2F * h2_tdc_adc_tot_L = new TH2F("h2_tdc_adc_tot_L","Left PMTs;ADC;t_{TDC}-t_{FADC} [ns]" ,200,0,20000,200,350,450);
+	TH2F * h2_tdc_adc_tot_R = new TH2F("h2_tdc_adc_tot_R","Right PMTs;ADC;t_{TDC}-t_{FADC} [ns]",200,0,20000,200,350,450);
+	h2_tdc_adc_tot_L -> GetYaxis() -> SetTitleOffset(1.40);
+        h2_tdc_adc_tot_L -> GetXaxis() -> SetNdivisions(509);
+	h2_tdc_adc_tot_R -> GetYaxis() -> SetTitleOffset(1.40);
+        h2_tdc_adc_tot_R -> GetXaxis() -> SetNdivisions(509);
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC;t_{TDC}-t_{FADC}",200,0,30000,200,350,450);
-		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC;t_{TDC}-t_{FADC}",200,0,30000,200,350,450);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",200,0,20000,200,350,450);
+		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",200,0,20000,200,350,450);
 	
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
@@ -177,7 +184,7 @@ int main(int argc, char** argv) {
 	for(int is = 0 ; is < 5 ; is++){
 		cSLC[is] = new TCanvas*[6];
 		for(int il = 0 ; il < 6 ; il++){
-			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),600,600);
+			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
 			cSLC[is][il] -> Divide(2,7);
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
@@ -185,11 +192,11 @@ int main(int argc, char** argv) {
 				int notEmpty = (h2_tdc_adc_L[identifier]->Integral()+h2_tdc_adc_R[identifier]->Integral());
 				if(notEmpty){
 					cSLC[is][il] -> cd(2*cIdx+1);
-					gPad -> SetBottomMargin(0.25);
+					gPad -> SetBottomMargin(0.26);
 					h2_tdc_adc_L[identifier] -> Draw("COLZ");
 					
 					cSLC[is][il] -> cd(2*cIdx+2);
-					gPad -> SetBottomMargin(0.25);
+					gPad -> SetBottomMargin(0.26);
 					h2_tdc_adc_R[identifier] -> Draw("COLZ");
 				}
 			}
@@ -246,18 +253,11 @@ int main(int argc, char** argv) {
 	return 0;
 }
 // ========================================================================================================================================
-void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color) {
-	h1 -> GetXaxis() -> SetTitle(titx);
-	h1 -> GetYaxis() -> SetTitle(tity);
-	h1 -> SetLineColor(color);
-	h1 -> SetLineWidth(2);
-}
-// ========================================================================================================================================
 void PrettyTH2F(TH2F * h2) {
 	h2 -> GetXaxis() -> CenterTitle();
 	h2 -> GetYaxis() -> CenterTitle();
 
-	h2 -> GetXaxis() -> SetTitleSize(0.13);
+	h2 -> SetTitleSize(0.5);
 
 	h2 -> GetXaxis() -> SetLabelSize(0.13);
 	h2 -> GetYaxis() -> SetLabelSize(0.13);
@@ -266,5 +266,7 @@ void PrettyTH2F(TH2F * h2) {
 	
 	h2 -> GetYaxis() -> SetTitleOffset(0.38);
 	h2 -> GetYaxis() -> SetNdivisions(509);
+
+	h2 -> GetXaxis() -> SetNdivisions(509);
 }
 
