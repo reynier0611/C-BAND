@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 
 	for(int is = 0 ; is < 5 ; is++){
 		cSLC[is] = new TCanvas*[6];
-		for(int il = 0 ; il < 6 ; il++){
+		for(int il = 0 ; il < 5 ; il++){
 			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
 			cSLC[is][il] -> Divide(2,7);
 
@@ -237,12 +237,14 @@ int main(int argc, char** argv) {
 
 				if(parL[idx][0]!=0){
 					tabL << is << "\t" << il << "\t" << ic << "\t" << "\t";
-					tabL << parL[idx][0] << "\t" << parL[idx][1] << "\t" << parL[idx][2]  << "\t" << parL[idx][3] << endl;
+					if(il==6) tabL << "0\t0\t0\t0" << endl;
+					else tabL << parL[idx][0] << "\t" << parL[idx][1] << "\t" << parL[idx][2]  << "\t" << parL[idx][3] << endl;
 				}
 				// ---
 				if(parR[idx][0]!=0){
 					tabR << is << "\t" << il << "\t" << ic << "\t" << "\t";
-					tabR << parR[idx][0] << "\t" << parR[idx][1] << "\t" << parR[idx][2]  << "\t" << parR[idx][3] << endl;
+					if(il==6) tabR << "0\t0\t0\t0" << endl;
+					else tabR << parR[idx][0] << "\t" << parR[idx][1] << "\t" << parR[idx][2]  << "\t" << parR[idx][3] << endl;
 				}
 			}
 		}
@@ -264,7 +266,7 @@ int main(int argc, char** argv) {
 	// Saving plots to a pdf file
 	c0 -> Print("results_timeWalk.pdf(");
 	for(int is = 0 ; is < 5 ; is++){
-		for(int il = 0 ; il < 6 ; il++){
+		for(int il = 0 ; il < 5 ; il++){
 			cSLC[is][il] -> Print("results_timeWalk.pdf");
 		}
 	}
