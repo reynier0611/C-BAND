@@ -29,6 +29,8 @@ using namespace std;
 // Forward-declaring functions
 void PrettyTH2F(TH2F * h2);
 double getTriggerPhase( long timeStamp );
+int getMinNonEmptyBin(TH2F * h2);
+int getMaxNonEmptyBin(TH2F * h2);
 
 int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,7,6,6,2}};
 // ========================================================================================================================================
@@ -202,12 +204,20 @@ int main(int argc, char** argv) {
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
 				int notEmpty = (h2_tdc_adc_L[identifier]->Integral()+h2_tdc_adc_R[identifier]->Integral());
 				if(notEmpty){
+					int min, max;
+
 					cSLC[is][il] -> cd(2*cIdx+1);
 					gPad -> SetBottomMargin(0.26);
+					min = getMinNonEmptyBin(h2_tdc_adc_L[identifier]);
+					max = getMaxNonEmptyBin(h2_tdc_adc_L[identifier]);
+					h2_tdc_adc_L[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_tdc_adc_L[identifier] -> Draw("COLZ");
 
 					cSLC[is][il] -> cd(2*cIdx+2);
 					gPad -> SetBottomMargin(0.26);
+					min = getMinNonEmptyBin(h2_tdc_adc_R[identifier]);
+                                        max = getMaxNonEmptyBin(h2_tdc_adc_R[identifier]);
+                                        h2_tdc_adc_R[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_tdc_adc_R[identifier] -> Draw("COLZ");
 				}
 			}
@@ -293,3 +303,34 @@ double getTriggerPhase( long timeStamp ) {
 
 	return tPh;
 }
+// ========================================================================================================================================
+int getMinNonEmptyBin(TH2F * h2){
+	int nBinX = h2 -> GetXaxis() -> GetNbins();
+	int nBinY = h2 -> GetYaxis() -> GetNbins();
+
+	int binContent = 0;
+
+	for(int i = 1 ; i <= nBinY ; i++){
+		for(int j = 1 ; j <= nBinX ; j++){
+			binContent = h2 -> GetBinContent(j,i);
+			if(binContent!=0) return i;
+		}
+	}
+	return 1;
+}
+// ========================================================================================================================================
+int getMaxNonEmptyBin(TH2F * h2){
+        int nBinX = h2 -> GetXaxis() -> GetNbins();
+        int nBinY = h2 -> GetYaxis() -> GetNbins();
+
+        int binContent = 0;
+
+        for(int i = nBinY ; i > 0 ; i--){
+                for(int j = 1 ; j <= nBinX ; j++){
+                        binContent = h2 -> GetBinContent(j,i);
+                        if(binContent!=0) return i;
+                }
+        }
+        return nBinY;
+}
+
