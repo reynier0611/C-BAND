@@ -65,16 +65,16 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_L = new TH2F * [nHistos];
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
-	TH2F * h2_tdc_adc_tot_L = new TH2F("h2_tdc_adc_tot_L","Left PMTs;ADC;t_{TDC}-t_{FADC} [ns]" ,400,1000,14000,400,370,400);
-	TH2F * h2_tdc_adc_tot_R = new TH2F("h2_tdc_adc_tot_R","Right PMTs;ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,370,400);
+	TH2F * h2_tdc_adc_tot_L = new TH2F("h2_tdc_adc_tot_L","Left PMTs;ADC;t_{TDC}-t_{FADC} [ns]" ,400,1000,14000,400,382,396);
+	TH2F * h2_tdc_adc_tot_R = new TH2F("h2_tdc_adc_tot_R","Right PMTs;ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,382,396);
 	h2_tdc_adc_tot_L -> GetYaxis() -> SetTitleOffset(1.40);
 	h2_tdc_adc_tot_L -> GetXaxis() -> SetNdivisions(509);
 	h2_tdc_adc_tot_R -> GetYaxis() -> SetTitleOffset(1.40);
 	h2_tdc_adc_tot_R -> GetXaxis() -> SetNdivisions(509);
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,370,400);
-		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,370,400);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,382,396);
+		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,382,396);
 
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
