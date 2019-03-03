@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
 
 	// ------------------------------------------------
 	// Saving results to a pdf file
-	c0 -> Print("results_mean_time.pdf");
+	c0 -> Print("results_bandPhoton2CLAS.pdf");
 
 	myapp -> Run();
 	return 0;
