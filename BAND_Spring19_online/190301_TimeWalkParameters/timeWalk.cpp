@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 				int   TDC_layer     = BAND_TDC.getInt  (1,tIdx);
 				int   TDC_component = BAND_TDC.getInt  (2,tIdx);
 				int   TDC_order     = BAND_TDC.getInt  (3,tIdx);
-				float TDC_tdc       = (float)(BAND_TDC.getInt(4,0));
+				float TDC_tdc       = (float)(BAND_TDC.getInt(4,tIdx));
 				float TDC_time      = TDC_tdc*0.02345;
 
 				if(		(ADC_sector   ==TDC_sector   )&&
