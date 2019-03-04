@@ -147,25 +147,27 @@ int main(int argc, char** argv) {
 	TH2F * h2_p_dtT_det  = new TH2F("h2_p_dtT_det"  ,"h2_p_dtT_det" , 72,0   , 36,100,-20, 20);
 	TH2F * h2_Em_Pm      = new TH2F("h2_Em_Pm"      ,"h2_Em_Pm"     ,100,0   ,  3,100,-2 ,  2);
 	TH2F * h2_pe_pp      = new TH2F("h2_pe_pp"      ,"h2_pe_pp"     ,100,0   ,  6,100, 1 , 10);
+	TH2F * h2_pe_the     = new TH2F("h2_pe_the"     ,"h2_pe_the"    ,100,0   , 30,100, 1 , 10);
 
-	PrettyTH2F(h2_e_Ep_p_0  ,"p_{e} [GeV]" ,"E_{e}/p_{e}"         );
-	PrettyTH2F(h2_e_Ep_p_1  ,"p_{e} [GeV]" ,"E_{e}/p_{e}"         );
-	PrettyTH2F(h2_e_th_phi  ,"#phi_e [deg]","#theta_e [deg]"      );
-	PrettyTH2F(h2_p_th_phi  ,"#phi_p [deg]","#theta_p [deg]"      );
-	PrettyTH2F(h2_beta_p_pos,"p [GeV]"     ,"#beta"               );
-	PrettyTH2F(h2_beta_p_neg,"p [GeV]"     ,"#beta"               );
-	PrettyTH2F(h2_beta_p_p  ,"p [GeV]"     ,"#beta"               );
-	PrettyTH2F(h2_beta_p_pip,"p [GeV]"     ,"#beta"               );
-	PrettyTH2F(h2_beta_p_pim,"p [GeV]"     ,"#beta"               );
-	PrettyTH2F(h2_e_vz_phi  ,"#phi_e [deg]","e v_{z} [cm]"        );
-	PrettyTH2F(h2_p_vz_phi  ,"#phi_p [deg]","p v_{z} [cm]"        );
-	PrettyTH2F(h2_e_tof_p   ,"p_{e} [GeV]" ,"electron TOF [ns]"   );
-	PrettyTH2F(h2_p_dtT_p_0 ,"p_{e} [GeV]" ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_p_dtT_p_1 ,"p_{e} [GeV]" ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_p_tof_det ,"detector id" ,"candidate p tof [ns]");
-	PrettyTH2F(h2_p_dtT_det ,"detector id" ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_Em_Pm     ,"Pm [GeV]"    ,"Em [GeV]"            );
-	PrettyTH2F(h2_pe_pp     ,"p p [GeV]"   ,"e p [GeV]"           );
+	PrettyTH2F(h2_e_Ep_p_0  ,"p_{e} [GeV]"   ,"E_{e}/p_{e}"         );
+	PrettyTH2F(h2_e_Ep_p_1  ,"p_{e} [GeV]"   ,"E_{e}/p_{e}"         );
+	PrettyTH2F(h2_e_th_phi  ,"#phi_e [deg]"  ,"#theta_e [deg]"      );
+	PrettyTH2F(h2_p_th_phi  ,"#phi_p [deg]"  ,"#theta_p [deg]"      );
+	PrettyTH2F(h2_beta_p_pos,"p [GeV]"       ,"#beta"               );
+	PrettyTH2F(h2_beta_p_neg,"p [GeV]"       ,"#beta"               );
+	PrettyTH2F(h2_beta_p_p  ,"p [GeV]"       ,"#beta"               );
+	PrettyTH2F(h2_beta_p_pip,"p [GeV]"       ,"#beta"               );
+	PrettyTH2F(h2_beta_p_pim,"p [GeV]"       ,"#beta"               );
+	PrettyTH2F(h2_e_vz_phi  ,"#phi_e [deg]"  ,"e v_{z} [cm]"        );
+	PrettyTH2F(h2_p_vz_phi  ,"#phi_p [deg]"  ,"p v_{z} [cm]"        );
+	PrettyTH2F(h2_e_tof_p   ,"p_{e} [GeV]"   ,"electron TOF [ns]"   );
+	PrettyTH2F(h2_p_dtT_p_0 ,"p_{e} [GeV]"   ,"p #Delta t [ns]"     );
+	PrettyTH2F(h2_p_dtT_p_1 ,"p_{e} [GeV]"   ,"p #Delta t [ns]"     );
+	PrettyTH2F(h2_p_tof_det ,"detector id"   ,"candidate p tof [ns]");
+	PrettyTH2F(h2_p_dtT_det ,"detector id"   ,"p #Delta t [ns]"     );
+	PrettyTH2F(h2_Em_Pm     ,"Pm [GeV]"      ,"Em [GeV]"            );
+	PrettyTH2F(h2_pe_pp     ,"p p [GeV]"     ,"e p [GeV]"           );
+	PrettyTH2F(h2_pe_the    ,"#theta_e [deg]","p_{e} [GeV]"         );
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
 
@@ -281,6 +283,7 @@ int main(int argc, char** argv) {
 		h2_e_Ep_p_1 -> Fill(ep           ,Ee/ep       );
 		h2_e_th_phi -> Fill(rad2deg*V3_ep.Phi(),rad2deg*V3_ep.Theta());
 		h2_e_tof_p  -> Fill(ep           ,tof_e       );
+		h2_pe_the   -> Fill(rad2deg*V3_ep.Theta(),ep  );
 
 		// -------------------------------------------------------------------------
 		
@@ -519,6 +522,11 @@ int main(int argc, char** argv) {
 	c22 -> Modified();
         c22 -> Update();
 
+	TCanvas * c23 = new TCanvas();
+        h2_pe_the -> Draw("COLZ");
+        c23 -> Modified();
+        c23 -> Update();
+
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
 
@@ -543,7 +551,8 @@ int main(int argc, char** argv) {
 	c19 -> Print("results_ePip.pdf" );
 	c20 -> Print("results_ePip.pdf" );
 	c21 -> Print("results_ePip.pdf" );
-	c22 -> Print("results_ePip.pdf)");
+	c22 -> Print("results_ePip.pdf" );
+	c23 -> Print("results_ePip.pdf)");
 
 	myapp -> Run();
 	return 0;
