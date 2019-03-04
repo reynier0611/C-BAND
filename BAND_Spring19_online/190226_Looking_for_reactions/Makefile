@@ -14,13 +14,13 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: ePip eppPi epPipPim bandPhoton2CLAS
+all: ePip eppPim epPipPim bandPhoton2CLAS
 
 ePip: ePip.o
 	$(CXX) -o ePip $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
-eppPi: eppPi.o
-	$(CXX) -o eppPi $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+eppPim: eppPim.o
+	$(CXX) -o eppPim $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 epPipPim: epPipPim.o
 	$(CXX) -o epPipPim $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
@@ -30,7 +30,7 @@ bandPhoton2CLAS: bandPhoton2CLAS.o
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o epPipPim eppPi bandPhoton2CLAS ePip *~
+	@rm -rf *.o epPipPim eppPim bandPhoton2CLAS ePip *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
