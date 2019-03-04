@@ -119,8 +119,10 @@ int main(int argc, char** argv) {
 	TH1F * h1_pmy   = new TH1F("h1_pmy"   ,"h1_pmy"   ,100,  -2,  2);	PrettyTH1F(h1_pmy   ,"Pmy [GeV]"            ,"Counts",62);
 	TH1F * h1_pmz   = new TH1F("h1_pmz"   ,"h1_pmz"   ,100,  -3,  3);	PrettyTH1F(h1_pmz   ,"Pmz [GeV]"            ,"Counts",62);
 	TH1F * h1_pm_th = new TH1F("h1_pm_th" ,"h1_pm_th" ,100,   0,180);	PrettyTH1F(h1_pm_th ,"#theta_{Pm} [deg]"    ,"Counts",62);
-        TH1F * h1_pm_ph = new TH1F("h1_pm_ph" ,"h1_pm_ph" ,100,-190,190);	PrettyTH1F(h1_pm_ph ,"#phi_{Pm} [deg]"      ,"Counts",62);
+	TH1F * h1_pm_ph = new TH1F("h1_pm_ph" ,"h1_pm_ph" ,100,-190,190);	PrettyTH1F(h1_pm_ph ,"#phi_{Pm} [deg]"      ,"Counts",62);
 	TH1F * h1_Mmiss = new TH1F("h1_Mmiss" ,"h1_Mmiss" ,100,   0,  4);	PrettyTH1F(h1_Mmiss ,"m_{miss} [GeV]"       ,"Counts",62);
+	TH1F * h1_Mmiss1= new TH1F("h1_Mmiss1","h1_Mmiss1",100,   0,  4);	PrettyTH1F(h1_Mmiss1,"m_{miss} [GeV]"       ,"Counts",62);
+	TH1F * h1_Mmiss2= new TH1F("h1_Mmiss2","h1_Mmiss2",100,   0,  4);	PrettyTH1F(h1_Mmiss2,"m_{miss} [GeV]"       ,"Counts", 2);
 	TH1F * h1_Em    = new TH1F("h1_Em"    ,"h1_Em"    ,100,  -3,  3);	PrettyTH1F(h1_Em    ,"Em [GeV]"             ,"Counts",62);
 
 	TH1F * h1_W     = new TH1F("h1_W"     ,"h1_W"     ,100,   0,  4);	PrettyTH1F(h1_W     ,"W [GeV]"              ,"Counts",62);
@@ -143,8 +145,6 @@ int main(int argc, char** argv) {
 	TH2F * h2_e_vz_phi   = new TH2F("h2_e_vz_phi"   ,"h2_e_vz_phi"  ,100,-190,190,100,-50, 50);
 	TH2F * h2_p_vz_phi   = new TH2F("h2_p_vz_phi"   ,"h2_p_vz_phi"  ,100,-190,190,100,-50, 50);
 	TH2F * h2_e_tof_p    = new TH2F("h2_e_tof_p"    ,"h2_e_tof_p"   ,100,1   ,  7,100, 20, 27);
-	TH2F * h2_p_dtT_p_0  = new TH2F("h2_p_dtT_p_0"  ,"h2_p_dtT_p_0" ,100,0   ,  6,100,- 4,  4);
-	TH2F * h2_p_dtT_p_1  = new TH2F("h2_p_dtT_p_1"  ,"h2_p_dtT_p_1" ,100,0   ,  6,100,- 4,  4);
 	TH2F * h2_p_tof_det  = new TH2F("h2_p_tof_det"  ,"h2_p_tof_det" , 72,0   , 36,100,  0, 40);
 	TH2F * h2_p_dtT_det  = new TH2F("h2_p_dtT_det"  ,"h2_p_dtT_det" , 72,0   , 36,100,-20, 20);
 	TH2F * h2_Em_Pm      = new TH2F("h2_Em_Pm"      ,"h2_Em_Pm"     ,100,0   ,  3,100,-2 ,  2);
@@ -162,8 +162,6 @@ int main(int argc, char** argv) {
 	PrettyTH2F(h2_e_vz_phi  ,"#phi_e [deg]","e v_{z} [cm]"        );
 	PrettyTH2F(h2_p_vz_phi  ,"#phi_p [deg]","p v_{z} [cm]"        );
 	PrettyTH2F(h2_e_tof_p   ,"p_{e} [GeV]" ,"electron TOF [ns]"   );
-	PrettyTH2F(h2_p_dtT_p_0 ,"p_{e} [GeV]" ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_p_dtT_p_1 ,"p_{e} [GeV]" ,"p #Delta t [ns]"     );
 	PrettyTH2F(h2_p_tof_det ,"detector id" ,"candidate p tof [ns]");
 	PrettyTH2F(h2_p_dtT_det ,"detector id" ,"p #Delta t [ns]"     );
 	PrettyTH2F(h2_Em_Pm     ,"Pm [GeV]"    ,"Em [GeV]"            );
@@ -178,8 +176,11 @@ int main(int argc, char** argv) {
 	BParticle     particles   ("REC::Particle"    ,reader);
 	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
 	BScintillator scintillator("REC::Scintillator",reader);
+	BBand         band_hits   ("BAND::hits"       ,reader);
 
 	int event_counter = 0;
+	int pmissPointsToBand = 0;
+	int hitInBand = 0;
 	// ----------------------------------------------------------------------------------
 	// Loop over events and print them on the screen
 	while(reader.next()==true){
@@ -388,27 +389,48 @@ int main(int argc, char** argv) {
 			h1_pmx         -> Fill(V3_Pm.X()               );
 			h1_pmy         -> Fill(V3_Pm.Y()               );
 			h1_pmz         -> Fill(V3_Pm.Z()               );
-			h1_pm_th       -> Fill(rad2deg*V3_Pm.Theta()    );
-                        h1_pm_ph       -> Fill(rad2deg*V3_Pm.Phi()      );
+			h1_pm_th       -> Fill(rad2deg*V3_Pm.Theta()   );
+			h1_pm_ph       -> Fill(rad2deg*V3_Pm.Phi()     );
 			h1_pmiss       -> Fill(V3_Pm.Mag()             );
 			h1_Mmiss       -> Fill(Mmiss                   );
 			//h1_Em       -> Fill(Emiss        );
-
 			h2_p_th_phi   -> Fill(rad2deg*V3_p1p.Phi(), rad2deg*V3_p1p.Theta());
 			h2_p_vz_phi   -> Fill(rad2deg*V3_p1p.Phi(), V3_p1v.Z()         );
 			h2_beta_p_p   -> Fill(V3_p1p .Mag(), beta_p1      );
 			h2_beta_p_pip -> Fill(V3_pipp .Mag(), beta_p2    );
 			h2_beta_p_pim -> Fill(V3_pimp.Mag(), beta_pim    );
-			//h2_p_dtT_p_1 -> Fill(pp          , delta_tP    );
 			//h2_Em_Pm     -> Fill(Pm          , Emiss       );
 			h2_pe_pp      -> Fill(V3_p1p .Mag(), ep          );
 
+			if(rad2deg*V3_Pm.Theta()<(180-155)){
+				pmissPointsToBand++;			
+
+				h1_Mmiss1 -> Fill(Mmiss);
+
+				// Now look at band to check what's up there
+				int nHits = band_hits.getSize();
+				if(nHits==1){ 
+					float  meantimeFadc = band_hits.getMeantimeFadc(0);
+					double ToF = meantimeFadc-t_vtx;
+
+					// Subtract off gamma peak position in ToF:
+					if( ToF < 4.99481e+01 ) continue;                       // these are below our photon peak, so ignore
+					if( fabs(ToF-4.99481e+01) < 3*1.19734e+00) continue;    // this is our photon peak, so ignore
+					if( ToF > 120) continue; 
+					
+					h1_Mmiss2 -> Fill(Mmiss);
+
+					hitInBand++;
+				}
+			}
 		}
 
 
 		h1_p_num -> Fill((double)(nProtons));
 
 	} // End of while loop over events
+
+	cout << "Out of " << pmissPointsToBand << " events with theta_Pmiss < 25 deg, " << hitInBand << " events are found in BAND" << endl;
 
 	// -------------------------------------------------------------------------------------------
 	// Drawing histograms
@@ -524,11 +546,10 @@ int main(int argc, char** argv) {
 	c14 -> Update();
 
 	TCanvas * c15 = new TCanvas();
-	c15 -> Divide(2, 1);
-	c15 -> cd(1);	gPad -> SetLogz();	h2_p_dtT_p_0 -> Draw("COLZ");
-	c15 -> cd(2);	gPad -> SetLogz();	h2_p_dtT_p_1 -> Draw("COLZ");
+	h1_Mmiss1 -> Draw();
+	h1_Mmiss2 -> Draw("same");
 	c15 -> Modified();
-	c15 -> Update();
+        c15 -> Update();
 
 	TCanvas * c16 = new TCanvas();
 	h2_p_tof_det -> Draw("COLZ");
@@ -556,14 +577,14 @@ int main(int argc, char** argv) {
 	c20 -> Update();
 
 	TCanvas * c21 = new TCanvas();
-        h1_pm_th -> Draw();
-        c21 -> Modified();
-        c21 -> Update();
+	h1_pm_th -> Draw();
+	c21 -> Modified();
+	c21 -> Update();
 
-        TCanvas * c22 = new TCanvas();
-        h1_pm_ph -> Draw();
-        c22 -> Modified();
-        c22 -> Update();
+	TCanvas * c22 = new TCanvas();
+	h1_pm_ph -> Draw();
+	c22 -> Modified();
+	c22 -> Update();
 
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
@@ -581,7 +602,7 @@ int main(int argc, char** argv) {
 	c11 -> Print("results_epPipPim.pdf" );
 	c12 -> Print("results_epPipPim.pdf" );
 	c13 -> Print("results_epPipPim.pdf" );
-	c14 -> Print("results_epPipPim.pdf" );
+	c14 -> Print("results_epPipPim.pdf" );	
 	c15 -> Print("results_epPipPim.pdf" );
 	c16 -> Print("results_epPipPim.pdf" );
 	c17 -> Print("results_epPipPim.pdf" );
