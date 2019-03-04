@@ -598,7 +598,7 @@ void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color) {
 	h1 -> GetXaxis() -> SetTitle(titx);
 	h1 -> GetYaxis() -> SetTitle(tity);
 	h1 -> SetLineColor(color);
-	h1 -> SetLineWidth(3);
+	h1 -> SetLineWidth(2);
 }
 // ========================================================================================================================================
 void PrettyTH2F(TH2F * h2,TString titx,TString tity) {
