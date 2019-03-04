@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 	TH1F * h1_pmx   = new TH1F("h1_pmx"   ,"h1_pmx"   ,100,  -2,  2);	PrettyTH1F(h1_pmx   ,"Pmx [GeV]"            ,"Counts",62);
 	TH1F * h1_pmy   = new TH1F("h1_pmy"   ,"h1_pmy"   ,100,  -2,  2);	PrettyTH1F(h1_pmy   ,"Pmy [GeV]"            ,"Counts",62);
 	TH1F * h1_pmz   = new TH1F("h1_pmz"   ,"h1_pmz"   ,100,  -3,  3);	PrettyTH1F(h1_pmz   ,"Pmz [GeV]"            ,"Counts",62);
-	TH1F * h1_Mmiss = new TH1F("h1_Mmiss" ,"h1_Mmiss" ,100,  -4,  4);	PrettyTH1F(h1_Mmiss ,"m_{miss} [GeV]"       ,"Counts",62);
+	TH1F * h1_Mmiss = new TH1F("h1_Mmiss" ,"h1_Mmiss" , 60,  -4,  4);	PrettyTH1F(h1_Mmiss ,"m_{miss} [GeV]"       ,"Counts",62);
 	TH1F * h1_Em    = new TH1F("h1_Em"    ,"h1_Em"    ,100,  -3,  3);	PrettyTH1F(h1_Em    ,"Em [GeV]"             ,"Counts",62);
 
 	TH1F * h1_W     = new TH1F("h1_W"     ,"h1_W"     ,100,   0,  4);	PrettyTH1F(h1_W     ,"W [GeV]"              ,"Counts",62);
@@ -179,12 +179,16 @@ int main(int argc, char** argv) {
 	BScintillator scintillator("REC::Scintillator",reader);
 
 	int event_counter = 0;
+	int ctr_triggers = 0;
+	int ctr_electrons = 0;
+	int ctr_selectedReaction = 0;
 	// ----------------------------------------------------------------------------------
 	// Loop over events and print them on the screen
 	while(reader.next()==true){
 
 		if(event_counter%1000000==0) cout << "event: " << event_counter << endl;
 		event_counter++;
+		ctr_triggers++;
 
 		//particles.show();
 		//calo.show();
@@ -262,6 +266,8 @@ int main(int argc, char** argv) {
 				(TMath::Sqrt(W2)<=cut_W)||
 				(tof_e<cut_tof_e       )
 		  ) continue;
+
+		ctr_electrons++;
 
 		// -------------------------------------------------------------------------
 		// Filling electron histograms
@@ -345,6 +351,8 @@ int main(int argc, char** argv) {
 		}
 
 		if(nProtons==2&&nPim==1&&nParticles==4) {
+
+			ctr_selectedReaction++;
 
 			TVector3 V3_p1v  = particles.getV3v  (tmp_fast_p1_idx);		// proton vertex vector [cm]
 			TVector3 V3_p1p  = particles.getV3P  (tmp_fast_p1_idx);		// proton momentum vector [GeV]
@@ -551,6 +559,12 @@ int main(int argc, char** argv) {
 	h2_pe_pp -> Draw("COLZ");
 	c20 -> Modified();
 	c20 -> Update();
+
+	// -------------------------------------------------------------------------------------------
+	// Printing some info to screen
+	cout << "Triggers: " << ctr_triggers << endl;
+        cout << "Electrons: " << ctr_electrons << endl;
+        cout << "Selected reaction: " << ctr_selectedReaction << endl;
 
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
