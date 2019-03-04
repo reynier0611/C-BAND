@@ -120,6 +120,8 @@ int main(int argc, char** argv) {
 	TH1F * h1_pmx   = new TH1F("h1_pmx"   ,"h1_pmx"   ,100,  -2,  2);	PrettyTH1F(h1_pmx   ,"Pmx [GeV]"            ,"Counts",62);
 	TH1F * h1_pmy   = new TH1F("h1_pmy"   ,"h1_pmy"   ,100,  -2,  2);	PrettyTH1F(h1_pmy   ,"Pmy [GeV]"            ,"Counts",62);
 	TH1F * h1_pmz   = new TH1F("h1_pmz"   ,"h1_pmz"   ,100,  -3,  3);	PrettyTH1F(h1_pmz   ,"Pmz [GeV]"            ,"Counts",62);
+	TH1F * h1_pm_th = new TH1F("h1_pm_th" ,"h1_pm_th" ,100,   0,180);	PrettyTH1F(h1_pm_th ,"#theta_{Pm} [deg]"    ,"Counts",62);
+        TH1F * h1_pm_ph = new TH1F("h1_pm_ph" ,"h1_pm_ph" ,100,-190,190);	PrettyTH1F(h1_pm_ph ,"#phi_{Pm} [deg]"      ,"Counts",62);
 	TH1F * h1_Mmiss = new TH1F("h1_Mmiss" ,"h1_Mmiss" , 60,  -4,  4);	PrettyTH1F(h1_Mmiss ,"m_{miss} [GeV]"       ,"Counts",62);
 	TH1F * h1_Em    = new TH1F("h1_Em"    ,"h1_Em"    ,100,  -3,  3);	PrettyTH1F(h1_Em    ,"Em [GeV]"             ,"Counts",62);
 
@@ -395,6 +397,8 @@ int main(int argc, char** argv) {
 			h1_pmx         -> Fill(V3_Pm.X()               );
 			h1_pmy         -> Fill(V3_Pm.Y()               );
 			h1_pmz         -> Fill(V3_Pm.Z()               );
+			h1_pm_th       -> Fill(rad2deg*V3_Pm.Theta()   );
+                        h1_pm_ph       -> Fill(rad2deg*V3_Pm.Phi()     );
 			h1_pmiss       -> Fill(V3_Pm.Mag()             );
 			h1_Mmiss       -> Fill(Mmiss                   );
 			//h1_Em       -> Fill(Emiss        );
@@ -560,6 +564,16 @@ int main(int argc, char** argv) {
 	c20 -> Modified();
 	c20 -> Update();
 
+	TCanvas * c21 = new TCanvas();
+        h1_pm_th -> Draw();
+        c21 -> Modified();
+        c21 -> Update();
+
+        TCanvas * c22 = new TCanvas();
+        h1_pm_ph -> Draw();
+        c22 -> Modified();
+        c22 -> Update();
+
 	// -------------------------------------------------------------------------------------------
 	// Printing some info to screen
 	cout << "Triggers: " << ctr_triggers << endl;
@@ -588,7 +602,9 @@ int main(int argc, char** argv) {
 	c17 -> Print("results_eppPi.pdf" );
 	c18 -> Print("results_eppPi.pdf" );
 	c19 -> Print("results_eppPi.pdf" );
-	c20 -> Print("results_eppPi.pdf)");
+	c20 -> Print("results_eppPi.pdf" );
+	c21 -> Print("results_eppPi.pdf" );
+	c22 -> Print("results_eppPi.pdf)");
 
 	myapp -> Run();
 	return 0;
