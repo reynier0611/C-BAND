@@ -286,7 +286,7 @@ int main(int argc, char** argv) {
 		h2_pe_the   -> Fill(rad2deg*V3_ep.Theta(),ep  );
 
 		// -------------------------------------------------------------------------
-		
+
 		// pi+ variables
 		int nPip = 0;
 		int tmp_fast_pip_idx  = 0;	// index of the pi+
@@ -338,7 +338,7 @@ int main(int argc, char** argv) {
 
 			double Mmiss = V4_Pm.M();	
 
-			if(Mmiss<1.2){
+			//if(Mmiss<1.2){
 
 			// Filling histograms
 			h1_p_vz        -> Fill(V3_pipp.Z()              );
@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
 			h2_p_vz_phi   -> Fill(rad2deg*V3_pipp.Phi(), V3_pipp.Z()            );
 			h2_beta_p_p   -> Fill(V3_pipp.Mag()        , beta_pip               );
 			h2_pe_pp      -> Fill(V3_pipp.Mag()        , ep                     );
-			}
+			//}
 		}
 
 
@@ -515,17 +515,17 @@ int main(int argc, char** argv) {
 	TCanvas * c21 = new TCanvas();
 	h1_pm_th -> Draw();
 	c21 -> Modified();
-        c21 -> Update();
+	c21 -> Update();
 
 	TCanvas * c22 = new TCanvas();
 	h1_pm_ph -> Draw();
 	c22 -> Modified();
-        c22 -> Update();
+	c22 -> Update();
 
 	TCanvas * c23 = new TCanvas();
-        h2_pe_the -> Draw("COLZ");
-        c23 -> Modified();
-        c23 -> Update();
+	h2_pe_the -> Draw("COLZ");
+	c23 -> Modified();
+	c23 -> Update();
 
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
