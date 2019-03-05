@@ -235,17 +235,17 @@ int main(int argc, char** argv) {
 			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
 				int idx = 100*is + 10*il + ic;
 
-				if(parL[idx][0]!=0){
+				//if(parL[idx][0]!=0){
 					tabL << is << "\t" << il << "\t" << ic << "\t" << "\t";
 					if(il==6) tabL << "0\t0\t0\t0" << endl;
 					else tabL << parL[idx][0] << "\t" << parL[idx][1] << "\t" << parL[idx][2]  << "\t" << parL[idx][3] << endl;
-				}
+				//}
 				// ---
-				if(parR[idx][0]!=0){
+				//if(parR[idx][0]!=0){
 					tabR << is << "\t" << il << "\t" << ic << "\t" << "\t";
 					if(il==6) tabR << "0\t0\t0\t0" << endl;
 					else tabR << parR[idx][0] << "\t" << parR[idx][1] << "\t" << parR[idx][2]  << "\t" << parR[idx][3] << endl;
-				}
+				//}
 			}
 		}
 	}
