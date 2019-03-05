@@ -128,16 +128,19 @@ int main(int argc, char** argv) {
 
 	TH1F * h1_dlt_vz_ep  = new TH1F("h1_dlt_vz_ep"  ,"electron - #pi+",100, -20, 20);	PrettyTH1F(h1_dlt_vz_ep  ,"#Delta v_{z} [cm]"    ,"Counts",2);
 
+	TH1F * h1_p_th_meas_calc = new TH1F("h1_p_th_meas_calc","h1_p_th_meas_calc",80,-50,50);
+	PrettyTH1F(h1_p_th_meas_calc,"proton #theta_{measured}-#theta_{calculated} [deg]","Counts",62);
+
+	TH1F * h1_p_p_meas_calc = new TH1F("h1_p_p_meas_calc","h1_p_p_meas_calc",80,-5,5);
+	PrettyTH1F(h1_p_p_meas_calc,"proton p_{measured}-p_{calculated} [GeV]"    ,"Counts",62);
+
 	// 2D histograms
 	TH2F * h2_e_Ep_p_0   = new TH2F("h2_e_Ep_p_0"   ,"h2_e_Ep_p_0"  ,100,1   , 10,100,  0,0.4);
 	TH2F * h2_e_Ep_p_1   = new TH2F("h2_e_Ep_p_1"   ,"h2_e_Ep_p_1"  ,100,1   , 10,100,  0,0.4);	
 	TH2F * h2_e_th_phi   = new TH2F("h2_e_th_phi"   ,"h2_e_th_phi"  ,100,-190,190,100,  0, 30);
 	TH2F * h2_p_th_phi   = new TH2F("h2_p_th_phi"   ,"h2_p_th_phi"  ,100,-190,190,100,  0, 80);
 	TH2F * h2_beta_p_pos = new TH2F("h2_beta_p_pos" ,"h2_beta_p_pos",100,0   ,  6,100,0.1,1.1);
-	TH2F * h2_beta_p_neg = new TH2F("h2_beta_p_neg" ,"h2_beta_p_neg",100,0   ,  6,100,0.1,1.1);
 	TH2F * h2_beta_p_p   = new TH2F("h2_beta_p_p"   ,"h2_beta_p_p"  ,100,0   ,  6,100,0.1,1.1);
-	TH2F * h2_beta_p_pip = new TH2F("h2_beta_p_pip" ,"h2_beta_p_pip",100,0   ,  6,100,0.1,1.1);
-	TH2F * h2_beta_p_pim = new TH2F("h2_beta_p_pim" ,"h2_beta_p_pim",100,0   ,  6,100,0.1,1.1);
 	TH2F * h2_e_vz_phi   = new TH2F("h2_e_vz_phi"   ,"h2_e_vz_phi"  ,100,-190,190,100,-50, 50);
 	TH2F * h2_p_vz_phi   = new TH2F("h2_p_vz_phi"   ,"h2_p_vz_phi"  ,100,-190,190,100,-50, 50);
 	TH2F * h2_e_tof_p    = new TH2F("h2_e_tof_p"    ,"h2_e_tof_p"   ,100,1   ,  7,100, 20, 27);
@@ -154,10 +157,7 @@ int main(int argc, char** argv) {
 	PrettyTH2F(h2_e_th_phi  ,"#phi_e [deg]"  ,"#theta_e [deg]"      );
 	PrettyTH2F(h2_p_th_phi  ,"#phi_p [deg]"  ,"#theta_p [deg]"      );
 	PrettyTH2F(h2_beta_p_pos,"p [GeV]"       ,"#beta"               );
-	PrettyTH2F(h2_beta_p_neg,"p [GeV]"       ,"#beta"               );
 	PrettyTH2F(h2_beta_p_p  ,"p [GeV]"       ,"#beta"               );
-	PrettyTH2F(h2_beta_p_pip,"p [GeV]"       ,"#beta"               );
-	PrettyTH2F(h2_beta_p_pim,"p [GeV]"       ,"#beta"               );
 	PrettyTH2F(h2_e_vz_phi  ,"#phi_e [deg]"  ,"e v_{z} [cm]"        );
 	PrettyTH2F(h2_p_vz_phi  ,"#phi_p [deg]"  ,"p v_{z} [cm]"        );
 	PrettyTH2F(h2_e_tof_p   ,"p_{e} [GeV]"   ,"electron TOF [ns]"   );
@@ -285,6 +285,8 @@ int main(int argc, char** argv) {
 		h2_e_tof_p  -> Fill(ep           ,tof_e       );
 		h2_pe_the   -> Fill(rad2deg*V3_ep.Theta(),ep  );
 
+		if((xB>1.2)||(xB<0.8)) continue;
+
 		// -------------------------------------------------------------------------
 
 		// pi+ variables
@@ -304,7 +306,6 @@ int main(int argc, char** argv) {
 			double pp     = V3_hp.Mag();
 
 			if     (chri== 1) h2_beta_p_pos -> Fill(V3_hp.Mag(), beta_p  );
-			else if(chri==-1) h2_beta_p_neg -> Fill(V3_hp.Mag(), beta_p  );
 
 			// -------------------------------------------------------------------------
 			// proton
@@ -327,10 +328,7 @@ int main(int argc, char** argv) {
 			float beta_p    = particles.getBeta (tmp_fast_p_idx);		// p 2 beta = v/c
 
 			TLorentzVector V4_pp;
-
 			V4_pp.SetXYZM( V3_pp.X() , V3_pp.Y() , V3_pp.Z() , mp );
-
-			double EP  = V4_pp .E();
 
 			// Missing momentum components
 			TVector3       V3_Pm = V3_pp - V3_q;
@@ -338,28 +336,38 @@ int main(int argc, char** argv) {
 
 			double Mmiss = V4_Pm.M();		
 
-			// Filling histograms
-			h1_p_vz        -> Fill(V3_pp.Z()              );
-			h1_dlt_vz_ep   -> Fill(V3_pp.Z()  - V3_ev.Z() );
-			h1_p_px        -> Fill(V3_pp.X()              );
-			h1_p_py        -> Fill(V3_pp.Y()              );
-			h1_p_pz        -> Fill(V3_pp.Z()              );
-			h1_p_p         -> Fill(V3_pp.Mag()            );
-			h1_p_th        -> Fill(rad2deg*V3_pp.Theta()  );
-			h1_p_phi       -> Fill(rad2deg*V3_pp.Phi()    );
-			h1_pmx         -> Fill(V3_Pm.X()                );
-			h1_pmy         -> Fill(V3_Pm.Y()                );
-			h1_pmz         -> Fill(V3_Pm.Z()                );
-			h1_pm_th       -> Fill(rad2deg*V3_Pm.Theta()    );
-			h1_pm_ph       -> Fill(rad2deg*V3_Pm.Phi()      );
-			h1_pmiss       -> Fill(V3_Pm.Mag()              );
-			h1_Mmiss       -> Fill(Mmiss                    );
+			double Em = fn_Emiss( V3_Pm.Mag() , omega , mtar , V4_pp.E() , mp );
 
-			h2_p_th_phi   -> Fill(rad2deg*V3_pp.Phi(), rad2deg*V3_pp.Theta());
-			h2_p_vz_phi   -> Fill(rad2deg*V3_pp.Phi(), V3_pp.Z()            );
-			h2_beta_p_p   -> Fill(V3_pp.Mag()        , beta_p               );
-			h2_pe_pp      -> Fill(V3_pp.Mag()        , ep                     );
+			// Predicted proton momentum and angle
+			double th_p_calc = TMath::ACos((Ebeam - ep*TMath::Cos(V3_ep.Theta()))/V3_pp.Mag());
+			double p_p_calc  = TMath::Sqrt(pow(Ebeam+mp-ep, 2)-mp*mp);
 
+			if(V3_Pm.Mag()<0.3&&Em<0.1){
+				// Filling histograms
+				h1_p_vz        -> Fill(V3_pp.Z()              );
+				h1_dlt_vz_ep   -> Fill(V3_pp.Z()  - V3_ev.Z() );
+				h1_p_px        -> Fill(V3_pp.X()              );
+				h1_p_py        -> Fill(V3_pp.Y()              );
+				h1_p_pz        -> Fill(V3_pp.Z()              );
+				h1_p_p         -> Fill(V3_pp.Mag()            );
+				h1_p_th        -> Fill(rad2deg*V3_pp.Theta()  );
+				h1_p_phi       -> Fill(rad2deg*V3_pp.Phi()    );
+				h1_pmx         -> Fill(V3_Pm.X()                );
+				h1_pmy         -> Fill(V3_Pm.Y()                );
+				h1_pmz         -> Fill(V3_Pm.Z()                );
+				h1_pm_th       -> Fill(rad2deg*V3_Pm.Theta()    );
+				h1_pm_ph       -> Fill(rad2deg*V3_Pm.Phi()      );
+				h1_pmiss       -> Fill(V3_Pm.Mag()              );
+				h1_Mmiss       -> Fill(Mmiss                    );
+
+				h1_p_th_meas_calc -> Fill((V3_pp.Theta()-th_p_calc)*rad2deg);
+				h1_p_p_meas_calc  -> Fill(V3_pp.Mag()-p_p_calc    );
+
+				h2_p_th_phi   -> Fill(rad2deg*V3_pp.Phi(), rad2deg*V3_pp.Theta());
+				h2_p_vz_phi   -> Fill(rad2deg*V3_pp.Phi(), V3_pp.Z()            );
+				h2_beta_p_p   -> Fill(V3_pp.Mag()        , beta_p               );
+				h2_pe_pp      -> Fill(V3_pp.Mag()        , ep                     );
+			}
 		}
 
 
@@ -429,12 +437,9 @@ int main(int argc, char** argv) {
 	c7 -> Update();
 
 	TCanvas * c8 = new TCanvas();
-	c8->Divide(3, 2);
+	c8->Divide(2, 1);
 	c8->cd(1);	gPad -> SetLogz();	h2_beta_p_pos -> Draw("COLZ");
 	c8->cd(2);	gPad -> SetLogz();	h2_beta_p_p   -> Draw("COLZ");
-	c8->cd(3);	gPad -> SetLogz();	h2_beta_p_p -> Draw("COLZ");
-	c8->cd(4);	gPad -> SetLogz();	h2_beta_p_neg -> Draw("COLZ");
-	c8->cd(5);	gPad -> SetLogz();	h2_beta_p_pim -> Draw("COLZ");
 	c8 -> Modified();
 	c8 -> Update(); 
 
@@ -524,6 +529,13 @@ int main(int argc, char** argv) {
 	h2_pe_the -> Draw("COLZ");
 	c23 -> Modified();
 	c23 -> Update();
+
+	TCanvas * c24 = new TCanvas();
+	c24 -> Divide(2,1);
+	c24 -> cd(1);	h1_p_th_meas_calc -> Draw();
+	c24 -> cd(2);	h1_p_p_meas_calc  -> Draw();
+	c24 -> Modified();
+	c24 -> Update();
 
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
