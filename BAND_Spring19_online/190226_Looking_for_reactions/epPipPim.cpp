@@ -355,9 +355,9 @@ int main(int argc, char** argv) {
 			TVector3 V3_p1p  = particles.getV3P  (tmp_fast_p_idx);		// proton momentum vector [GeV]
 			float beta_p1    = particles.getBeta (tmp_fast_p_idx);		// proton beta = v/c
 
-			TVector3 V3_pipv  = particles.getV3v  (tmp_fast_pip_idx);		// proton 2 vertex vector [cm]
-			TVector3 V3_pipp  = particles.getV3P  (tmp_fast_pip_idx);		// proton 2 momentum vector [GeV]
-			float beta_p2    = particles.getBeta (tmp_fast_pip_idx);		// proton 2 beta = v/c
+			TVector3 V3_pipv = particles.getV3v  (tmp_fast_pip_idx);		// proton 2 vertex vector [cm]
+			TVector3 V3_pipp = particles.getV3P  (tmp_fast_pip_idx);		// proton 2 momentum vector [GeV]
+			float beta_pip    = particles.getBeta (tmp_fast_pip_idx);		// proton 2 beta = v/c
 
 			TVector3 V3_pimv = particles.getV3v  (tmp_fast_pim_idx);	// pi- vertex vector [cm]
 			TVector3 V3_pimp = particles.getV3P  (tmp_fast_pim_idx);	// pi- momentum vector [GeV]
@@ -399,8 +399,8 @@ int main(int argc, char** argv) {
 			//h1_Em       -> Fill(Emiss        );
 			h2_p_th_phi   -> Fill(rad2deg*V3_p1p.Phi(), rad2deg*V3_p1p.Theta());
 			h2_p_vz_phi   -> Fill(rad2deg*V3_p1p.Phi(), V3_p1v.Z()         );
-			h2_beta_p_p   -> Fill(V3_p1p .Mag(), beta_p1      );
-			h2_beta_p_pip -> Fill(V3_pipp .Mag(), beta_p2    );
+			h2_beta_p_p   -> Fill(V3_p1p .Mag(), beta_p1     );
+			h2_beta_p_pip -> Fill(V3_pipp.Mag(), beta_pip     );
 			h2_beta_p_pim -> Fill(V3_pimp.Mag(), beta_pim    );
 			//h2_Em_Pm     -> Fill(Pm          , Emiss       );
 			h2_pe_pp      -> Fill(V3_p1p .Mag(), ep          );
