@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
 			double th_p_calc = TMath::ACos((Ebeam - ep*TMath::Cos(V3_ep.Theta()))/V3_pp.Mag());
 			double p_p_calc  = TMath::Sqrt(pow(Ebeam+mp-ep, 2)-mp*mp);
 
-			if(V3_Pm.Mag()<0.3&&Em<0.1){
+			if(V3_Pm.Mag()>0.25&&Em<0.1){
 				// Filling histograms
 				h1_p_vz        -> Fill(V3_pp.Z()              );
 				h1_dlt_vz_ep   -> Fill(V3_pp.Z()  - V3_ev.Z() );
@@ -562,7 +562,8 @@ int main(int argc, char** argv) {
 	c20 -> Print("results_eP.pdf" );
 	c21 -> Print("results_eP.pdf" );
 	c22 -> Print("results_eP.pdf" );
-	c23 -> Print("results_eP.pdf)");
+	c23 -> Print("results_eP.pdf" );
+	c24 -> Print("results_eP.pdf)");
 
 	myapp -> Run();
 	return 0;
