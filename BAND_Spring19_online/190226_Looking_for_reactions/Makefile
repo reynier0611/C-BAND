@@ -14,7 +14,10 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: ePip eppPim epPipPim bandPhoton2CLAS
+all: ep ePip eppPim epPipPim bandPhoton2CLAS
+
+ep: ep.o
+	$(CXX) -o ep $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 ePip: ePip.o
 	$(CXX) -o ePip $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
