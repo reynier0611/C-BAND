@@ -32,6 +32,8 @@ bool PParticle::pointsToBand(){
         double phi   = mom.Phi();
         double z = z_m*100; // from m to cm
 
+	if(theta < TMath::DegToRad()*90.) return 0; // Immediately reject all particles going forward
+
         // Numbers taken from band/src/main/java/org/jlab/rec/band/constants/Parameters.java
         double thickness  = 7.2;                                // thickness of each bar (cm)
         double layerGap[] = {7.94, 7.62, 7.94, 7.62, 7.3};      // gap between center of neighbouring layers (cm), 1-2, 2-3, 3-4, 4-5, 5-6
@@ -47,7 +49,7 @@ bool PParticle::pointsToBand(){
         double zDown = (zUpst + 5*thickness) - z_m;
 
         double rho   = zDown/TMath::Cos(theta);
-        double xDown = rho*TMath::Sin(theta)*TMath::Cos(phi);
+        double xDown = -rho*TMath::Sin(theta)*TMath::Cos(phi);
         double yDown = rho*TMath::Sin(theta)*TMath::Sin(phi);
 
         double globalX = (-240.5-240.5+241.0+243.7)/4.; // [cm] --> Not using this yet (need to make sure we have the right coordinate system)

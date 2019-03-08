@@ -151,7 +151,9 @@ int main(int argc, char** argv) {
 	TH2F * h2_Em_Pm      = new TH2F("h2_Em_Pm"      ,"h2_Em_Pm"     ,100,0   ,  3,100,-2 ,  2);
 	TH2F * h2_pe_pp      = new TH2F("h2_pe_pp"      ,"h2_pe_pp"     ,100,0   ,  6,100, 1 , 10);
 	TH2F * h2_pe_the     = new TH2F("h2_pe_the"     ,"h2_pe_the"    ,100,0   , 30,100, 1 , 10);
-
+	TH2F * h2_n_th_phi_0 = new TH2F("h2_n_th_phi_0" ,"h2_n_th_phi_0",100,-190,190,100,140,180);
+	TH2F * h2_n_th_phi_1 = new TH2F("h2_n_th_phi_1" ,"h2_n_th_phi_1",100,-190,190,100,140,180);
+	
 	PrettyTH2F(h2_e_Ep_p_0  ,"p_{e} [GeV]"   ,"E_{e}/p_{e}"         );
 	PrettyTH2F(h2_e_Ep_p_1  ,"p_{e} [GeV]"   ,"E_{e}/p_{e}"         );
 	PrettyTH2F(h2_e_th_phi  ,"#phi_e [deg]"  ,"#theta_e [deg]"      );
@@ -169,6 +171,10 @@ int main(int argc, char** argv) {
 	PrettyTH2F(h2_Em_Pm     ,"Pm [GeV]"      ,"Em [GeV]"            );
 	PrettyTH2F(h2_pe_pp     ,"p p [GeV]"     ,"e p [GeV]"           );
 	PrettyTH2F(h2_pe_the    ,"#theta_e [deg]","p_{e} [GeV]"         );
+
+	//h2_n_th_phi_0 -> SetMarkerStyle(20);    h2_n_th_phi_0 -> SetMarkerSize(0.6);
+	h2_n_th_phi_1 -> SetMarkerStyle(20);	h2_n_th_phi_1 -> SetMarkerSize(0.6);
+	h2_n_th_phi_1 -> SetMarkerColor(2);
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
 
@@ -407,13 +413,17 @@ int main(int argc, char** argv) {
 			h2_pe_pp      -> Fill(V3_p1p .Mag(), ep          );
 
 			TVector3 V3_Pneut = -V3_Pm;
-			PParticle Pneutron (V3_Pneut,0);
+			PParticle Pneutron (V3_Pneut,V3_ev.Z()/100.);
+
+			h2_n_th_phi_0 -> Fill(rad2deg*V3_Pneut.Phi(),rad2deg*V3_Pneut.Theta());
 
 			if(Pneutron.pointsToBand()){
 			//if(rad2deg*V3_Pm.Theta()<(180-155)){
 				pmissPointsToBand++;			
 
 				h1_Mmiss1 -> Fill(Mmiss);
+
+				h2_n_th_phi_1 -> Fill(rad2deg*V3_Pneut.Phi(),rad2deg*V3_Pneut.Theta());
 
 				// Now look at band to check what's up there
 				int nHits = band_hits.getSize();
@@ -598,6 +608,12 @@ int main(int argc, char** argv) {
 	h2_pe_the -> Draw("COLZ");
 	c23 -> Modified();
 	c23 -> Update();
+
+	TCanvas * c24 = new TCanvas();
+	h2_n_th_phi_0 -> Draw();
+	h2_n_th_phi_1 -> Draw("same");
+	c24 -> Modified();
+        c24 -> Update();
 
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to system
