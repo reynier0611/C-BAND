@@ -14,6 +14,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TLatex.h"
+#include "TLegend.h"
 
 #include "reader.h"
 #include "node.h"
@@ -28,6 +29,7 @@
 using namespace std;
 
 // Forward-declaring functions
+void PrettyTH1F(TH1F * h1, int color);
 void PrettyTH2F(TH2F * h2);
 double getTriggerPhase( long timeStamp );
 int getMinNonEmptyBin(TH2F * h2);
@@ -72,10 +74,15 @@ int main(int argc, char** argv) {
 	double par[nHistos][2] = {{0}};
 
 	TH2F ** h2_T_vDt = new TH2F * [nHistos];
+	TH1F ** h1_ADC_L = new TH1F * [nHistos];
+	TH1F ** h1_ADC_R = new TH1F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
 		h2_T_vDt[i] = new TH2F(Form("h2_T_vDt_%i",i),";position [m];R",200,-1.5,1.5,200,-1,1);
 		PrettyTH2F(h2_T_vDt[i]);
+	
+		h1_ADC_L[i] = new TH1F(Form("h1_ADC_L_%i",i),";ADC",100,0,50000);	PrettyTH1F(h1_ADC_L[i] , 2);
+        	h1_ADC_R[i] = new TH1F(Form("h1_ADC_R_%i",i),";ADC",100,0,50000);	PrettyTH1F(h1_ADC_R[i] ,62);
 	}
 
 	TH1F * h1_E_minus_R_mu = new TH1F("h1_E_minus_R_mu",";#mu (Efrain - Rey) [m]",40,-2,2); // Attenuation lengths from Efrain - from Rey
@@ -191,6 +198,9 @@ int main(int argc, char** argv) {
 
 									h2_T_vDt[barKey] -> Fill(x,R);
 									h2_T_vDt[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
+								
+									h1_ADC_L[barKey] -> Fill(ADC1_adc);	h1_ADC_L[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
+									h1_ADC_R[barKey] -> Fill(ADC2_adc);	h1_ADC_R[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
 								}			
 							}
 						}
@@ -219,12 +229,22 @@ int main(int argc, char** argv) {
 	TCanvas * c0 = new TCanvas("c0","c0",900,900);
 
 	TCanvas *** cSLC = new TCanvas**[5];
+	TCanvas *** cADC = new TCanvas**[5];
+
+	TLegend * leg_adc = new TLegend(0.6,0.6,0.85,0.75);
+	leg_adc -> SetLineColor(0);
+	leg_adc -> AddEntry(h1_ADC_L[0],"Left PMT" );
+	leg_adc -> AddEntry(h1_ADC_R[0],"Right PMT");
 
 	for(int is = 0 ; is < 5 ; is++){
 		cSLC[is] = new TCanvas*[6];
+		cADC[is] = new TCanvas*[6];
 		for(int il = 0 ; il < 5 ; il++){
 			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
 			cSLC[is][il] -> Divide(2,4);
+
+			cADC[is][il] = new TCanvas(Form("cADC_S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
+			cADC[is][il] -> Divide(2,4);
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
@@ -243,9 +263,18 @@ int main(int argc, char** argv) {
 					tex_mu -> Draw("same");
 
 					h1_E_minus_R_mu -> Fill(mu_efrain[identifier]/100.-par[identifier][0]);
+				
+					// ADC spectra
+					cADC[is][il] -> cd(cIdx+1);
+					gPad -> SetBottomMargin(0.26);
+
+					h1_ADC_L[identifier] -> Draw(); 
+					h1_ADC_R[identifier] -> Draw("same");
+					leg_adc -> Draw("same");
 				}
 			}
 			cSLC[is][il] -> Modified();	cSLC[is][il] -> Update();
+			cADC[is][il] -> Modified();	cADC[is][il] -> Update();
 		}
 	}
 
@@ -266,12 +295,16 @@ int main(int argc, char** argv) {
 	// -------------------------------------------------------------------------------------------------
 	// Saving plots to a pdf file
 	c0 -> Print("results_attenuation.pdf(");
+	c0 -> Print("results_adc_spectra.pdf(");
+
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
 			cSLC[is][il] -> Print("results_attenuation.pdf");
+			cADC[is][il] -> Print("results_adc_spectra.pdf");
 		}
 	}
 	c0 -> Print("results_attenuation.pdf)");
+	c0 -> Print("results_adc_spectra.pdf)");
 
 	myapp -> Run();
 	return 0;
@@ -292,6 +325,26 @@ void PrettyTH2F(TH2F * h2) {
 
 	h2 -> GetYaxis() -> SetNdivisions(109);
 	h2 -> GetXaxis() -> SetNdivisions(109);
+}
+// ========================================================================================================================================
+void PrettyTH1F(TH1F * h1, int color) {
+        h1 -> GetXaxis() -> CenterTitle();
+        h1 -> GetYaxis() -> CenterTitle();
+
+	h1 -> SetLineColor(color);
+	h1 -> SetLineWidth(2);
+
+        h1 -> SetTitleSize(0.5);
+
+        h1 -> GetXaxis() -> SetLabelSize(0.09);
+        h1 -> GetYaxis() -> SetLabelSize(0.09);
+        h1 -> GetXaxis() -> SetTitleSize(0.09);
+        h1 -> GetYaxis() -> SetTitleSize(0.09);
+
+        h1 -> GetYaxis() -> SetTitleOffset(0.60);
+
+        h1 -> GetYaxis() -> SetNdivisions(109);
+        h1 -> GetXaxis() -> SetNdivisions(109);
 }
 // ========================================================================================================================================
 double getTriggerPhase( long timeStamp ) {
