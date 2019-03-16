@@ -6,6 +6,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TF1.h"
 #include "TH2.h"
 #include "TMath.h"
 #include "TVector3.h"
@@ -48,28 +49,68 @@ int main(int argc, char** argv) {
 	double cut_Epcal   = 0.060; //GeV (60 MeV)
 	double cut_tof_e   =    10; //ns
 
+	// Create output tree
+	TFile * outFile = new TFile("clas_band_physics.root","RECREATE");
+	TTree * outTree = new TTree("skim","CLAS and BAND Physics");
+		// BAND variables
+	int nHits;
+	int sector, layer, component;
+	double adcLcorr, adcRcorr;
+	double meantimeFadc, meantimeTdc;
+	double difftimeFadc, difftimeTdc;
+	double x,y,z;
+	double dL, ToF;
+	double beta, pN_mag, theta_n, phi_n;
+	double En, pN_cosTheta, phi_en;
+	double CosTheta_qn, Xp, Wp, As, theta_qn;
+		// CLAS variables
+	double theta_e, phi_e;
+	double theta_q, phi_q;
+	double Q2, nu, xB, W2, q;
+	
+	// Branches for BAND
+	outTree->Branch("nHits",		&nHits		,	"nHits/I");
+	outTree->Branch("sector",		&sector		,	"sector/I");
+	outTree->Branch("layer",		&layer		,	"layer/I");
+	outTree->Branch("component",		&component	,	"component/I");
+	outTree->Branch("adcLcorr",		&adcLcorr	,	"adcLcorr/D");
+	outTree->Branch("adcRcorr",		&adcRcorr	,	"adcRcorr/D");
+	outTree->Branch("meantimeFadc",		&meantimeFadc	,	"meantimeFadc/D");
+	outTree->Branch("meantimeTdc",		&meantimeTdc	,	"meantimeTdc/D");
+	outTree->Branch("difftimeFadc",		&difftimeFadc	,	"difftimeFadc/D");
+	outTree->Branch("difftimeTdc",		&difftimeTdc	,	"difftimeTdc/D");
+	outTree->Branch("x",			&x		,	"x/D");
+	outTree->Branch("y",			&y		,	"y/D");
+	outTree->Branch("z",			&z		,	"z/D");
+	outTree->Branch("dL",			&dL		,	"dL/D");
+	outTree->Branch("ToF",			&ToF		,	"ToF/D");
+	outTree->Branch("beta",			&beta		,	"beta/D");
+	outTree->Branch("pN_mag",		&pN_mag		,	"pN_mag/D");
+	outTree->Branch("theta_n",		&theta_n	,	"theta_n/D");
+	outTree->Branch("phi_n",		&phi_n		,	"phi_n/D");
+	outTree->Branch("En",			&En		,	"En/D");
+	outTree->Branch("pN_cosTheta",		&pN_cosTheta	,	"pN_cosTheta/D");
+	outTree->Branch("phi_en",		&phi_en		,	"phi_en/D");
+	outTree->Branch("CosTheta_qn",		&CosTheta_qn	,	"CosTheta_qn/D");
+	outTree->Branch("Xp",			&Xp		,	"Xp/D");
+	outTree->Branch("Wp",			&Wp		,	"Wp/D");
+	outTree->Branch("As",			&As		,	"As/D");
+	outTree->Branch("theta_qn",		&theta_qn	,	"theta_qn/D");
+	// Branches for CLAS
+	outTree->Branch("theta_e",		&theta_e	,	"theta_e/D");
+	outTree->Branch("phi_e",		&phi_e		,	"phi_e/D");
+	outTree->Branch("theta_q",		&theta_q	,	"theta_q/D");
+	outTree->Branch("phi_q",		&phi_q		,	"phi_q/D");
+	outTree->Branch("Q2",			&Q2		,	"Q2/D");
+	outTree->Branch("nu",			&nu		,	"nu/D");
+	outTree->Branch("xB",			&xB		,	"xB/D");
+	outTree->Branch("W2",			&W2		,	"W2/D");
+	outTree->Branch("q",			&q		,	"q/D");
+	
+
 	// Declaring histograms
-	TH1F * hToF_bkg = new TH1F("hToF_bkg","hToF_bkg",400,0,400);
-	TH1F * hToF 	= new TH1F("hToF","hToF",40,0,80);
-	TH1F * hToF_pre = new TH1F("hToF_pre","hToF_pre",60,0,120);
-	TH1F * hDL 	= new TH1F("hDL","hDL",50,250,350);
-	TH1F * hQ2      = new TH1F("hQ2","hQ2",100,0,10);
-        TH1F * hNu      = new TH1F("hNu","hnu",100,0,10);
-        TH1F * hXB      = new TH1F("hXB","xB",100,0,2);
-        TH1F * hTheta_q = new TH1F("hTheta_q","htheta_q",100,-180,180);
-        TH1F * hqMag    = new TH1F("hqMag","hq",100,0,10);	
-	TH1F * hBeta	= new TH1F("hBeta","hBeta",50,0,1);
-	TH1F * hPsMom	= new TH1F("hPsMom","hPsMom",10,0,1000);
-	TH1F * hEn	= new TH1F("hEn","hEn",50,0,2000);
-	TH1F * hTheta_n = new TH1F("hTheta_n","hTheta_n",100,-180,180);
-	TH1F * hPhi_n 	= new TH1F("hPhi_n","hPhi_n",100,-180,180);
-	TH1F * hPhi_en 	= new TH1F("hPhi_en","hPhi_en",100,-180,180);
-	TH1F * hTheta_qn= new TH1F("hTheta_qn","hTheta_qn",100,-180,180);
-	TH1F * hXp	= new TH1F("hXp","hXp",100,0,1);
-	TH1F * hWp	= new TH1F("hWp","hWp",50,0,5);
-	TH1F * hAs	= new TH1F("hAs","hAs",10,1,2);
-	TH2D * hXpAs	= new TH2D("hXpAs","hXpAs",14,0.1,0.8,25,1.3,1.55);
-	TH2D * hXpQ2	= new TH2D("hXpQ2","hXpQ2",14,0.1,0.8,30,2,8);
+	TH1F * hToF_sig 	= new TH1F("hToF_sig","hToF",40,20,60);
+	TH1F * hToF_full 	= new TH1F("hToF_full","hToF",450,-100,350);
 	
 
 	// Load input file
@@ -90,6 +131,12 @@ int main(int argc, char** argv) {
 	// Loop over events in hipo fil
 	int event_counter = 0;
 	while(reader.next()==true){
+		nHits,sector,layer,component,adcLcorr,adcRcorr			= 0.;
+		meantimeFadc,meantimeTdc,difftimeFadc,difftimeTdc 		= 0.;
+		x,y,z,dL,ToF,beta,pN_mag,theta_n,phi_n,En,pN_cosTheta 		= 0.;
+		phi_en,CosTheta_qn,Xp,Wp,As,theta_qn 				= 0.;
+		theta_e,phi_e,theta_q,phi_q,Q2,nu,xB,W2,q 			= 0.;
+
 
 		if(event_counter%1000000==0) cout << "event: " << event_counter << endl;
 		event_counter++;
@@ -137,194 +184,158 @@ int main(int argc, char** argv) {
 
 
 		// Calculate kinematic variables
-		double theta_e 		= eP.Theta();
-		double Q2 		= 4. * e0_4.Energy() * eP.Mag() * pow( TMath::Sin(theta_e/2.) , 2 );	// momentum transfer
-		double nu 		= e0_4.Energy() - eP.Mag();						// energy transfer
-		double xB		= Q2 / (2.*mP*nu);
-		double q		= sqrt( Q2 + pow(nu,2) ); 						// 3 vector q-magnitude
-		double phi_q		= eP.Phi() + M_PI;	  						// q vector phi angle
+		theta_e 	= eP.Theta();
+		Q2 		= 4. * e0_4.Energy() * eP.Mag() * pow( TMath::Sin(theta_e/2.) , 2 );	// momentum transfer
+		nu 		= e0_4.Energy() - eP.Mag();						// energy transfer
+		xB		= Q2 / (2.*mP*nu);
+		q		= sqrt( Q2 + pow(nu,2) ); 						// 3 vector q-magnitude
+		phi_q		= eP.Phi() + M_PI;	  						// q vector phi angle
+		W2     		= mP*mP - Q2 + 2*nu*mP;						// invariant jet mass based on e kinematics
 		if (phi_q > M_PI) phi_q -= 2.*M_PI;
-		double theta_q 		= acos(  ( e0_4.Energy() - eP.Mag() * TMath::Cos(theta_e) ) / q );	// q vector theta angle
-		double phi_e		= eP.Phi();
+		theta_q 	= acos(  ( e0_4.Energy() - eP.Mag() * TMath::Cos(theta_e) ) / q );	// q vector theta angle
+		phi_e		= eP.Phi();
 
 
 		// Looking in BAND
-		int nHits = band_hits.getSize();
-		if( nHits != 1 ) continue;
-		for(int hit = 0; hit < nHits; hit++) {
+		nHits = band_hits.getSize();
+		if( nHits == 1){
+			for(int hit = 0; hit < nHits; hit++) {
 
-			int    sector          	= band_hits.getSector      	(hit);
-			float adcLcorr         	= band_hits.getAdcLcorr    	(hit);
-			float adcRcorr         	= band_hits.getAdcRcorr    	(hit);
-			float  meantimeFadc    	= band_hits.getMeantimeFadc	(hit);
-			float x			= band_hits.getX		(hit);
-			float y			= band_hits.getY		(hit);
-			float z			= band_hits.getZ		(hit);
+				sector          	= band_hits.getSector      	(hit);
+				layer			= band_hits.getLayer		(hit);
+				component		= band_hits.getComponent	(hit);
 
-			if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
-
-			if( sector == 3 || sector == 4 ) continue; 	// Don't want short bars for now because they have a systematic
-									// shift from long bars due to length of bar
-									
-			double ToF = meantimeFadc-t_vtx;	// [ns]
-			double dL  = sqrt( x*x + y*y + z*z );	// [cm]
-
-
-			// Subtract off gamma peak position in ToF:
-			hToF_bkg -> Fill( ToF + dL/cAir -4.99481e+01);
-			ToF = ToF - (4.99481e+01);
-
-			// Fill spectrum that will be used for background subtraction
-			//	At t = 100ns from gamma peak, highest p of neutrons could be
-			//	100MeV, which we aren't interested in. So let's take from 100ns
-			//	for +100ns more to get our background level estimation
-			
-			double beta = dL/(cAir*(ToF+dL/cAir));	
-	
-			// Build neutron 4 vector
-			double pN_mag = 1./sqrt( 1./(beta*beta) - 1.) * mN; 	// [GeV]
-			double En = sqrt( pN_mag*pN_mag + mN*mN );		// [GeV]
-
-			double pN_cosTheta = z/dL;
-			double theta_n = acos( pN_cosTheta );
-			double phi_n = atan2( y , x );
-
-			TVector3 pN( pN_mag*sin(theta_n)*sin(phi_n) , pN_mag*sin(theta_n)*cos(phi_n) , pN_mag*cos(theta_n) );
-			TLorentzVector pN_4( pN , En );
-			
-			// Now look at electron-neutron quantities to build the physics
-			double phi_en = phi_n - phi_e;
-			if (phi_en < -M_PI) phi_en += 2.*M_PI;
-			if (phi_en >  M_PI) phi_en -= 2.*M_PI;
-			double CosTheta_qn = cos(theta_n)*cos(theta_q) - sin(theta_n)*sin(theta_q)*cos(phi_en);
-			double Xp = Q2/(2.*( nu*(mD-En) + pN_mag*q*CosTheta_qn));
-			double Wp = sqrt((mD*mD) - Q2 + (mP*mP) + 2.*mD*(nu-En) -2.* nu * En + 2.*q*pN_mag*CosTheta_qn);
-			double As = (En - pN_mag*CosTheta_qn)/mN;
-
-
-
-			if (Q2 < 2)       				continue;
-			if (acos(CosTheta_qn)*180./M_PI < 110.)		continue;
-			if (Xp > 0.8)      				continue;
-			if (Wp < 1.8)     	 			continue;
-
-			hToF_pre -> Fill(ToF+dL/cAir);
-			if( beta > 1 ) 					continue;
-			if( ToF > 100 && ToF < 250 )			continue;
-			if( ToF < 0 )	 				continue; 	// these are below our photon peak, so ignore
-			if( ToF < 3*1.19734e+00) 			continue; 	// this is our photon peak, so ignore
-			if( pN_mag < 0.2)				continue;
-			/*
-			if (pN_mag < 0.25) 				continue;
-			if (pN_mag > 0.6)  	    			continue;
-			*/
-
-			hXpQ2		-> Fill(Xp,Q2);
-			hXpAs		-> Fill(Xp,As);
-			if (Xp < 0.2)  	   	 			continue;
-			// Fill histograms
-				// only CLAS
-			hQ2		-> Fill(Q2);
-			hNu		-> Fill(nu);
-			hXB		-> Fill(xB);
-			hTheta_q	-> Fill(theta_q*180./M_PI);
-			hqMag		-> Fill(q);
-				// only BAND
-			hToF		-> Fill(ToF+dL/cAir);
-			hBeta		-> Fill(beta);
-			hDL		-> Fill(dL);
-			hPsMom		-> Fill(pN_mag * 1E3); // convert to MeV
-			hEn		-> Fill(En * 1E3);
-			hTheta_n	-> Fill(theta_n * 180./M_PI);
-			hPhi_n		-> Fill(phi_n * 180./M_PI);
-				// combo
-			hPhi_en		-> Fill(phi_en * 180./M_PI);
-			hTheta_qn	-> Fill( acos(CosTheta_qn) * 180./M_PI );
-			hXp		-> Fill(Xp);
-			hWp		-> Fill(Wp);
-			hAs		-> Fill(As);
+				adcLcorr         	= band_hits.getAdcLcorr    	(hit);
+				adcRcorr         	= band_hits.getAdcRcorr    	(hit);
+				meantimeFadc    	= band_hits.getMeantimeFadc	(hit);
+				meantimeTdc		= band_hits.getMeantimeTdc	(hit);	
 		
-		
+				difftimeFadc		= band_hits.getDifftimeFadc	(hit);
+				difftimeTdc		= band_hits.getDifftimeTdc	(hit);
+				
+				x			= band_hits.getX		(hit);
+				y			= band_hits.getY		(hit);
+				z			= band_hits.getZ		(hit);
 
-		}// end loop over hits in event
+				double cutMeVee = 5.;
+				if( adcLcorr < cutMeVee*2000. || adcRcorr < cutMeVee*2000. ) continue;
+
+				//if( sector == 3 || sector == 4 ) continue; 	// Don't want short bars for now because they have a systematic
+										// shift from long bars due to length of bar
+										
+				ToF = meantimeFadc-t_vtx;	// [ns]
+				dL  = sqrt( x*x + y*y + z*z );	// [cm]
+
+				// Real ToF = (measured ToF - gamma peak position) + (where gamma peak should really be)
+				ToF = ToF - 4.99481e+01 + dL/cAir;
+				hToF_sig->Fill( ToF );
+				hToF_full->Fill( ToF );
+
+				// Calculate beta
+				beta = dL/(cAir*ToF);	
+		
+				// Build neutron 4 vector
+				pN_mag = 1./sqrt( 1./(beta*beta) - 1.) * mN; 	// [GeV]
+				En = sqrt( pN_mag*pN_mag + mN*mN );		// [GeV]
+
+				pN_cosTheta = z/dL;
+				theta_n = acos( pN_cosTheta );
+				phi_n = atan2( y , x );
+
+				TVector3 pN( pN_mag*sin(theta_n)*sin(phi_n) , pN_mag*sin(theta_n)*cos(phi_n) , pN_mag*cos(theta_n) );
+				TLorentzVector pN_4( pN , En );
+				
+				// Now look at electron-neutron quantities to build the physics
+				phi_en = phi_n - phi_e;
+				if (phi_en < -M_PI) phi_en += 2.*M_PI;
+				if (phi_en >  M_PI) phi_en -= 2.*M_PI;
+				CosTheta_qn = cos(theta_n)*cos(theta_q) - sin(theta_n)*sin(theta_q)*cos(phi_en);
+				theta_qn = acos(CosTheta_qn);
+				Xp = Q2/(2.*( nu*(mD-En) + pN_mag*q*CosTheta_qn));
+				Wp = sqrt((mD*mD) - Q2 + (mP*mP) + 2.*mD*(nu-En) -2.* nu * En + 2.*q*pN_mag*CosTheta_qn);
+				As = (En - pN_mag*CosTheta_qn)/mN;
+
+
+
+				//if (Q2 < 2)       				continue;
+				//if (acos(CosTheta_qn)*180./M_PI < 110.)		continue;
+				//if (Xp > 0.8)      				continue;
+				//if (Wp < 1.8)     	 			continue;
+
+				//if( beta > 1 ) 					continue;
+				//if( ToF > 100 && ToF < 250 )			continue;
+				//if( ToF < 0 )	 				continue; 	// these are below our photon peak, so ignore
+				//if( ToF < 3*1.19734e+00) 			continue; 	// this is our photon peak, so ignore
+				//if( pN_mag < 0.2)				continue;
+				//if (pN_mag < 0.25) 				continue;
+				//if (pN_mag > 0.6)  	    			continue;
+
+			
+			}// end loop over band hits in an event
+		}
+		outTree->Fill();
 
 
 	}// end file
 
-	// From hToF_bkg let's calculate our background levels. But not all of these pass the cuts used above
-	double bkg_ev = hToF_bkg->Integral();
-	double n_bins = (250.-100.);
-	double bkgPerBin = bkg_ev / n_bins;
-
 	
-
-	TCanvas *cbkg = new TCanvas("cbkg","Background Estimation",900,900);
-	hToF_bkg->Draw();
-	cbkg->Update();
+	// Fit the background part of the ToF spectrum
+	TF1 * bkg = new TF1("bkg","pol0",120,200);
+	hToF_full -> Fit(bkg,"QESRN");
+	double bkg_per_bin = bkg->GetParameter(0);
+	cout << "Background level of ToF spectrum: " << bkg_per_bin << "\n";
+	double bkg_int = bkg_per_bin * (200.-120.);
 	
+	// Calculate the total signa with uncertainty:
+	double SpB = hToF_sig->Integral();
+	double Rb = (200.-120.);
+	double Rs = 40.;
+	double B = bkg_int * (Rs/Rb);
+	double S = SpB - B;
+	double Serr = sqrt( 1./SpB+ 1./B * pow( Rs/Rb , 2) );
+	cout << "Signal + Background Integral: " << SpB << "\n";
+	cout << "Signal and Error: " << S << " " << Serr << "\n";
 
-	TCanvas *c0 = new TCanvas("c0","BAND Physics",900,900);
-	c0->Divide(2,2);
-	c0->cd(1);
-	hToF_pre ->SetLineColor(2);
-	hToF_pre -> Draw();
-	hToF->Draw("same");
-	c0->cd(2);
-	hDL->Draw();
-	c0->cd(3);	
-	hBeta->Draw();
-	c0->cd(4);
-	hPsMom->Draw();
-	c0->Update();
-
-	TCanvas *c1 = new TCanvas("c1","CLAS Physics",900,900);
-	c1->Divide(2,2);
+	// Take our ToF histogram and subtract of BKG level
+		// integral of background level
+	TH1F * hToF_new = new TH1F("hToF_new","hToF",40,20,60);
+	for( int bin = 1 ; bin < hToF_sig->GetXaxis()->GetNbins() ; bin++ ){
+		double val = hToF_sig->GetBinContent(bin);
+		double newVal = val - bkg_per_bin;
+		if( newVal < 0 ) newVal = 0;
+		hToF_new->SetBinContent( bin , newVal );
+		// Error is 1/sqrt(N) propagated
+		double err = sqrt( 1./val + 1./bkg_per_bin );
+		hToF_new->SetBinError( bin , err );
+	}
+	TCanvas * c1 = new TCanvas("c1","ToF Background Subtraction",900,900);
+	c1->Divide(1,3);
 	c1->cd(1);
-	hQ2->Draw();
+	hToF_full->GetYaxis()->SetRange(0,2000);
+	hToF_full->SetStats(0);
+	hToF_full->SetTitle("");
+	hToF_full->Draw();
+	//bkg->Draw("same");
 	c1->cd(2);
-	hXB->Draw();
+	hToF_sig->SetStats(0);
+	hToF_new->GetYaxis()->SetRange(0,1000);
+	hToF_sig->SetTitle("");
+	hToF_sig->Draw();
 	c1->cd(3);
-	hTheta_q->Draw();
-	c1->cd(4);
-	hNu->Draw();
+	hToF_new->GetYaxis()->SetRange(0,600);
+	hToF_new->SetStats(0);
+	hToF_new->SetTitle("");
+	hToF_new->Draw("E HIST");
 	c1->Update();
 
-	TCanvas * c2 = new TCanvas("c2","CLAS and BAND",900,900);
-	c2->Divide(2,3);
-	c2->cd(1);
-	hTheta_qn->Draw();
-	c2->cd(2);
-	hPhi_en->Draw();
-	c2->cd(3);
-	hXp->Draw();
-	c2->cd(4);
-	hWp->Draw();
-	c2->cd(5);
-	hAs->Draw();
-	c2->cd(6);
-	hXpAs->Draw("col");
-	c2->Update();
 
-	TCanvas * c3 = new TCanvas("c3");
-	hPsMom->SetStats(0);
-	hPsMom->SetTitle("");
-	hPsMom->Draw();
-	c3->Update();
+	outFile->cd();
+	c1->Write();
+	outTree->Write();
+	outFile->Close();
 
-	TCanvas * c4 = new TCanvas("c4");
-	hXpQ2->SetStats(0);
-	hXpQ2->SetTitle("");
-	hXpQ2->Draw("col");
-	c4->Update();
 
-	
-	TCanvas * c5 = new TCanvas("c5");
-	hXpAs->SetStats(0);
-	hXpAs->SetTitle("");
-	hXpAs->Draw("col");
-	c5->Update();
-
-	myapp -> Run();
+	//myapp -> Run();
 	return 0;
 }
 
