@@ -363,10 +363,10 @@ void LoadPaddleCorrectionPar(){
 
 	f.open("TDC_paddle_offsets.txt");
 	while(!f.eof()){
-		f >> layer;
 		f >> sector;
+		f >> layer;
 		f >> component;
-		barId = 100*layer + 10*sector + component;
+		barId = 100*sector + 10*layer + component;
 		f >> parameter;
 		f >> temp;
 		p2p[barId] = parameter;
@@ -375,10 +375,10 @@ void LoadPaddleCorrectionPar(){
 
 	f.open("TDC_layer_offsets.txt");
 	while(!f.eof()){
-		f >> layer;
 		f >> sector;
+		f >> layer;
 		f >> component;
-		barId = 100*layer + 10*sector + component;
+		barId = 100*sector + 10*layer + component;
 		f >> parameter;
 		f >> temp;
 		l2l[barId] = parameter;
