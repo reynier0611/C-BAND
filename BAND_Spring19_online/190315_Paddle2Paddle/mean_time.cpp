@@ -24,7 +24,12 @@
 
 using namespace std;
 
+double p2p[600] = {0};
+double l2l[600] = {0};
+
 // Forward-declaring functions
+void LoadPaddleCorrectionPar();
+double TDC_corr( int barId );
 void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
 void PrettyTH2F(TH2F * h2,TString titx,TString tity);
 double fn_Emiss(double Pmiss, double omega, double M_tar, double Enuc, double Mnuc);
@@ -49,6 +54,18 @@ int main(int argc, char** argv) {
 		cout << "=========================\nRun this code as:\n./code path/to/input/file\n=========================" << endl;
 		exit(0);
 	}
+
+	// ----------------------------------------------------------------------------------
+        // Load TDC paddle-to-paddle correction parameters only if data is not already corrected
+        cout << "Is your data already TDC paddle offset corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+        int option;
+        cin >> option;
+        if(option==3){
+                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
+                exit(0);
+        }
+        if(option==1)
+                LoadPaddleCorrectionPar();
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
@@ -198,6 +215,8 @@ int main(int argc, char** argv) {
 			float adcLcorr           = band_hits.getAdcLcorr    (hit);
 			float adcRcorr           = band_hits.getAdcRcorr    (hit);
 
+			meantimeTdc += TDC_corr(barKey);
+
 			if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
 			//if( sector < 3 || sector > 4 ) continue;
 			if( sector == 3 || sector == 4 ) continue;
@@ -298,4 +317,38 @@ double fn_Emiss(double Pmiss, double omega, double M_tar, double Enuc, double Mn
 	double Tb   = omega + M_tar - Enuc - TMath::Sqrt(pow(omega + M_tar - Enuc,2)- Pmiss*Pmiss );	// Kinetic energy of A-1 system
 	double Tnuc = Enuc - Mnuc;                                                             			// Kinetic energy of struck neutron
 	return omega - Tnuc - Tb;
+}
+// ========================================================================================================================================
+void LoadPaddleCorrectionPar(){
+        ifstream f;
+        int layer, sector, component, barId;
+        double parameter, temp;
+
+        f.open("TDC_paddle_offsets.txt");
+        while(!f.eof()){
+                f >> layer;
+                f >> sector;
+                f >> component;
+                barId = 100*layer + 10*sector + component;
+                f >> parameter;
+                f >> temp;
+                p2p[barId] = parameter;
+        }
+        f.close();
+
+        f.open("TDC_layer_offsets.txt");
+        while(!f.eof()){
+                f >> layer;
+                f >> sector;
+                f >> component;
+                barId = 100*layer + 10*sector + component;
+                f >> parameter;
+                f >> temp;
+                l2l[barId] = parameter;
+        }
+        f.close();
+}
+// ========================================================================================================================================
+double TDC_corr( int barId ){
+        return -( p2p[barId] + l2l[barId] );
 }
