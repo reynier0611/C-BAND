@@ -218,8 +218,8 @@ int main(int argc, char** argv) {
 			meantimeTdc += TDC_corr(barKey);
 
 			if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
-			//if( sector < 3 || sector > 4 ) continue;
-			if( sector == 3 || sector == 4 ) continue;
+			//if( sector < 3 || sector > 4 ) continue; // Use this line to not include long bars
+			if( sector == 3 || sector == 4 ) continue; // Use this line to not include short bars
 
 			float tFadcLcorr = band_hits.getTfadcLcorr(hit);
 			float tFadcRcorr = band_hits.getTfadcRcorr(hit);
