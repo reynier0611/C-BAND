@@ -29,6 +29,10 @@
 using namespace std;
 
 
+double p2p[600] = {0};
+double l2l[600] = {0};
+void LoadPaddleCorrectionPar();
+double TDC_corr( int barId );
 int main(int argc, char** argv) {
 
 	TApplication *myapp = new TApplication("myapp",0,0);
@@ -67,6 +71,7 @@ int main(int argc, char** argv) {
 	double theta_e, phi_e;
 	double theta_q, phi_q;
 	double Q2, nu, xB, W2, q;
+	double start_time;
 	
 	// Branches for BAND
 	outTree->Branch("nHits",		&nHits		,	"nHits/I");
@@ -106,6 +111,7 @@ int main(int argc, char** argv) {
 	outTree->Branch("xB",			&xB		,	"xB/D");
 	outTree->Branch("W2",			&W2		,	"W2/D");
 	outTree->Branch("q",			&q		,	"q/D");
+	outTree->Branch("STTime",		&start_time	,	"STTime/D");
 	
 
 	// Declaring histograms
@@ -201,6 +207,7 @@ int main(int argc, char** argv) {
 		if( nHits == 1){
 			for(int hit = 0; hit < nHits; hit++) {
 
+				int    barKey            = band_hits.getBarKey      (hit); 
 				sector          	= band_hits.getSector      	(hit);
 				layer			= band_hits.getLayer		(hit);
 				component		= band_hits.getComponent	(hit);
@@ -217,12 +224,13 @@ int main(int argc, char** argv) {
 				y			= band_hits.getY		(hit);
 				z			= band_hits.getZ		(hit);
 
-				double cutMeVee = 5.;
-				if( adcLcorr < cutMeVee*2000. || adcRcorr < cutMeVee*2000. ) continue;
+				//double cutMeVee = 5.;
+				//if( adcLcorr < cutMeVee*2000. || adcRcorr < cutMeVee*2000. ) continue;
 
 				//if( sector == 3 || sector == 4 ) continue; 	// Don't want short bars for now because they have a systematic
 										// shift from long bars due to length of bar
-										
+				meantimeTdc += TDC_corr(barKey);
+				start_time = t_vtx;					
 				ToF = meantimeFadc-t_vtx;	// [ns]
 				dL  = sqrt( x*x + y*y + z*z );	// [cm]
 
@@ -340,3 +348,36 @@ int main(int argc, char** argv) {
 }
 
 
+void LoadPaddleCorrectionPar(){
+        ifstream f;
+        int layer, sector, component, barId;
+        double parameter, temp;
+
+        f.open("TDC_paddle_offsets.txt");
+        while(!f.eof()){
+		f >> sector;
+                f >> layer;
+                f >> component;
+                barId = 100*sector + 10*layer + component;
+                f >> parameter;
+                f >> temp;
+                p2p[barId] = parameter;
+        }
+        f.close();
+
+        f.open("TDC_layer_offsets.txt");
+        while(!f.eof()){
+		f >> sector;
+                f >> layer;
+                f >> component;
+                barId = 100*sector + 10*layer + component;
+                f >> parameter;
+                f >> temp;
+                l2l[barId] = parameter;
+        }
+        f.close();
+}
+
+double TDC_corr( int barId ){
+        return -( p2p[barId] + l2l[barId] );
+}
