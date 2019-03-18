@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "TLine.h"
+#include "TProfile.h"
 #include "TRint.h"
 #include "TApplication.h"
 #include "TFile.h"
@@ -11,6 +13,7 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TLorentzVector.h"
+#include "TGraphErrors.h"
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TLatex.h"
@@ -31,6 +34,7 @@ using namespace std;
 // Forward-declaring functions
 void PrettyTH1F(TH1F * h1, int color);
 void PrettyTH2F(TH2F * h2);
+void PrettyTGraphErrors(TGraphErrors * gP, int color);
 double getTriggerPhase( long timeStamp );
 int getMinNonEmptyBin(TH2F * h2);
 int getMaxNonEmptyBin(TH2F * h2);
@@ -68,15 +72,20 @@ int main(int argc, char** argv) {
 
 	double par_pad[nHistos][2] = {{0}};
 	double par_lay[nHistos][2] = {{0}};
+	double par_res[nHistos][2] = {{0}};
 
 	TH2F ** h2_dMeantime_adc_paddle = new TH2F * [nHistos];
 	TH2F ** h2_dMeantime_adc_layer  = new TH2F * [nHistos];
+	TH1F ** h1_resolutions          = new TH1F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
 		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",500,0,15000,501,-15,15);
 		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",500,0,15000,501,-15,15);
 		PrettyTH2F(h2_dMeantime_adc_paddle[i]);
 		PrettyTH2F(h2_dMeantime_adc_layer [i]);
+
+		h1_resolutions         [i] = new TH1F(Form("h1_resolutions_%i"         ,i),";((t_{L}+t_{R})/2)_{TDC}(bar - ref)",501,-15,15);
+		PrettyTH1F(h1_resolutions[i],62);
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -224,6 +233,10 @@ int main(int argc, char** argv) {
 									h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,delta_meantime);
 									h2_dMeantime_adc_paddle[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
 
+									// 1-D projection to extract resolutions
+									h1_resolutions[barKey] -> Fill(delta_meantime);
+									h1_resolutions[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
+
 									if(TDC1_sector==2&&TDC1_component==1){
 										double delta_meantime_layer = meantime - ref_meantime[5];
 										h2_dMeantime_adc_layer[barKey] -> Fill(adc_geometric_mean,delta_meantime_layer);
@@ -242,29 +255,50 @@ int main(int argc, char** argv) {
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Fitting functions
-
+	TProfile ** p_dMeantime_adc_paddle = new TProfile*[nHistos];
 	// Fitting paddle-to-paddle parameters
 	for(int i = 0 ; i < nHistos ; i++){
 		int notEmpty = (h2_dMeantime_adc_paddle[i]->Integral());
 		if(notEmpty){
+			int nBins = h2_dMeantime_adc_paddle[i] -> GetXaxis() -> GetNbins();
+			p_dMeantime_adc_paddle[i] = h2_dMeantime_adc_paddle[i]->ProfileX("px", 1, nBins );
 			TF1 * f_line = new TF1("f_line","pol0");
-			h2_dMeantime_adc_paddle[i] -> Fit("f_line","Q");
+			p_dMeantime_adc_paddle[i] -> Fit("f_line","Q");
 
 			par_pad[i][0] = f_line->GetParameter(0);
 			par_pad[i][1] = f_line->GetParError (0);
 		}
 	}
 
+	TProfile ** p_dMeantime_adc_layer = new TProfile*[5];
 	// Fitting layer-to-layer parameters
 	for(int i = 0 ; i < 5 ; i++){
 		TF1 * f_line = new TF1("f_line","pol0");
 
 		int idx = 201+10*(i+1);
-		h2_dMeantime_adc_layer[idx] -> Fit("f_line","Q");
+		int nBins = h2_dMeantime_adc_layer[i] -> GetXaxis() -> GetNbins();
+		p_dMeantime_adc_layer[i] = h2_dMeantime_adc_layer[idx] ->ProfileX("lx", 1, nBins );
+		p_dMeantime_adc_layer[i] -> Fit("f_line","Q");
 
 		par_lay[i][0] = f_line->GetParameter(0);
 		par_lay[i][1] = f_line->GetParError (0);
 
+	}
+
+	// Fitting 1-d projections to get resolutions
+	for(int i = 0 ; i < nHistos ; i++){
+                int notEmpty = (h1_resolutions[i]->Integral());
+		if(notEmpty){
+			TF1 * f_gaus = new TF1("f_gaus","gaus");
+			f_gaus -> SetParameters(300,0,200);
+			f_gaus -> SetParLimits(1,-15, 15);
+			f_gaus -> SetParLimits(2,  0,600);
+
+			h1_resolutions[i] -> Fit("f_gaus","Q");
+
+			par_res[i][0] = f_gaus->GetParameter(2);
+			par_res[i][1] = f_gaus->GetParError (2);
+		}
 	}
 
 	// -------------------------------------------------------------------------------------------------
@@ -272,13 +306,18 @@ int main(int argc, char** argv) {
 	TCanvas * c0 = new TCanvas("c0","c0",900,900);
 
 	TCanvas *** cSLC_paddle = new TCanvas**[5];
+	TCanvas *** cSLC_resol  = new TCanvas**[5];
 
 	for(int is = 0 ; is < 5 ; is++){
 		cSLC_paddle[is] = new TCanvas*[6];
+		cSLC_resol [is] = new TCanvas*[6];
 
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC_paddle[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
+			cSLC_paddle[is][il] = new TCanvas(Form("S%iL%i_paddle",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
 			cSLC_paddle[is][il] -> Divide(2,4);	
+
+			cSLC_resol [is][il] = new TCanvas(Form("S%iL%i_resol" ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
+			cSLC_resol [is][il] -> Divide(2,4); 
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
@@ -293,12 +332,30 @@ int main(int argc, char** argv) {
 					//h2_dMeantime_adc_paddle[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_dMeantime_adc_paddle[identifier] -> Draw("COLZ");
 
+					// Drawing a line with the fit result
+					TLine * l_fit_result = new TLine(0,par_pad[identifier][0],15000,par_pad[identifier][0]);
+					l_fit_result -> SetLineColor(2);
+					l_fit_result -> SetLineWidth(2);
+					l_fit_result -> SetLineStyle(2);
+					l_fit_result -> Draw("same");
+
 					TLatex * tex_pad = new TLatex(1000,par_pad[identifier][0]-5,Form("y = %f #pm %f m",par_pad[identifier][0],par_pad[identifier][1]));
 					tex_pad -> SetTextSize(0.08);
 					tex_pad -> Draw("same");
+
+					// Resolutions
+					cSLC_resol [is][il] -> cd(cIdx+1);
+					gPad -> SetBottomMargin(0.26);
+                                        gPad -> SetLeftMargin(0.14);
+					h1_resolutions[identifier] -> Draw();
+
+					TLatex * tex_lay = new TLatex(-10,(h1_resolutions[identifier]->GetMaximum()/2.),Form("#sigma = %.1f #pm %.1f ps",1000*par_res[identifier][0],1000*par_res[identifier][1]));
+					tex_lay -> SetTextSize(0.08);
+                                        tex_lay -> Draw("same");
 				} 
 			}
 			cSLC_paddle[is][il] -> Modified();	cSLC_paddle[is][il] -> Update();		
+			cSLC_resol [is][il] -> Modified();	cSLC_resol [is][il] -> Update();
 		}
 	}
 
@@ -312,12 +369,44 @@ int main(int argc, char** argv) {
 		int idx = 201 + 10*(i+1);
 		h2_dMeantime_adc_layer[idx] -> Draw("COLZ");
 
+		// Drawing a line with the fit result
+                TLine * l_fit_result = new TLine(0,par_lay[i][0],15000,par_lay[i][0]);
+                l_fit_result -> SetLineColor(2);
+                l_fit_result -> SetLineWidth(2);
+                l_fit_result -> SetLineStyle(2);
+                l_fit_result -> Draw("same");
+
 		TLatex * tex_lay = new TLatex(1000,par_lay[i][0]-5,Form("y = %f #pm %f m",par_lay[i][0],par_lay[i][1]));
                 tex_lay -> SetTextSize(0.08);
                 tex_lay -> Draw("same");
 	}
 	cSLC_layer -> Modified();
 	cSLC_layer -> Update();
+
+	// -------------------------------------------------------------------------------------------------
+	// Making a plot with resolutions
+	int ctr = 0;
+	double x_val[600] = {0};
+	double y_val[600] = {0};
+	for(int il = 1 ; il < 6 ; il++){
+		for(int is = 1 ; is <= 5 ; is++){
+			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
+				int I_BarKey = 100*is + 10*il + ic;
+
+				x_val[ctr] = (double)(I_BarKey);
+				y_val[ctr] = 1000*par_res[I_BarKey][0];
+				ctr++;	
+			}
+		}
+	}
+
+	TGraphErrors * gResolutions = new TGraphErrors(ctr,x_val,y_val,0,0);
+	PrettyTGraphErrors(gResolutions,62);
+
+	TCanvas * cres = new TCanvas("cres","cres",900,900);
+	gResolutions -> Draw("AP");
+	cres -> Modified();
+	cres -> Update();
 
 	// -------------------------------------------------------------------------------------------------
 	// Saving fit values to ccdb tables
@@ -362,13 +451,16 @@ int main(int argc, char** argv) {
 	c0 -> Print("results_paddle_corr.pdf(");
 	cSLC_layer -> Print("results_paddle_corr.pdf");
 	c0 -> Print("results_paddle_corr.pdf");
+	cres -> Print("results_resolutions.pdf(");
 
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
 			cSLC_paddle[is][il] -> Print("results_paddle_corr.pdf");
+			cSLC_resol [is][il] -> Print("results_resolutions.pdf");
 		}
 	}
 	c0 -> Print("results_paddle_corr.pdf)");
+	c0 -> Print("results_resolutions.pdf)");
 
 	myapp -> Run();
 	return 0;
@@ -454,3 +546,17 @@ int getMaxNonEmptyBin(TH2F * h2){
 	return nBinY;
 }
 // ========================================================================================================================================
+void PrettyTGraphErrors(TGraphErrors * gP, int color){
+	gP -> SetTitle("");
+	gP -> SetMarkerColor(color);
+	gP -> SetMarkerStyle(20);
+	gP -> GetXaxis() -> CenterTitle();
+	gP -> GetXaxis() -> SetTitle("Bar ID");
+	gP -> GetYaxis() -> CenterTitle();
+        gP -> GetYaxis() -> SetTitle("resolution [ps]");
+
+	gP -> GetYaxis() -> SetTitleOffset(1.30);
+
+	gP -> SetMinimum(200);
+	gP -> SetMaximum(450);
+}
