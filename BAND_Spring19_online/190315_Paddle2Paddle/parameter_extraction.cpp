@@ -79,12 +79,12 @@ int main(int argc, char** argv) {
 	TH1F ** h1_resolutions          = new TH1F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",500,0,15000,501,-15,15);
-		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",500,0,15000,501,-15,15);
+		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,15000,401,-15,15);
+		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,15000,401,-15,15);
 		PrettyTH2F(h2_dMeantime_adc_paddle[i]);
 		PrettyTH2F(h2_dMeantime_adc_layer [i]);
 
-		h1_resolutions         [i] = new TH1F(Form("h1_resolutions_%i"         ,i),";((t_{L}+t_{R})/2)_{TDC}(bar - ref)",501,-15,15);
+		h1_resolutions         [i] = new TH1F(Form("h1_resolutions_%i"         ,i),";((t_{L}+t_{R})/2)_{TDC}(bar - ref)",401,-15,15);
 		PrettyTH1F(h1_resolutions[i],62);
 	}
 
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 		int notEmpty = (h2_dMeantime_adc_paddle[i]->Integral());
 		if(notEmpty){
 			int nBins = h2_dMeantime_adc_paddle[i] -> GetXaxis() -> GetNbins();
-			p_dMeantime_adc_paddle[i] = h2_dMeantime_adc_paddle[i]->ProfileX("px", 1, nBins );
+			p_dMeantime_adc_paddle[i] = h2_dMeantime_adc_paddle[i]->ProfileX(Form("px_%i",i), 1, nBins );
 			TF1 * f_line = new TF1("f_line","pol0");
 			p_dMeantime_adc_paddle[i] -> Fit("f_line","Q");
 
@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
 
 		int idx = 201+10*(i+1);
 		int nBins = h2_dMeantime_adc_layer[i] -> GetXaxis() -> GetNbins();
-		p_dMeantime_adc_layer[i] = h2_dMeantime_adc_layer[idx] ->ProfileX("lx", 1, nBins );
+		p_dMeantime_adc_layer[i] = h2_dMeantime_adc_layer[idx] ->ProfileX(Form("lx_%i",i), 1, nBins );
 		p_dMeantime_adc_layer[i] -> Fit("f_line","Q");
 
 		par_lay[i][0] = f_line->GetParameter(0);
@@ -289,15 +289,18 @@ int main(int argc, char** argv) {
 	for(int i = 0 ; i < nHistos ; i++){
                 int notEmpty = (h1_resolutions[i]->Integral());
 		if(notEmpty){
-			TF1 * f_gaus = new TF1("f_gaus","gaus");
+			double mean = h1_resolutions[i]->GetMean();
+			TF1 * f_gaus = new TF1("f_gaus","gaus",mean-5,mean+5);
 			f_gaus -> SetParameters(300,0,200);
 			f_gaus -> SetParLimits(1,-15, 15);
 			f_gaus -> SetParLimits(2,  0,600);
 
-			h1_resolutions[i] -> Fit("f_gaus","Q");
+			h1_resolutions[i] -> Fit("f_gaus","QR");
 
-			par_res[i][0] = f_gaus->GetParameter(2);
-			par_res[i][1] = f_gaus->GetParError (2);
+			if((i!=211)&&(i!=221)&&(i!=231)&&(i!=241)&&(i!=251)){ // Don't fill parameters for reference bars
+				par_res[i][0] = f_gaus->GetParameter(2);
+				par_res[i][1] = f_gaus->GetParError (2);
+			}
 		}
 	}
 
@@ -331,15 +334,9 @@ int main(int argc, char** argv) {
 					//max = getMaxNonEmptyBin(h2_dMeantime_adc_paddle[identifier]);
 					//h2_dMeantime_adc_paddle[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_dMeantime_adc_paddle[identifier] -> Draw("COLZ");
+					p_dMeantime_adc_paddle[identifier] -> Draw("same");		
 
-					// Drawing a line with the fit result
-					TLine * l_fit_result = new TLine(0,par_pad[identifier][0],15000,par_pad[identifier][0]);
-					l_fit_result -> SetLineColor(2);
-					l_fit_result -> SetLineWidth(2);
-					l_fit_result -> SetLineStyle(2);
-					l_fit_result -> Draw("same");
-
-					TLatex * tex_pad = new TLatex(1000,par_pad[identifier][0]-5,Form("y = %f #pm %f m",par_pad[identifier][0],par_pad[identifier][1]));
+					TLatex * tex_pad = new TLatex(1000,par_pad[identifier][0]-5,Form("y = %f #pm %f ns",par_pad[identifier][0],par_pad[identifier][1]));
 					tex_pad -> SetTextSize(0.08);
 					tex_pad -> Draw("same");
 
@@ -368,15 +365,9 @@ int main(int argc, char** argv) {
 
 		int idx = 201 + 10*(i+1);
 		h2_dMeantime_adc_layer[idx] -> Draw("COLZ");
+		p_dMeantime_adc_layer[i] -> Draw("same");
 
-		// Drawing a line with the fit result
-                TLine * l_fit_result = new TLine(0,par_lay[i][0],15000,par_lay[i][0]);
-                l_fit_result -> SetLineColor(2);
-                l_fit_result -> SetLineWidth(2);
-                l_fit_result -> SetLineStyle(2);
-                l_fit_result -> Draw("same");
-
-		TLatex * tex_lay = new TLatex(1000,par_lay[i][0]-5,Form("y = %f #pm %f m",par_lay[i][0],par_lay[i][1]));
+		TLatex * tex_lay = new TLatex(1000,par_lay[i][0]-5,Form("y = %f #pm %f ns",par_lay[i][0],par_lay[i][1]));
                 tex_lay -> SetTextSize(0.08);
                 tex_lay -> Draw("same");
 	}
@@ -394,7 +385,7 @@ int main(int argc, char** argv) {
 				int I_BarKey = 100*is + 10*il + ic;
 
 				x_val[ctr] = (double)(I_BarKey);
-				y_val[ctr] = 1000*par_res[I_BarKey][0];
+				y_val[ctr] = 1000*par_res[I_BarKey][0]/TMath::Sqrt(2);
 				ctr++;	
 			}
 		}
@@ -553,10 +544,10 @@ void PrettyTGraphErrors(TGraphErrors * gP, int color){
 	gP -> GetXaxis() -> CenterTitle();
 	gP -> GetXaxis() -> SetTitle("Bar ID");
 	gP -> GetYaxis() -> CenterTitle();
-        gP -> GetYaxis() -> SetTitle("resolution [ps]");
+        gP -> GetYaxis() -> SetTitle("resolution/#sqrt{2} [ps]");
 
 	gP -> GetYaxis() -> SetTitleOffset(1.30);
 
-	gP -> SetMinimum(200);
-	gP -> SetMaximum(450);
+	gP -> SetMinimum(150);
+	gP -> SetMaximum(400);
 }
