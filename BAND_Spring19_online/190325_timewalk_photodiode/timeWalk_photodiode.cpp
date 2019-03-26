@@ -69,15 +69,16 @@ int main(int argc, char** argv) {
 
 	double ref_time = 0;
 
-	double par_tw[nHistos][2] = {{0}};
+	double parA_L[nHistos][2] = {{0}};
+	double parB_L[nHistos][2] = {{0}};
 
 	TH2F ** h2_dMeantime_adc = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",400,0,20000,400,208,240);
+		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",500,0,20000,800,200,240);
 		PrettyTH2F(h2_dMeantime_adc[i]);
 	}
-	
+
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
 	hipo::reader reader;
@@ -114,7 +115,7 @@ int main(int argc, char** argv) {
 		long timestamp = RUN_config.getLong(4,0);
 		double phaseCorr = getTriggerPhase(timestamp);
 
-		ref_time = -1000;
+		ref_time = -100000;
 
 		for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
 			int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
@@ -132,6 +133,8 @@ int main(int argc, char** argv) {
 			}
 
 		}
+
+		if(ref_time == -100000) continue;
 
 		// Looping over entries of the event for a second time
 		for(int aIdx1 = 0 ; aIdx1 < nADC ; aIdx1++){
@@ -190,12 +193,12 @@ int main(int argc, char** argv) {
 								TDC2_time -= phaseCorr;
 
 								if(             (!already_matched                     )&& // Avoid multi-hits
-									        (TDC1_sector   ==TDC2_sector          )&&
+										(TDC1_sector   ==TDC2_sector          )&&
 										(TDC1_layer    ==TDC2_layer           )&&
 										(TDC1_component==TDC2_component       )&&
 										(TDC1_order+1==TDC2_order             )
 								  ){	
-							
+
 									already_matched = true;
 
 									int barKey = 100*ADC1_sector + 10*ADC1_layer + ADC1_component;			
@@ -203,7 +206,7 @@ int main(int argc, char** argv) {
 									double meantime = ( TDC1_time + TDC2_time )/2.;
 									double delta_meantime = meantime - ref_time;
 									double adc_geometric_mean = TMath::Sqrt(ADC1_adc*ADC2_adc);
-
+									
 									h2_dMeantime_adc[barKey] -> Fill(adc_geometric_mean,delta_meantime);
 									h2_dMeantime_adc[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
 								}
@@ -216,7 +219,7 @@ int main(int argc, char** argv) {
 
 	}// end file
 
-	
+
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Fitting functions
 	TProfile ** p_dMeantime_adc = new TProfile*[nHistos];
@@ -224,13 +227,21 @@ int main(int argc, char** argv) {
 	for(int i = 0 ; i < nHistos ; i++){
 		int notEmpty = (h2_dMeantime_adc[i]->Integral());
 		if(notEmpty){
-			int nBins = h2_dMeantime_adc[i] -> GetXaxis() -> GetNbins();
+			int nBins = h2_dMeantime_adc[i] -> GetYaxis() -> GetNbins();
 			p_dMeantime_adc[i] = h2_dMeantime_adc[i]->ProfileX(Form("px_%i",i), 1, nBins );
-			TF1 * f_twCorr = new TF1("f_twCorr","[0]/TMath::Sqrt(x)+[1]");
-			p_dMeantime_adc[i] -> Fit("f_twCorr","Q");
+			TF1 * f_twCorr = new TF1("f_twCorr","[0]/TMath::Sqrt(x)+[1]",2000,20000);
+			f_twCorr -> SetParameters(200,200);
+			f_twCorr -> SetParLimits(0,100,300);
+			p_dMeantime_adc[i] -> Fit("f_twCorr","QR");
 
-			par_tw[i][0] = f_twCorr->GetParameter(0);
-			par_tw[i][1] = f_twCorr->GetParError (0);
+			parA_L[i][0] = f_twCorr->GetParameter(0);
+			parA_L[i][1] = f_twCorr->GetParError (0);
+			parB_L[i][0] = f_twCorr->GetParameter(1);
+                        parB_L[i][1] = f_twCorr->GetParError (1);
+
+			p_dMeantime_adc[i] -> SetMarkerStyle(20);
+			p_dMeantime_adc[i] -> SetMarkerColor( 1);
+			p_dMeantime_adc[i] -> SetMarkerSize (.5);
 		}
 	}
 
@@ -253,51 +264,57 @@ int main(int argc, char** argv) {
 				int notEmpty = (h2_dMeantime_adc[identifier]->Integral());
 				if(notEmpty){
 					int min, max;
+					double min_val, max_val;
 					c_tw[is][il] -> cd(cIdx+1);
 					gPad -> SetBottomMargin(0.26);
 					gPad -> SetLeftMargin(0.14);
+					
 					min = getMinNonEmptyBin(h2_dMeantime_adc[identifier]);
 					max = getMaxNonEmptyBin(h2_dMeantime_adc[identifier]);
+					min_val = h2_dMeantime_adc[identifier] -> GetYaxis() -> GetBinCenter(min);
+					max_val = h2_dMeantime_adc[identifier] -> GetYaxis() -> GetBinCenter(max);
+
 					h2_dMeantime_adc[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_dMeantime_adc[identifier] -> Draw("COLZ");
 					p_dMeantime_adc[identifier] -> Draw("same");		
 
-					/*
-					TLatex * tex_pad = new TLatex(1000,par_tw[identifier][0]-5,Form("y = %f #pm %f ns",par_tw[identifier][0],par_tw[identifier][1]));
-					tex_pad -> SetTextSize(0.08);
-					tex_pad -> Draw("same");
-					*/
+					TLatex * tex_f = new TLatex(500,min_val+0.30*(max_val-min_val),"y = A/#sqrt{x} + B");
+					tex_f -> SetTextSize(0.08);
+                                        tex_f -> Draw("same");
+
+					TLatex * tex_A = new TLatex(500,min_val+0.18*(max_val-min_val),Form("A = %.4f #pm %.4f",parA_L[identifier][0],parA_L[identifier][1]));
+					tex_A -> SetTextSize(0.08);
+					tex_A -> Draw("same");
+
+					TLatex * tex_B = new TLatex(500,min_val+0.06*(max_val-min_val),Form("B = %.4f #pm %.4f",parB_L[identifier][0],parB_L[identifier][1]));
+                                        tex_B -> SetTextSize(0.08);
+                                        tex_B -> Draw("same");
 				} 
 			}
 			c_tw[is][il] -> Modified();	c_tw[is][il] -> Update();		
 		}
 	}
 
-	/*
 	// -------------------------------------------------------------------------------------------------
 	// Saving fit values to ccdb tables
-	ofstream tab_pad, tab_lay;
-	tab_pad.open("TDC_paddle_offsets.txt");
-	tab_lay.open("TDC_layer_offsets.txt" );
+	ofstream tabL, tabR;
+	tabL.open("timeWalkPar_L.txt");
+	tabR.open("timeWalkPar_R.txt");
 
-	for(int il = 1 ; il <= 6 ; il++){
-		for(int is = 1 ; is <= 5 ; is++){
+	for(int is = 1 ; is <= 5 ; is++){
+		for(int il = 1 ; il <= 6 ; il++){
 			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
 				int idx = 100*is + 10*il + ic;
 
-				tab_pad << is << "\t" << il << "\t" << ic << "\t";
-				if(il==6||(is==2&&ic==1)) tab_pad << "0.0000\t0.0000" << endl;
-				else tab_pad << par_tw[idx][0] << "\t" << par_tw[idx][1] << endl;
-
-				tab_lay << is << "\t" << il << "\t" << ic << "\t";
-				if(il==6||il==5) tab_lay << "0.0000\t0.0000" << endl;
-				else tab_lay << par_lay[il-1][0] << "\t" << par_lay[il-1][1] << endl;
+				tabL << is << "\t" << il << "\t" << ic << "\t" << "\t";
+				if(il==6) tabL << "0\t0\t0\t0" << endl;
+				else tabL << parA_L[idx][0] << "\t" << parB_L[idx][0] << "\t" << parA_L[idx][1] << "\t" << parB_L[idx][1] << endl;
 			}
 		}
 	}
-	tab_pad.close();
-	tab_lay.close();
-	*/
+	tabL.close();
+	tabR.close();
+
 	// -------------------------------------------------------------------------------------------------
 	// Deleting empty histograms
 	for(int i = 0 ; i < nHistos ; i++){
@@ -317,7 +334,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	c0 -> Print("results_timewalk_corr.pdf)");
-	
+
 	myapp -> Run();
 	return 0;
 }
@@ -333,7 +350,7 @@ void PrettyTH2F(TH2F * h2) {
 	h2 -> GetXaxis() -> SetTitleSize(0.09);
 	h2 -> GetYaxis() -> SetTitleSize(0.09);
 
-	h2 -> GetYaxis() -> SetTitleOffset(0.70);
+	h2 -> GetYaxis() -> SetTitleOffset(0.80);
 
 	h2 -> GetYaxis() -> SetNdivisions(109);
 	h2 -> GetXaxis() -> SetNdivisions(107);
@@ -409,7 +426,7 @@ void PrettyTGraphErrors(TGraphErrors * gP, int color){
 	gP -> GetXaxis() -> CenterTitle();
 	gP -> GetXaxis() -> SetTitle("Bar ID");
 	gP -> GetYaxis() -> CenterTitle();
-        gP -> GetYaxis() -> SetTitle("resolution/#sqrt{2} [ps]");
+	gP -> GetYaxis() -> SetTitle("resolution/#sqrt{2} [ps]");
 
 	gP -> GetYaxis() -> SetTitleOffset(1.30);
 
