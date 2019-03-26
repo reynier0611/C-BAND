@@ -14,14 +14,17 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: attenuation
+all: attenuation diff_adc_tdc
 
 attenuation: attenuation.o
 	$(CXX) -o attenuation $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
+diff_adc_tdc: diff_adc_tdc.o
+	$(CXX) -o diff_adc_tdc $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o attenuation *~
+	@rm -rf *.o attenuation diff_adc_tdc *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
