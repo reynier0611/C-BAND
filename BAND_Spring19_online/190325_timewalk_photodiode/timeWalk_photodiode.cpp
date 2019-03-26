@@ -69,16 +69,12 @@ int main(int argc, char** argv) {
 
 	double ref_time = 0;
 
-	/*
-	double par_pad[nHistos][2] = {{0}};
-	double par_lay[nHistos][2] = {{0}};
-	double par_res[nHistos][2] = {{0}};
-	*/
+	double par_tw[nHistos][2] = {{0}};
 
 	TH2F ** h2_dMeantime_adc = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",400,0,15000,401,-1500,1500);
+		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",400,0,20000,400,208,240);
 		PrettyTH2F(h2_dMeantime_adc[i]);
 	}
 	
@@ -220,79 +216,60 @@ int main(int argc, char** argv) {
 
 	}// end file
 
-	/*
+	
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Fitting functions
-	TProfile ** p_dMeantime_adc_paddle = new TProfile*[nHistos];
+	TProfile ** p_dMeantime_adc = new TProfile*[nHistos];
 	// Fitting paddle-to-paddle parameters
 	for(int i = 0 ; i < nHistos ; i++){
 		int notEmpty = (h2_dMeantime_adc[i]->Integral());
 		if(notEmpty){
 			int nBins = h2_dMeantime_adc[i] -> GetXaxis() -> GetNbins();
-			p_dMeantime_adc_paddle[i] = h2_dMeantime_adc[i]->ProfileX(Form("px_%i",i), 1, nBins );
-			TF1 * f_line = new TF1("f_line","pol0");
-			p_dMeantime_adc_paddle[i] -> Fit("f_line","Q");
+			p_dMeantime_adc[i] = h2_dMeantime_adc[i]->ProfileX(Form("px_%i",i), 1, nBins );
+			TF1 * f_twCorr = new TF1("f_twCorr","[0]/TMath::Sqrt(x)+[1]");
+			p_dMeantime_adc[i] -> Fit("f_twCorr","Q");
 
-			par_pad[i][0] = f_line->GetParameter(0);
-			par_pad[i][1] = f_line->GetParError (0);
+			par_tw[i][0] = f_twCorr->GetParameter(0);
+			par_tw[i][1] = f_twCorr->GetParError (0);
 		}
 	}
 
-	// Fitting 1-d projections to get resolutions
-	for(int i = 0 ; i < nHistos ; i++){
-                int notEmpty = (h1_resolutions[i]->Integral());
-		if(notEmpty){
-			double mean = h1_resolutions[i]->GetMean();
-			TF1 * f_gaus = new TF1("f_gaus","gaus",mean-5,mean+5);
-			f_gaus -> SetParameters(300,0,200);
-			f_gaus -> SetParLimits(1,-15, 15);
-			f_gaus -> SetParLimits(2,  0,600);
-
-			h1_resolutions[i] -> Fit("f_gaus","QR");
-
-			if((i!=211)&&(i!=221)&&(i!=231)&&(i!=241)&&(i!=251)){ // Don't fill parameters for reference bars
-				par_res[i][0] = f_gaus->GetParameter(2);
-				par_res[i][1] = f_gaus->GetParError (2);
-			}
-		}
-	}
-	*/
 	// -------------------------------------------------------------------------------------------------
 	// Printing results onto canvases
 	TCanvas * c0 = new TCanvas("c0","c0",900,900);
 
-	TCanvas *** cSLC_paddle = new TCanvas**[5];
+	TCanvas *** c_tw = new TCanvas**[5];
 
 	for(int is = 0 ; is < 5 ; is++){
-		cSLC_paddle[is] = new TCanvas*[6];
+		c_tw[is] = new TCanvas*[6];
 
 
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC_paddle[is][il] = new TCanvas(Form("S%iL%i_paddle",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
-			cSLC_paddle[is][il] -> Divide(2,4);	
+			c_tw[is][il] = new TCanvas(Form("S%iL%i_paddle",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
+			c_tw[is][il] -> Divide(2,4);	
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
 				int notEmpty = (h2_dMeantime_adc[identifier]->Integral());
 				if(notEmpty){
 					int min, max;
-					cSLC_paddle[is][il] -> cd(cIdx+1);
+					c_tw[is][il] -> cd(cIdx+1);
 					gPad -> SetBottomMargin(0.26);
 					gPad -> SetLeftMargin(0.14);
-					//min = getMinNonEmptyBin(h2_dMeantime_adc[identifier]);
-					//max = getMaxNonEmptyBin(h2_dMeantime_adc[identifier]);
-					//h2_dMeantime_adc[identifier] -> GetYaxis() -> SetRange(min,max);
+					min = getMinNonEmptyBin(h2_dMeantime_adc[identifier]);
+					max = getMaxNonEmptyBin(h2_dMeantime_adc[identifier]);
+					h2_dMeantime_adc[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_dMeantime_adc[identifier] -> Draw("COLZ");
-					//p_dMeantime_adc_paddle[identifier] -> Draw("same");		
+					p_dMeantime_adc[identifier] -> Draw("same");		
 
 					/*
-					TLatex * tex_pad = new TLatex(1000,par_pad[identifier][0]-5,Form("y = %f #pm %f ns",par_pad[identifier][0],par_pad[identifier][1]));
+					TLatex * tex_pad = new TLatex(1000,par_tw[identifier][0]-5,Form("y = %f #pm %f ns",par_tw[identifier][0],par_tw[identifier][1]));
 					tex_pad -> SetTextSize(0.08);
 					tex_pad -> Draw("same");
 					*/
 				} 
 			}
-			cSLC_paddle[is][il] -> Modified();	cSLC_paddle[is][il] -> Update();		
+			c_tw[is][il] -> Modified();	c_tw[is][il] -> Update();		
 		}
 	}
 
@@ -310,7 +287,7 @@ int main(int argc, char** argv) {
 
 				tab_pad << is << "\t" << il << "\t" << ic << "\t";
 				if(il==6||(is==2&&ic==1)) tab_pad << "0.0000\t0.0000" << endl;
-				else tab_pad << par_pad[idx][0] << "\t" << par_pad[idx][1] << endl;
+				else tab_pad << par_tw[idx][0] << "\t" << par_tw[idx][1] << endl;
 
 				tab_lay << is << "\t" << il << "\t" << ic << "\t";
 				if(il==6||il==5) tab_lay << "0.0000\t0.0000" << endl;
@@ -332,21 +309,15 @@ int main(int argc, char** argv) {
 
 	// -------------------------------------------------------------------------------------------------
 	// Saving plots to a pdf file
-	/*
-	c0 -> Print("results_paddle_corr.pdf(");
-	cSLC_layer -> Print("results_paddle_corr.pdf");
-	c0 -> Print("results_paddle_corr.pdf");
-	cres -> Print("results_resolutions.pdf(");
+	c0 -> Print("results_timewalk_corr.pdf(");
 
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC_paddle[is][il] -> Print("results_paddle_corr.pdf");
-			cSLC_resol [is][il] -> Print("results_resolutions.pdf");
+			c_tw[is][il] -> Print("results_timewalk_corr.pdf");
 		}
 	}
-	c0 -> Print("results_paddle_corr.pdf)");
-	c0 -> Print("results_resolutions.pdf)");
-	*/
+	c0 -> Print("results_timewalk_corr.pdf)");
+	
 	myapp -> Run();
 	return 0;
 }
