@@ -24,7 +24,7 @@ timeWalk_photodiode_perPMT: timeWalk_photodiode_perPMT.o
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o timeWalk_photodiode_perBar *~
+	@rm -rf *.o timeWalk_photodiode_perBar timeWalk_photodiode_perPMT *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

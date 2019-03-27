@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 	TApplication *myapp = new TApplication("myapp",0,0);
 #endif
 
-	gStyle->SetTitleSize(0.3,"t");
+	gStyle->SetTitleSize(0.2,"t");
 	gStyle->SetOptStat(0);
 
 	TString inputFile;
@@ -77,21 +77,17 @@ int main(int argc, char** argv) {
 	double parA_L[nHistos][2] = {{0}};
 	double parB_L[nHistos][2] = {{0}};
 	double parA_R[nHistos][2] = {{0}};
-        double parB_R[nHistos][2] = {{0}};
+	double parB_R[nHistos][2] = {{0}};
 
-	TH2F ** h2_dMeantime_adc = new TH2F * [nHistos];
 	TH2F ** h2_tdc_adc_L = new TH2F * [nHistos];
-        TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
+	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",500,0,20000,800,100,200);
-		PrettyTH2F(h2_dMeantime_adc[i]);
-
-                h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,382,396);
-                h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC;t_{TDC}-t_{FADC} [ns]",400,1000,14000,400,382,396);
-                PrettyTH2F(h2_tdc_adc_L[i]);
-                PrettyTH2F(h2_tdc_adc_R[i]);
-        }
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,14000,700,100,200);
+		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,14000,700,100,200);
+		PrettyTH2F(h2_tdc_adc_L[i]);
+		PrettyTH2F(h2_tdc_adc_R[i]);
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -100,7 +96,7 @@ int main(int argc, char** argv) {
 
 	hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
 	hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
-	hipo::bank RUN_config("RUN::config",reader);
+	//hipo::bank RUN_config("RUN::config",reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -126,8 +122,8 @@ int main(int argc, char** argv) {
 		// Skip all laser events
 		//if(nADC>100||nTDC>100) continue;
 
-		long timestamp = RUN_config.getLong(4,0);
-		double phaseCorr = getTriggerPhase(timestamp);
+		//long timestamp = RUN_config.getLong(4,0);
+		//double phaseCorr = getTriggerPhase(timestamp);
 
 		ref_time = -100000;
 
@@ -139,7 +135,7 @@ int main(int argc, char** argv) {
 			float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
 			float TDC1_time      = TDC1_tdc*0.02345;
 
-			TDC1_time -= phaseCorr;
+			//TDC1_time -= phaseCorr;
 
 			// Reference is PMT in bar V16-A (L), corresponding to Sector: 3, Layer: 6, Component: 6, Order
 			if( TDC1_sector==3 && TDC1_layer==6 && TDC1_component==6 ){
@@ -150,162 +146,170 @@ int main(int argc, char** argv) {
 
 		if(ref_time == -100000) continue;
 
-		// Looping over entries of the event for a second time
-		for(int aIdx1 = 0 ; aIdx1 < nADC ; aIdx1++){
+		for(int aIdx = 0 ; aIdx < nADC ; aIdx++){
 
-			int   ADC1_sector    = BAND_ADC.getInt  (0,aIdx1);
-			int   ADC1_layer     = BAND_ADC.getInt  (1,aIdx1);
-			int   ADC1_component = BAND_ADC.getInt  (2,aIdx1);
-			int   ADC1_order     = BAND_ADC.getInt  (3,aIdx1);
-			float ADC1_adc       = (float)(BAND_ADC.getInt(4,aIdx1));
-			float ADC1_time      = BAND_ADC.getFloat(5,aIdx1);
+			int   ADC_sector    = BAND_ADC.getInt  (0,aIdx);
+			int   ADC_layer     = BAND_ADC.getInt  (1,aIdx);
+			int   ADC_component = BAND_ADC.getInt  (2,aIdx);
+			int   ADC_order     = BAND_ADC.getInt  (3,aIdx);
+			float ADC_adc       = (float)(BAND_ADC.getInt(4,aIdx));
+			float ADC_time      = BAND_ADC.getFloat(5,aIdx);
 
-			for(int aIdx2 = 0 ; aIdx2 < nADC ; aIdx2++){
+			bool already_matched = false;
 
-				int   ADC2_sector    = BAND_ADC.getInt  (0,aIdx2);
-				int   ADC2_layer     = BAND_ADC.getInt  (1,aIdx2);
-				int   ADC2_component = BAND_ADC.getInt  (2,aIdx2);
-				int   ADC2_order     = BAND_ADC.getInt  (3,aIdx2);
-				float ADC2_adc       = (float)(BAND_ADC.getInt(4,aIdx2));
-				float ADC2_time      = BAND_ADC.getFloat(5,aIdx2);
+			for(int tIdx = 0 ; tIdx < nTDC ; tIdx++){
+				int   TDC_sector    = BAND_TDC.getInt  (0,tIdx);
+				int   TDC_layer     = BAND_TDC.getInt  (1,tIdx);
+				int   TDC_component = BAND_TDC.getInt  (2,tIdx);
+				int   TDC_order     = BAND_TDC.getInt  (3,tIdx);
+				float TDC_tdc       = (float)(BAND_TDC.getInt(4,tIdx));
+				float TDC_time      = TDC_tdc*0.02345;
 
-				// Matching each ADC to the corresponding ADC from the other side of the bar
-				if(             (ADC1_sector   ==ADC2_sector          )&&
-						(ADC1_layer    ==ADC2_layer           )&&
-						(ADC1_component==ADC2_component       )&&
-						(ADC1_order+1==ADC2_order             )
+				if(             (!already_matched            )&& // Avoid multi-hits
+						(ADC_sector   ==TDC_sector   )&&
+						(ADC_layer    ==TDC_layer    )&&
+						(ADC_component==TDC_component)&&
+						(ADC_order +2 ==TDC_order    )
 				  ){
+					already_matched = true;
 
-					bool already_matched = false;
-					for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
+					int barKey = 100*ADC_sector + 10*ADC_layer + ADC_component;
 
-						int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
-						int   TDC1_layer     = BAND_TDC.getInt  (1,tIdx1);
-						int   TDC1_component = BAND_TDC.getInt  (2,tIdx1);
-						int   TDC1_order     = BAND_TDC.getInt  (3,tIdx1);
-						float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
-						float TDC1_time      = TDC1_tdc*0.02345;
+					//TDC_time -= phaseCorr;
+					double delta_time = TDC_time - ref_time;
 
-						TDC1_time -= phaseCorr;
-
-						// Matching these ADCs to a TDC
-						if(             (ADC1_sector   ==TDC1_sector   )&&
-								(ADC1_layer    ==TDC1_layer    )&&
-								(ADC1_component==TDC1_component)&&
-								(ADC1_order+2  ==TDC1_order    )
-						  ){
-
-							for(int tIdx2 = 0 ; tIdx2 < nTDC ; tIdx2++){
-
-								int   TDC2_sector    = BAND_TDC.getInt  (0,tIdx2);
-								int   TDC2_layer     = BAND_TDC.getInt  (1,tIdx2);
-								int   TDC2_component = BAND_TDC.getInt  (2,tIdx2);
-								int   TDC2_order     = BAND_TDC.getInt  (3,tIdx2);
-								float TDC2_tdc       = (float)(BAND_TDC.getInt(4,tIdx2));
-								float TDC2_time      = TDC2_tdc*0.02345;
-
-								TDC2_time -= phaseCorr;
-
-								if(             (!already_matched                     )&& // Avoid multi-hits
-										(TDC1_sector   ==TDC2_sector          )&&
-										(TDC1_layer    ==TDC2_layer           )&&
-										(TDC1_component==TDC2_component       )&&
-										(TDC1_order+1==TDC2_order             )
-								  ){	
-
-									already_matched = true;
-
-									int barKey = 100*ADC1_sector + 10*ADC1_layer + ADC1_component;			
-
-									double meantime = ( TDC1_time + TDC2_time )/2.;
-									double delta_meantime = meantime - ref_time;
-									double adc_geometric_mean = TMath::Sqrt(ADC1_adc*ADC2_adc);
-									
-									h2_dMeantime_adc[barKey] -> Fill(adc_geometric_mean,delta_meantime);
-									h2_dMeantime_adc[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
-								}
-							}
-						}
+					// Left PMTs
+					if(ADC_order==0){
+						h2_tdc_adc_L[barKey] -> SetTitle(Form("Left PMTs, Sector:%i, Layer:%i, Component:%i",ADC_sector,ADC_layer,ADC_component));
+						h2_tdc_adc_L[barKey] -> Fill(ADC_adc,delta_time);
 					}
+
+					// Right PMTs
+					if(ADC_order==1){
+						h2_tdc_adc_R[barKey] -> SetTitle(Form("Right PMTs, Sector:%i, Layer:%i, Component:%i",ADC_sector,ADC_layer,ADC_component));
+						h2_tdc_adc_R[barKey] -> Fill(ADC_adc,delta_time);
+					}
+
 				}
+
 			}
-		}
+		}	
 
 	}// end file
 
-
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Fitting functions
-	TProfile ** p_dMeantime_adc = new TProfile*[nHistos];
+	TProfile ** p_tdc_adc_L = new TProfile*[nHistos];
+	TProfile ** p_tdc_adc_R = new TProfile*[nHistos];
+
 	// Fitting paddle-to-paddle parameters
 	for(int i = 0 ; i < nHistos ; i++){
-		int notEmpty = (h2_dMeantime_adc[i]->Integral());
+		int notEmpty = (h2_tdc_adc_L[i]->Integral());
 		if(notEmpty){
-			int nBins = h2_dMeantime_adc[i] -> GetYaxis() -> GetNbins();
-			p_dMeantime_adc[i] = h2_dMeantime_adc[i]->ProfileX(Form("px_%i",i), 1, nBins );
-			TF1 * f_twCorr = new TF1("f_twCorr","[0]/TMath::Sqrt(x)+[1]",2000,20000);
-			f_twCorr -> SetParameters(200,200);
-			f_twCorr -> SetParLimits(0,100,300);
-			p_dMeantime_adc[i] -> Fit("f_twCorr","QR");
+			int nBins = h2_tdc_adc_L[i] -> GetYaxis() -> GetNbins();
+			p_tdc_adc_L[i] = h2_tdc_adc_L[i]->ProfileX(Form("px_L_%i",i), 1, nBins );
+			TF1 * f_twCorr_L = new TF1("f_twCorr_L","[0]/TMath::Sqrt(x)+[1]",100,14000);
+			f_twCorr_L -> SetParameters(200,200);
+			//f_twCorr_L -> SetParLimits(0,100,300);
+			//p_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
+			h2_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
 
-			parA_L[i][0] = f_twCorr->GetParameter(0);
-			parA_L[i][1] = f_twCorr->GetParError (0);
-			parB_L[i][0] = f_twCorr->GetParameter(1);
-                        parB_L[i][1] = f_twCorr->GetParError (1);
+			parA_L[i][0] = f_twCorr_L->GetParameter(0);
+			parA_L[i][1] = f_twCorr_L->GetParError (0);
+			parB_L[i][0] = f_twCorr_L->GetParameter(1);
+			parB_L[i][1] = f_twCorr_L->GetParError (1);
 
-			p_dMeantime_adc[i] -> SetMarkerStyle(20);
-			p_dMeantime_adc[i] -> SetMarkerColor( 1);
-			p_dMeantime_adc[i] -> SetMarkerSize (.5);
+			p_tdc_adc_L[i] -> SetMarkerStyle(20);
+			p_tdc_adc_L[i] -> SetMarkerColor( 1);
+			p_tdc_adc_L[i] -> SetMarkerSize (.5);
+		}
+
+		notEmpty = (h2_tdc_adc_R[i]->Integral());
+		if(notEmpty){
+			int nBins = h2_tdc_adc_R[i] -> GetYaxis() -> GetNbins();
+			p_tdc_adc_R[i] = h2_tdc_adc_R[i]->ProfileX(Form("px_R_%i",i), 1, nBins );
+			TF1 * f_twCorr_R = new TF1("f_twCorr_R","[0]/TMath::Sqrt(x)+[1]",100,14000);
+			f_twCorr_R -> SetParameters(200,200);
+			//f_twCorr_R -> SetParLimits(0,100,300);
+			//p_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
+			h2_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
+
+			parA_R[i][0] = f_twCorr_R->GetParameter(0);
+			parA_R[i][1] = f_twCorr_R->GetParError (0);
+			parB_R[i][0] = f_twCorr_R->GetParameter(1);
+			parB_R[i][1] = f_twCorr_R->GetParError (1);
+
+			p_tdc_adc_R[i] -> SetMarkerStyle(20);
+			p_tdc_adc_R[i] -> SetMarkerColor( 1);
+			p_tdc_adc_R[i] -> SetMarkerSize (.5);
 		}
 	}
 
 	// -------------------------------------------------------------------------------------------------
 	// Printing results onto canvases
-	TCanvas * c0 = new TCanvas("c0","c0",900,900);
+	TCanvas * c0 = new TCanvas("c0","c0",700,900);
+	TLatex * tex_f = new TLatex(0.1,0.5,"y = A/#sqrt{x} + B");
+	tex_f -> Draw();
+	c0 -> Modified();
+	c0 -> Update(); 
 
-	TCanvas *** c_tw = new TCanvas**[5];
+	TCanvas *** cSLC = new TCanvas**[5];
 
 	for(int is = 0 ; is < 5 ; is++){
-		c_tw[is] = new TCanvas*[6];
-
-
+		cSLC[is] = new TCanvas*[6];
 		for(int il = 0 ; il < 5 ; il++){
-			c_tw[is][il] = new TCanvas(Form("S%iL%i_paddle",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
-			c_tw[is][il] -> Divide(2,4);	
+			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),700,900);
+			cSLC[is][il] -> Divide(2,7);
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
-				int notEmpty = (h2_dMeantime_adc[identifier]->Integral());
+				int notEmpty = (h2_tdc_adc_L[identifier]->Integral()+h2_tdc_adc_R[identifier]->Integral());
 				if(notEmpty){
 					int min, max;
 					double min_val, max_val;
-					c_tw[is][il] -> cd(cIdx+1);
-					gPad -> SetBottomMargin(0.26);
-					gPad -> SetLeftMargin(0.14);
-					
-					min = getMinNonEmptyBin(h2_dMeantime_adc[identifier]);
-					max = getMaxNonEmptyBin(h2_dMeantime_adc[identifier]);
-					min_val = h2_dMeantime_adc[identifier] -> GetYaxis() -> GetBinCenter(min);
-					max_val = h2_dMeantime_adc[identifier] -> GetYaxis() -> GetBinCenter(max);
 
-					h2_dMeantime_adc[identifier] -> GetYaxis() -> SetRange(min,max);
-					h2_dMeantime_adc[identifier] -> Draw("COLZ");
-					p_dMeantime_adc[identifier] -> Draw("same");		
+					cSLC[is][il] -> cd(2*cIdx+1);
+					gPad -> SetLeftMargin(0.16);
+					gPad -> SetBottomMargin(0.20);
+					gPad -> SetTopMargin(0);
+					min = getMinNonEmptyBin(h2_tdc_adc_L[identifier]);
+					max = getMaxNonEmptyBin(h2_tdc_adc_L[identifier]);
+					min_val = h2_tdc_adc_L[identifier] -> GetYaxis() -> GetBinCenter(min);
+					max_val = h2_tdc_adc_L[identifier] -> GetYaxis() -> GetBinCenter(max);
+					h2_tdc_adc_L[identifier] -> GetYaxis() -> SetRange(min,max);
+					h2_tdc_adc_L[identifier] -> Draw("COLZ");
+					//p_tdc_adc_L[identifier] -> Draw("same");
 
-					TLatex * tex_f = new TLatex(500,min_val+0.30*(max_val-min_val),"y = A/#sqrt{x} + B");
-					tex_f -> SetTextSize(0.08);
-                                        tex_f -> Draw("same");
+					TLatex * tex_AL = new TLatex(10500,max_val-0.30*(max_val-min_val),Form("A = %.4f #pm %.4f",parA_L[identifier][0],parA_L[identifier][1]));
+					tex_AL -> SetTextSize(0.08);
+					tex_AL -> Draw("same");
 
-					TLatex * tex_A = new TLatex(500,min_val+0.18*(max_val-min_val),Form("A = %.4f #pm %.4f",parA_L[identifier][0],parA_L[identifier][1]));
-					tex_A -> SetTextSize(0.08);
-					tex_A -> Draw("same");
+					TLatex * tex_BL = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.4f #pm %.4f",parB_L[identifier][0],parB_L[identifier][1]));
+					tex_BL -> SetTextSize(0.08);
+					tex_BL -> Draw("same");
 
-					TLatex * tex_B = new TLatex(500,min_val+0.06*(max_val-min_val),Form("B = %.4f #pm %.4f",parB_L[identifier][0],parB_L[identifier][1]));
-                                        tex_B -> SetTextSize(0.08);
-                                        tex_B -> Draw("same");
-				} 
+					cSLC[is][il] -> cd(2*cIdx+2);
+					gPad -> SetLeftMargin(0.16);
+					gPad -> SetBottomMargin(0.20);
+					gPad -> SetTopMargin(0);
+					min = getMinNonEmptyBin(h2_tdc_adc_R[identifier]);
+					max = getMaxNonEmptyBin(h2_tdc_adc_R[identifier]);
+					min_val = h2_tdc_adc_R[identifier] -> GetYaxis() -> GetBinCenter(min);
+					max_val = h2_tdc_adc_R[identifier] -> GetYaxis() -> GetBinCenter(max);
+					h2_tdc_adc_R[identifier] -> GetYaxis() -> SetRange(min,max);
+					h2_tdc_adc_R[identifier] -> Draw("COLZ");
+					//p_tdc_adc_R[identifier] -> Draw("same");
+
+					TLatex * tex_AR = new TLatex(10500,max_val-0.30*(max_val-min_val),Form("A = %.2f #pm %.2f",parA_R[identifier][0],parA_R[identifier][1]));
+					tex_AR -> SetTextSize(0.08);
+					tex_AR -> Draw("same");
+
+					TLatex * tex_BR = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.2f #pm %.2f",parB_R[identifier][0],parB_R[identifier][1]));
+					tex_BR -> SetTextSize(0.08);
+					tex_BR -> Draw("same");
+				}
 			}
-			c_tw[is][il] -> Modified();	c_tw[is][il] -> Update();		
+			cSLC[is][il] -> Modified();     cSLC[is][il] -> Update();
 		}
 	}
 
@@ -319,10 +323,13 @@ int main(int argc, char** argv) {
 		for(int il = 1 ; il <= 6 ; il++){
 			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
 				int idx = 100*is + 10*il + ic;
-
 				tabL << is << "\t" << il << "\t" << ic << "\t" << "\t";
 				if(il==6) tabL << "0\t0\t0\t0" << endl;
-				else tabL << parA_L[idx][0] << "\t" << parB_L[idx][0] << "\t" << parA_L[idx][1] << "\t" << parB_L[idx][1] << endl;
+				else tabL << parA_L[idx][0] << "\t" << parB_L[idx][0] << "\t" << parA_L[idx][1]  << "\t" << parB_L[idx][1] << endl;
+				// ---
+				tabR << is << "\t" << il << "\t" << ic << "\t" << "\t";
+				if(il==6) tabR << "0\t0\t0\t0" << endl;
+				else tabR << parA_R[idx][0] << "\t" << parB_R[idx][0] << "\t" << parA_R[idx][1]  << "\t" << parB_R[idx][1] << endl;
 			}
 		}
 	}
@@ -332,22 +339,23 @@ int main(int argc, char** argv) {
 	// -------------------------------------------------------------------------------------------------
 	// Deleting empty histograms
 	for(int i = 0 ; i < nHistos ; i++){
-		int notEmpty = (h2_dMeantime_adc[i]->Integral());
+		int notEmpty = (h2_tdc_adc_L[i]->Integral()+h2_tdc_adc_R[i]->Integral());
 		if(!notEmpty){
-			delete h2_dMeantime_adc[i];
+			delete h2_tdc_adc_L[i];
+			delete h2_tdc_adc_R[i];
 		}
 	}
 
 	// -------------------------------------------------------------------------------------------------
 	// Saving plots to a pdf file
-	c0 -> Print("results_timewalk_corr.pdf(");
+	c0 -> Print("results_timewalk_corr_perPMT.pdf(");
 
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			c_tw[is][il] -> Print("results_timewalk_corr.pdf");
+			cSLC[is][il] -> Print("results_timewalk_corr_perPMT.pdf");
 		}
 	}
-	c0 -> Print("results_timewalk_corr.pdf)");
+	c0 -> Print("results_timewalk_corr_perPMT.pdf)");
 
 	myapp -> Run();
 	return 0;
