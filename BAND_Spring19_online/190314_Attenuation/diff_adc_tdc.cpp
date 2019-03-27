@@ -60,20 +60,20 @@ int main(int argc, char** argv) {
 	}
 	else {
 		cout << "=========================\nRun this code as:\n./code path/to/input/file A" << endl;
-		cout << "where A = 0 -> Altogether"             << endl;
-		cout << "        = 1 -> ADC_L < 11000"          << endl;
-		cout << "        = 2 -> 11000 <= ADC_L < 18000" << endl;
-		cout << "        = 3 -> ADC_L >= 18000"         << endl;
-		cout << "\n========================="           << endl;
+		cout << "where A = 0 -> Altogether"           << endl;
+		cout << "        = 1 -> ADC < 11000"          << endl;
+		cout << "        = 2 -> 11000 <= ADC < 18000" << endl;
+		cout << "        = 3 -> ADC >= 18000"         << endl;
+		cout << "\n========================="         << endl;
 		exit(0);
 	}
 
 	int cutopt = atoi(argv[2]);
 	TLatex * tex_cut = new TLatex();
 	if(cutopt==0) tex_cut = new TLatex(0.1,0.5,"Altogether"            );
-	if(cutopt==1) tex_cut = new TLatex(0.1,0.5,"ADC_L < 11000"         );
-	if(cutopt==2) tex_cut = new TLatex(0.1,0.5,"11000 <= ADC_L < 18000");
-	if(cutopt==3) tex_cut = new TLatex(0.1,0.5,"ADC_L >= 18000"        );
+	if(cutopt==1) tex_cut = new TLatex(0.1,0.5,"#sqrt{ADC_{L}*ADC_{R}} < 11000"         );
+	if(cutopt==2) tex_cut = new TLatex(0.1,0.5,"11000 <= #sqrt{ADC_{L}*ADC_{R}} < 18000");
+	if(cutopt==3) tex_cut = new TLatex(0.1,0.5,"#sqrt{ADC_{L}*ADC_{R}} >= 18000"        );
 
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
@@ -194,9 +194,9 @@ int main(int argc, char** argv) {
 									double diff_TDC = TDC1_time - TDC2_time;
 
 									if(             ( cutopt == 0)||
-											((cutopt == 1)&&(ADC1_adc <  11000))||
-											((cutopt == 2)&&(ADC1_adc >= 11000)&&(ADC1_adc < 18000))||
-											((cutopt == 3)&&(ADC1_adc >= 18000))
+											((cutopt == 1)&&(TMath::Sqrt(ADC1_adc*ADC2_adc) <  11000))||
+											((cutopt == 2)&&(TMath::Sqrt(ADC1_adc*ADC2_adc) >= 11000)&&(TMath::Sqrt(ADC1_adc*ADC2_adc) < 18000))||
+											((cutopt == 3)&&(TMath::Sqrt(ADC1_adc*ADC2_adc) >= 18000))
 									  ){
 										h2_diff_adc_tdc[barKey] -> Fill( diff_TDC , diff_ADC );
 									}
