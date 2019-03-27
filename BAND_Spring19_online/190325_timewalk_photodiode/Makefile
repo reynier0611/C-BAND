@@ -14,14 +14,17 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: timeWalk_photodiode
+all: timeWalk_photodiode_perBar timeWalk_photodiode_perPMT
 
-timeWalk_photodiode: timeWalk_photodiode.o
-	$(CXX) -o timeWalk_photodiode $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+timeWalk_photodiode_perBar: timeWalk_photodiode_perBar.o
+	$(CXX) -o timeWalk_photodiode_perBar $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+
+timeWalk_photodiode_perPMT: timeWalk_photodiode_perPMT.o
+	$(CXX) -o timeWalk_photodiode_perPMT $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o timeWalk_photodiode *~
+	@rm -rf *.o timeWalk_photodiode_perBar *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

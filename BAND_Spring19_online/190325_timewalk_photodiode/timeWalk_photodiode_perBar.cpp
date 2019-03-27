@@ -63,6 +63,11 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 
+	cout << "****************************************" << endl;
+	cout << "WARNING: This code may not work unless"   << endl;
+	cout << "         you run it on run 261."          << endl;
+	cout << "****************************************" << endl;
+
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
 	const int nHistos = 600;
@@ -77,7 +82,7 @@ int main(int argc, char** argv) {
 	for(int i = 0 ; i < nHistos ; i++){
 		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",500,0,20000,800,100,200);
 		PrettyTH2F(h2_dMeantime_adc[i]);
-	}
+        }
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -326,14 +331,14 @@ int main(int argc, char** argv) {
 
 	// -------------------------------------------------------------------------------------------------
 	// Saving plots to a pdf file
-	c0 -> Print("results_timewalk_corr.pdf(");
+	c0 -> Print("results_timewalk_corr_perBar.pdf(");
 
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			c_tw[is][il] -> Print("results_timewalk_corr.pdf");
+			c_tw[is][il] -> Print("results_timewalk_corr_perBar.pdf");
 		}
 	}
-	c0 -> Print("results_timewalk_corr.pdf)");
+	c0 -> Print("results_timewalk_corr_perBar.pdf)");
 
 	myapp -> Run();
 	return 0;
