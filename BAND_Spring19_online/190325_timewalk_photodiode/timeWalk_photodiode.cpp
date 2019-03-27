@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 	TH2F ** h2_dMeantime_adc = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",500,0,20000,800,200,240);
+		h2_dMeantime_adc[i] = new TH2F(Form("h2_dMeantime_adc_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC} - ref",500,0,20000,800,100,200);
 		PrettyTH2F(h2_dMeantime_adc[i]);
 	}
 
