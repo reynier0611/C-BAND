@@ -83,8 +83,8 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,14000,700,100,200);
-		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,14000,700,100,200);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,14000,300,142,180);
+		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,14000,300,142,180);
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
 	}
@@ -211,8 +211,8 @@ int main(int argc, char** argv) {
 			TF1 * f_twCorr_L = new TF1("f_twCorr_L","[0]/TMath::Sqrt(x)+[1]",100,14000);
 			f_twCorr_L -> SetParameters(200,200);
 			//f_twCorr_L -> SetParLimits(0,100,300);
-			//p_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
-			h2_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
+			p_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
+			//h2_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
 
 			parA_L[i][0] = f_twCorr_L->GetParameter(0);
 			parA_L[i][1] = f_twCorr_L->GetParError (0);
@@ -231,8 +231,8 @@ int main(int argc, char** argv) {
 			TF1 * f_twCorr_R = new TF1("f_twCorr_R","[0]/TMath::Sqrt(x)+[1]",100,14000);
 			f_twCorr_R -> SetParameters(200,200);
 			//f_twCorr_R -> SetParLimits(0,100,300);
-			//p_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
-			h2_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
+			p_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
+			//h2_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
 
 			parA_R[i][0] = f_twCorr_R->GetParameter(0);
 			parA_R[i][1] = f_twCorr_R->GetParError (0);
@@ -278,13 +278,13 @@ int main(int argc, char** argv) {
 					max_val = h2_tdc_adc_L[identifier] -> GetYaxis() -> GetBinCenter(max);
 					h2_tdc_adc_L[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_tdc_adc_L[identifier] -> Draw("COLZ");
-					//p_tdc_adc_L[identifier] -> Draw("same");
+					p_tdc_adc_L[identifier] -> Draw("same");
 
-					TLatex * tex_AL = new TLatex(10500,max_val-0.30*(max_val-min_val),Form("A = %.4f #pm %.4f",parA_L[identifier][0],parA_L[identifier][1]));
+					TLatex * tex_AL = new TLatex(10500,max_val-0.30*(max_val-min_val),Form("A = %.3f #pm %.3f",parA_L[identifier][0],parA_L[identifier][1]));
 					tex_AL -> SetTextSize(0.08);
 					tex_AL -> Draw("same");
 
-					TLatex * tex_BL = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.4f #pm %.4f",parB_L[identifier][0],parB_L[identifier][1]));
+					TLatex * tex_BL = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.3f #pm %.3f",parB_L[identifier][0],parB_L[identifier][1]));
 					tex_BL -> SetTextSize(0.08);
 					tex_BL -> Draw("same");
 
@@ -298,13 +298,13 @@ int main(int argc, char** argv) {
 					max_val = h2_tdc_adc_R[identifier] -> GetYaxis() -> GetBinCenter(max);
 					h2_tdc_adc_R[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_tdc_adc_R[identifier] -> Draw("COLZ");
-					//p_tdc_adc_R[identifier] -> Draw("same");
+					p_tdc_adc_R[identifier] -> Draw("same");
 
-					TLatex * tex_AR = new TLatex(10500,max_val-0.30*(max_val-min_val),Form("A = %.2f #pm %.2f",parA_R[identifier][0],parA_R[identifier][1]));
+					TLatex * tex_AR = new TLatex(10500,max_val-0.30*(max_val-min_val),Form("A = %.3f #pm %.3f",parA_R[identifier][0],parA_R[identifier][1]));
 					tex_AR -> SetTextSize(0.08);
 					tex_AR -> Draw("same");
 
-					TLatex * tex_BR = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.2f #pm %.2f",parB_R[identifier][0],parB_R[identifier][1]));
+					TLatex * tex_BR = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.3f #pm %.3f",parB_R[identifier][0],parB_R[identifier][1]));
 					tex_BR -> SetTextSize(0.08);
 					tex_BR -> Draw("same");
 				}
