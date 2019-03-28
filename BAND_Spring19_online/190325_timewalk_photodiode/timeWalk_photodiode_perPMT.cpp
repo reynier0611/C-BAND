@@ -210,9 +210,7 @@ int main(int argc, char** argv) {
 			p_tdc_adc_L[i] = h2_tdc_adc_L[i]->ProfileX(Form("px_L_%i",i), 1, nBins );
 			TF1 * f_twCorr_L = new TF1("f_twCorr_L","[0]/TMath::Sqrt(x)+[1]",100,18000);
 			f_twCorr_L -> SetParameters(200,200);
-			//f_twCorr_L -> SetParLimits(0,100,300);
 			p_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
-			//h2_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
 
 			parA_L[i][0] = f_twCorr_L->GetParameter(0);
 			parA_L[i][1] = f_twCorr_L->GetParError (0);
@@ -230,9 +228,7 @@ int main(int argc, char** argv) {
 			p_tdc_adc_R[i] = h2_tdc_adc_R[i]->ProfileX(Form("px_R_%i",i), 1, nBins );
 			TF1 * f_twCorr_R = new TF1("f_twCorr_R","[0]/TMath::Sqrt(x)+[1]",100,18000);
 			f_twCorr_R -> SetParameters(200,200);
-			//f_twCorr_R -> SetParLimits(0,100,300);
 			p_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
-			//h2_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
 
 			parA_R[i][0] = f_twCorr_R->GetParameter(0);
 			parA_R[i][1] = f_twCorr_R->GetParError (0);
@@ -257,13 +253,13 @@ int main(int argc, char** argv) {
 
 	for(int is = 0 ; is < 5 ; is++){
 		cSLC[is] = new TCanvas*[6];
-		for(int il = 0 ; il < 5 ; il++){
+		for(int il = 0 ; il < 6 ; il++){
 			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),700,900);
 			cSLC[is][il] -> Divide(2,7);
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
-				int notEmpty = (h2_tdc_adc_L[identifier]->Integral()+h2_tdc_adc_R[identifier]->Integral());
+				int notEmpty = (h2_tdc_adc_L[identifier]->Integral());
 				if(notEmpty){
 					int min, max;
 					double min_val, max_val;
@@ -287,6 +283,11 @@ int main(int argc, char** argv) {
 					TLatex * tex_BL = new TLatex(10500,max_val-0.42*(max_val-min_val),Form("B = %.3f #pm %.3f",parB_L[identifier][0],parB_L[identifier][1]));
 					tex_BL -> SetTextSize(0.08);
 					tex_BL -> Draw("same");
+				}
+				notEmpty = (h2_tdc_adc_R[identifier]->Integral());
+				if(notEmpty){
+					int min, max;
+                                        double min_val, max_val;
 
 					cSLC[is][il] -> cd(2*cIdx+2);
 					gPad -> SetLeftMargin(0.16);
@@ -312,7 +313,6 @@ int main(int argc, char** argv) {
 			cSLC[is][il] -> Modified();     cSLC[is][il] -> Update();
 		}
 	}
-
 	// -------------------------------------------------------------------------------------------------
 	// Saving fit values to ccdb tables
 	ofstream tabL, tabR;
@@ -324,12 +324,14 @@ int main(int argc, char** argv) {
 			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
 				int idx = 100*is + 10*il + ic;
 				tabL << is << "\t" << il << "\t" << ic << "\t" << "\t";
-				if(il==6) tabL << "0\t0\t0\t0" << endl;
-				else tabL << parA_L[idx][0] << "\t" << parB_L[idx][0] << "\t" << parA_L[idx][1]  << "\t" << parB_L[idx][1] << endl;
+				//if(il==6) tabL << "0\t0\t0\t0" << endl;
+				//else
+				tabL << parA_L[idx][0] << "\t" << parB_L[idx][0] << "\t" << parA_L[idx][1]  << "\t" << parB_L[idx][1] << endl;
 				// ---
 				tabR << is << "\t" << il << "\t" << ic << "\t" << "\t";
-				if(il==6) tabR << "0\t0\t0\t0" << endl;
-				else tabR << parA_R[idx][0] << "\t" << parB_R[idx][0] << "\t" << parA_R[idx][1]  << "\t" << parB_R[idx][1] << endl;
+				//if(il==6) tabR << "0\t0\t0\t0" << endl;
+				//else
+				tabR << parA_R[idx][0] << "\t" << parB_R[idx][0] << "\t" << parA_R[idx][1]  << "\t" << parB_R[idx][1] << endl;
 			}
 		}
 	}
@@ -351,7 +353,7 @@ int main(int argc, char** argv) {
 	c0 -> Print("results_timewalk_corr_perPMT.pdf(");
 
 	for(int is = 0 ; is < 5 ; is++){
-		for(int il = 0 ; il < 5 ; il++){
+		for(int il = 0 ; il < 6 ; il++){
 			cSLC[is][il] -> Print("results_timewalk_corr_perPMT.pdf");
 		}
 	}
