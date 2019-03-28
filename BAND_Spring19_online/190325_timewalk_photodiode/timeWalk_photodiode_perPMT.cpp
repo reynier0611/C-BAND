@@ -83,8 +83,8 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,14000,300,142,180);
-		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,14000,300,142,180);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,18000,300,142,180);
+		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,18000,300,142,180);
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
 	}
@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
 		if(notEmpty){
 			int nBins = h2_tdc_adc_L[i] -> GetYaxis() -> GetNbins();
 			p_tdc_adc_L[i] = h2_tdc_adc_L[i]->ProfileX(Form("px_L_%i",i), 1, nBins );
-			TF1 * f_twCorr_L = new TF1("f_twCorr_L","[0]/TMath::Sqrt(x)+[1]",100,14000);
+			TF1 * f_twCorr_L = new TF1("f_twCorr_L","[0]/TMath::Sqrt(x)+[1]",100,18000);
 			f_twCorr_L -> SetParameters(200,200);
 			//f_twCorr_L -> SetParLimits(0,100,300);
 			p_tdc_adc_L[i] -> Fit("f_twCorr_L","QR");
@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
 		if(notEmpty){
 			int nBins = h2_tdc_adc_R[i] -> GetYaxis() -> GetNbins();
 			p_tdc_adc_R[i] = h2_tdc_adc_R[i]->ProfileX(Form("px_R_%i",i), 1, nBins );
-			TF1 * f_twCorr_R = new TF1("f_twCorr_R","[0]/TMath::Sqrt(x)+[1]",100,14000);
+			TF1 * f_twCorr_R = new TF1("f_twCorr_R","[0]/TMath::Sqrt(x)+[1]",100,18000);
 			f_twCorr_R -> SetParameters(200,200);
 			//f_twCorr_R -> SetParLimits(0,100,300);
 			p_tdc_adc_R[i] -> Fit("f_twCorr_R","QR");
