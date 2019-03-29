@@ -111,9 +111,9 @@ int main(int argc, char** argv) {
 	TH1F * h1_adcR          = new TH1F("h1_adcR"         ,"",1000,  0,30000);	PrettyTH1F(h1_adcR          ,"R ADC"                        ,"Counts",1);
 
 	TH1F * h1_meantime_fadc = new TH1F("h1_meantime_fadc","",400 ,-50,  350);	PrettyTH1F(h1_meantime_fadc ,"(L+R)/2 (FADC)"               ,"Counts",1);
-	TH1F * h1_meantime_tdc  = new TH1F("h1_meantime_tdc" ,"",400 ,300,  900);	PrettyTH1F(h1_meantime_tdc  ,"(L+R)/2 corrected (TDC)"      ,"Counts",1);
+	TH1F * h1_meantime_tdc  = new TH1F("h1_meantime_tdc" ,"",400 ,350,  750);	PrettyTH1F(h1_meantime_tdc  ,"(L+R)/2 corrected (TDC)"      ,"Counts",1);
 	TH1F * h1_ToF_fadc      = new TH1F("h1_ToF_fadc"     ,"",400 ,-50,  350);	PrettyTH1F(h1_ToF_fadc      ,"(L+R)/2 - RF (FADC)"          ,"Counts",1);
-	TH1F * h1_ToF_tdc       = new TH1F("h1_ToF_tdc"      ,"",400 ,300,  900);	PrettyTH1F(h1_ToF_tdc       ,"(L+R)/2 corrected - RF (TDC)" ,"Counts",1);
+	TH1F * h1_ToF_tdc       = new TH1F("h1_ToF_tdc"      ,"",400 ,200,  600);	PrettyTH1F(h1_ToF_tdc       ,"(L+R)/2 corrected - RF (TDC)" ,"Counts",1);
 
 	TH1F * h1_bar_nPho      = new TH1F("h1_bar_nPho"     ,"",652 ,110,  652);	PrettyTH1F(h1_bar_nPho      ,"Bar ID","Number Hits Between 5-15 ns"  ,1);	
 
@@ -306,6 +306,11 @@ int main(int argc, char** argv) {
 	c2 -> Update();
 
 	c0 -> Print("results_mean_time.pdf");
+
+	TFile * output = new TFile("out.root","recreate");
+	h1_meantime_tdc -> Write("h1_meantime_tdc");
+	h1_ToF_tdc      -> Write("h1_ToF_tdc"     );
+	output -> Close();
 
 	myapp -> Run();
 	return 0;
