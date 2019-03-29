@@ -22,6 +22,7 @@ BAND_Spring19_online/190325_timewalk_photodiode/timeWalkPar_R.txt
 BAND_Spring19_online/190325_timewalk_photodiode/timeWalk_photodiode
 BAND_Spring19_online/190325_timewalk_photodiode/timeWalk_photodiode_perBar
 BAND_Spring19_online/190325_timewalk_photodiode/timeWalk_photodiode_perPMT
+BAND_Spring19_online/190325_timewalk_photodiode/test_parameters
 Examples/example
 lib/libclas12banks.a
 lib/libhipo.a

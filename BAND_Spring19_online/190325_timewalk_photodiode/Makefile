@@ -16,7 +16,7 @@ LDFLAGS   := $(ROOTLDFLAGS)
 
 all: test_parameters timeWalk_photodiode_perPMT
 
-test_parameters: timeWalk_photodiode_perBar.o
+test_parameters: test_parameters.o
 	$(CXX) -o test_parameters $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 timeWalk_photodiode_perPMT: timeWalk_photodiode_perPMT.o
