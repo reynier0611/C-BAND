@@ -81,6 +81,8 @@ int main(int argc, char** argv) {
 	// Declaring histograms
 	const int nHistos = 600;
 
+	double ref_time = 0;
+
 	double parA_L[nHistos][2] = {{0}};
 	double parB_L[nHistos][2] = {{0}};
 	double parA_R[nHistos][2] = {{0}};
@@ -90,8 +92,8 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,18000,300,1200,1400);
-		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,18000,300,1200,1400);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,18000,300,-5,5);
+                h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,18000,300,-5,5);
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
 	}
@@ -132,6 +134,27 @@ int main(int argc, char** argv) {
 		//long timestamp = RUN_config.getLong(4,0);
 		//double phaseCorr = getTriggerPhase(timestamp);	
 
+		ref_time = -100000;
+
+                for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
+                        int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
+                        int   TDC1_layer     = BAND_TDC.getInt  (1,tIdx1);
+                        int   TDC1_component = BAND_TDC.getInt  (2,tIdx1);
+                        int   TDC1_order     = BAND_TDC.getInt  (3,tIdx1);
+                        float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
+                        float TDC1_time      = TDC1_tdc*0.02345;
+
+                        //TDC1_time -= phaseCorr;
+
+                        // Reference is PMT in bar V16-A (L), corresponding to Sector: 3, Layer: 6, Component: 6, Order
+                        if( TDC1_sector==3 && TDC1_layer==6 && TDC1_component==6 ){
+                                ref_time = TDC1_time;
+                        }
+
+                }
+
+                if(ref_time == -100000) continue;
+
 		for(int aIdx = 0 ; aIdx < nADC ; aIdx++){
 
 			int   ADC_sector    = BAND_ADC.getInt  (0,aIdx);
@@ -168,7 +191,7 @@ int main(int argc, char** argv) {
 					if     (ADC_order==0) correction = TimeWalk_corr( barKey , "L" , ADC_adc );
 					else if(ADC_order==1) correction = TimeWalk_corr( barKey , "R" , ADC_adc );
 
-					double delta_time = TDC_time + correction;
+					double delta_time = TDC_time - ref_time + correction;
 
 					// Left PMTs
 					if(ADC_order==0){
