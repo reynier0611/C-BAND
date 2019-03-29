@@ -27,7 +27,7 @@ mean_time: mean_time.o
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o parameter_extraction parameter_test *~
+	@rm -rf *.o parameter_extraction parameter_test mean_time *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
