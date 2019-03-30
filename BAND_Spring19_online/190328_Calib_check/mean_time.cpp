@@ -11,6 +11,7 @@
 #include "TVector3.h"
 #include "TLorentzVector.h"
 #include "TCanvas.h"
+#include "TF1.h"
 
 #include "reader.h"
 #include "node.h"
@@ -105,19 +106,8 @@ int main(int argc, char** argv) {
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
 	// 1D histograms
-	TH1F * h1_tdiff_fadc    = new TH1F("h1_tdiff_fadc"   ,"",100 ,-40,   40);	PrettyTH1F(h1_tdiff_fadc    ,"L-R for FADC"                 ,"Counts",1);
-	TH1F * h1_tdiff_tdc     = new TH1F("h1_tdiff_tdc"    ,"",100 ,-40,   40);	PrettyTH1F(h1_tdiff_tdc     ,"L-R for TDC"                  ,"Counts",1);
-	TH1F * h1_adcL          = new TH1F("h1_adcL"         ,"",1000,  0,30000);	PrettyTH1F(h1_adcL          ,"L ADC"                        ,"Counts",1);
-	TH1F * h1_adcR          = new TH1F("h1_adcR"         ,"",1000,  0,30000);	PrettyTH1F(h1_adcR          ,"R ADC"                        ,"Counts",1);
-
-	TH1F * h1_meantime_fadc = new TH1F("h1_meantime_fadc","",400 ,-50,  350);	PrettyTH1F(h1_meantime_fadc ,"(L+R)/2 (FADC)"               ,"Counts",1);
-	TH1F * h1_meantime_tdc  = new TH1F("h1_meantime_tdc" ,"",400 ,350,  750);	PrettyTH1F(h1_meantime_tdc  ,"(L+R)/2 corrected (TDC)"      ,"Counts",1);
-	TH1F * h1_ToF_fadc      = new TH1F("h1_ToF_fadc"     ,"",400 ,-50,  350);	PrettyTH1F(h1_ToF_fadc      ,"(L+R)/2 - RF (FADC)"          ,"Counts",1);
-	TH1F * h1_ToF_tdc       = new TH1F("h1_ToF_tdc"      ,"",400 ,200,  600);	PrettyTH1F(h1_ToF_tdc       ,"(L+R)/2 corrected - RF (TDC)" ,"Counts",1);
-
-	TH1F * h1_bar_nPho      = new TH1F("h1_bar_nPho"     ,"",652 ,110,  652);	PrettyTH1F(h1_bar_nPho      ,"Bar ID","Number Hits Between 5-15 ns"  ,1);	
-
-	TH2F * h2_meantime_tdc_fadc = new TH2F("h2_meantime_tdc_fadc","",100 ,-50,  350,100 ,300, 900);
+	TH1F * h1_meantime_tdc  = new TH1F("h1_meantime_tdc" ,"",1800 ,200,  600);	PrettyTH1F(h1_meantime_tdc  ,"(L+R)/2 corrected (TDC)"      ,"Counts",4);
+	TH1F * h1_ToF_tdc       = new TH1F("h1_ToF_tdc"      ,"",1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc       ,"(L+R)/2 corrected - RF (TDC)" ,"Counts",1);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -254,63 +244,45 @@ int main(int argc, char** argv) {
 			double dL = TMath::Sqrt( pow(x,2) + pow(y,2) + pow(z,2) );
 
 			// Fill histograms
-			//h1_tdiff_fadc        -> Fill(difftimeFadc            );
-			//h1_tdiff_tdc         -> Fill(difftimeTdc             );
-			//h1_adcL              -> Fill(adcLcorr                );
-			//h1_adcR              -> Fill(adcRcorr                );
-			//h1_meantime_fadc     -> Fill(meantimeFadc            );
-			h1_meantime_tdc      -> Fill(meantimeTdc -t_vtx        );
-			//h1_ToF_fadc          -> Fill(meantimeFadc-t_vtx      );
+			h1_meantime_tdc      -> Fill(meantimeTdc -t_vtx -(442.741-287.925) );
 			h1_ToF_tdc           -> Fill(meantimeTdcCorr -t_vtx      );
-
-			h2_meantime_tdc_fadc -> Fill(meantimeFadc-t_vtx,meantimeTdc-t_vtx);
-
-			if( TMath::Abs( meantimeFadc-t_vtx-40 - 10 ) < 5 ){
-				h1_bar_nPho -> Fill( barKey );
-			}
 
 		}// end loop over hits in event
 
 
 	}// end file
 
-	TCanvas * c0 = new TCanvas("c0","c0",1200,800);
-	c0 -> Divide(2, 4);
+	// Fitting the photo-peak
+	TF1 * f_photopeak_1 = new TF1("f_photopeak_1","gaus(0) + pol2(3)",280,300);
+	f_photopeak_1 -> SetParameter(0,140);
+	f_photopeak_1 -> SetParameter(1,287);
+	f_photopeak_1 -> SetParameter(2,  1);
+	TF1 * f_photopeak_2 = new TF1("f_photopeak_2","gaus(0) + pol2(3)",280,300);
+	f_photopeak_2 -> SetParameter(0,140);
+        f_photopeak_2 -> SetParameter(1,287);
+        f_photopeak_2 -> SetParameter(2,  1);
 
-	for(int i = 1 ; i < 9 ; i++){
-		c0 -> cd(i);
-		gPad -> SetBottomMargin(0.2);
-	}
+	h1_meantime_tdc -> Fit("f_photopeak_1","R");
+	h1_ToF_tdc      -> Fit("f_photopeak_2","R");
 
-	c0 -> cd(1);	h1_adcL          -> Draw();
-	c0 -> cd(2);	h1_adcR          -> Draw();
-	c0 -> cd(3);	h1_tdiff_fadc    -> Draw();
-	c0 -> cd(4);	h1_tdiff_tdc     -> Draw();
-	c0 -> cd(5);	h1_meantime_fadc -> Draw();
-	c0 -> cd(6);	h1_meantime_tdc  -> Draw();
-	c0 -> cd(7);	h1_ToF_fadc      -> Draw();
-	c0 -> cd(8);	h1_ToF_tdc       -> Draw();
-	c0 -> Modified();
-	c0 -> Update();
-
-	TCanvas * c1 = new TCanvas("c1","c1",1200,800);
-        h2_meantime_tdc_fadc -> Draw("COLZ");
-	c1 -> Modified();
-        c1 -> Update();
-
+	// Making plots
 	TCanvas * c2 = new TCanvas("c2","c2",1200,800);
 	c2 -> Divide(1,2);
-	c2 -> cd(1);	h1_meantime_tdc -> Draw();
-	c2 -> cd(2);	h1_ToF_tdc      -> Draw();
+	c2 -> cd(1);	gPad -> SetBottomMargin(0.2);	h1_meantime_tdc -> Draw();
+	c2 -> cd(2);	gPad -> SetBottomMargin(0.2);	h1_ToF_tdc      -> Draw();
 	c2 -> Modified();
 	c2 -> Update();
 
-	c0 -> Print("results_mean_time.pdf");
+	// Saving plots to a pdf file
+	c2 -> Print("results_mean_time.pdf");
 
+	// Saving plots to a root file
 	TFile * output = new TFile("out.root","recreate");
 	h1_meantime_tdc -> Write("h1_meantime_tdc");
 	h1_ToF_tdc      -> Write("h1_ToF_tdc"     );
 	output -> Close();
+
+	cout << "ROOT FILE HAS BEEN CREATED" << endl;
 
 	myapp -> Run();
 	return 0;
