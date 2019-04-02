@@ -25,16 +25,19 @@
 
 using namespace std;
 
-double p2p [600] = {0};
-double l2l [600] = {0};
-double twAL[600] = {0};
-double twBL[600] = {0};
-double twAR[600] = {0};
-double twBR[600] = {0};
+double p2p   [600] = {0};
+double l2l   [600] = {0};
+double twAL  [600] = {0};
+double twBL  [600] = {0};
+double twAR  [600] = {0};
+double twBR  [600] = {0};
+double LRtdc [600] = {0};
+double LRfadc[600] = {0};
 
 // Forward-declaring functions
 void LoadPaddleCorrectionPar();
 void LoadT_WalkCorrectionPar();
+void Load_LminRCorrectionPar();
 double TDC_corr( int barId );
 double TimeWalk_corr( int barId , TString LR , double ADC );
 void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
@@ -63,6 +66,28 @@ int main(int argc, char** argv) {
 	}
 
 	// ----------------------------------------------------------------------------------
+        // Load time-walk correction parameters only if data is not already corrected
+        cout << "Is your data already timewalk corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+        int optionTW;
+        cin >> optionTW;
+        if(optionTW==3){
+                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
+                exit(0);
+        }
+        if(optionTW==1)
+                LoadT_WalkCorrectionPar();
+	// ----------------------------------------------------------------------------------
+        // Load L-R correction parameters only if data is not already corrected
+	cout << "Is your data already L-R time corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+	int optionLR;
+	cin >> optionLR;
+	if(optionLR==3){
+                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
+                exit(0);
+        }
+	if(optionLR==1)
+		Load_LminRCorrectionPar();
+	// ----------------------------------------------------------------------------------
         // Load TDC paddle-to-paddle correction parameters only if data is not already corrected
         cout << "Is your data already TDC paddle offset corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
         int option;
@@ -73,17 +98,7 @@ int main(int argc, char** argv) {
         }
         if(option==1)
                 LoadPaddleCorrectionPar();
-	// ----------------------------------------------------------------------------------
-        // Load time-wal correction parameters only if data is not already corrected
-        cout << "Is your data already timewalk corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
-        int optionTW;
-        cin >> optionTW;
-        if(optionTW==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-        if(optionTW==1)
-		LoadT_WalkCorrectionPar();
+	// ---------------------------------------------------------------------------------- 
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
@@ -222,7 +237,7 @@ int main(int argc, char** argv) {
 			float adcLcorr           = band_hits.getAdcLcorr    (hit);
 			float adcRcorr           = band_hits.getAdcRcorr    (hit);
 
-			double meantimeTdcCorr = meantimeTdc + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
+			double meantimeTdcCorr = meantimeTdc - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
 
 			//if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
 			if( TMath::Sqrt(adcLcorr*adcRcorr) < 6000 ) continue;
@@ -383,6 +398,27 @@ void LoadT_WalkCorrectionPar(){
                 f >> temp;
 		twAR[barId] = parA;
                 twBR[barId] = parB;
+        }
+        f.close();
+}
+// ========================================================================================================================================
+void Load_LminRCorrectionPar(){
+	ifstream f;
+        int layer, sector, component, barId;
+        double par_TDC, par_FADC, temp;
+
+	f.open("input_params/lr_offsets_261.txt");
+        while(!f.eof()){
+                f >> sector;
+                f >> layer;
+                f >> component;
+                barId = 100*sector + 10*layer + component;
+                f >> par_TDC;
+                f >> par_FADC;
+                f >> temp;
+                f >> temp;
+                LRtdc [barId] = par_TDC;
+                LRfadc[barId] = par_FADC;
         }
         f.close();
 }
