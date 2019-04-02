@@ -106,8 +106,8 @@ int main(int argc, char** argv) {
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
 	// 1D histograms
-	TH1F * h1_meantime_tdc  = new TH1F("h1_meantime_tdc" ,"",1800 ,200,  600);	PrettyTH1F(h1_meantime_tdc  ,"(L+R)/2 corrected (TDC)"      ,"Counts",4);
-	TH1F * h1_ToF_tdc       = new TH1F("h1_ToF_tdc"      ,"",1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc       ,"(L+R)/2 corrected - RF (TDC)" ,"Counts",1);
+	TH1F * h1_ToF_tdc_uncorr  = new TH1F("h1_ToF_tdc_uncorr" ,"uncorrected",1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc_uncorr  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+	TH1F * h1_ToF_tdc_corr    = new TH1F("h1_ToF_tdc_corr"   ,"corrected"  ,1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc_corr    ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -224,7 +224,8 @@ int main(int argc, char** argv) {
 
 			double meantimeTdcCorr = meantimeTdc + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
 
-			if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
+			//if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
+			if( TMath::Sqrt(adcLcorr*adcRcorr) < 6000 ) continue;
 			//if( sector < 3 || sector > 4 ) continue; // Use this line to not include long bars
 			if( sector == 3 || sector == 4 ) continue; // Use this line to not include short bars
 
@@ -244,8 +245,8 @@ int main(int argc, char** argv) {
 			double dL = TMath::Sqrt( pow(x,2) + pow(y,2) + pow(z,2) );
 
 			// Fill histograms
-			h1_meantime_tdc      -> Fill(meantimeTdc -t_vtx -(442.741-287.925) );
-			h1_ToF_tdc           -> Fill(meantimeTdcCorr -t_vtx      );
+			h1_ToF_tdc_uncorr      -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
+			h1_ToF_tdc_corr        -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
 
 		}// end loop over hits in event
 
@@ -253,23 +254,23 @@ int main(int argc, char** argv) {
 	}// end file
 
 	// Fitting the photo-peak
-	TF1 * f_photopeak_1 = new TF1("f_photopeak_1","gaus(0) + pol2(3)",280,300);
-	f_photopeak_1 -> SetParameter(0,140);
-	f_photopeak_1 -> SetParameter(1,287);
+	TF1 * f_photopeak_1 = new TF1("f_photopeak_1","gaus(0) + pol2(3)",270,290);
+	f_photopeak_1 -> SetParameter(0,100);
+	f_photopeak_1 -> SetParameter(1,278);
 	f_photopeak_1 -> SetParameter(2,  1);
-	TF1 * f_photopeak_2 = new TF1("f_photopeak_2","gaus(0) + pol2(3)",280,300);
-	f_photopeak_2 -> SetParameter(0,140);
-        f_photopeak_2 -> SetParameter(1,287);
+	TF1 * f_photopeak_2 = new TF1("f_photopeak_2","gaus(0) + pol2(3)",270,290);
+	f_photopeak_2 -> SetParameter(0,100);
+        f_photopeak_2 -> SetParameter(1,278);
         f_photopeak_2 -> SetParameter(2,  1);
 
-	h1_meantime_tdc -> Fit("f_photopeak_1","R");
-	h1_ToF_tdc      -> Fit("f_photopeak_2","R");
+	h1_ToF_tdc_uncorr -> Fit("f_photopeak_1","R");
+	h1_ToF_tdc_corr      -> Fit("f_photopeak_2","R");
 
 	// Making plots
 	TCanvas * c2 = new TCanvas("c2","c2",1200,800);
 	c2 -> Divide(1,2);
-	c2 -> cd(1);	gPad -> SetBottomMargin(0.2);	h1_meantime_tdc -> Draw();
-	c2 -> cd(2);	gPad -> SetBottomMargin(0.2);	h1_ToF_tdc      -> Draw();
+	c2 -> cd(1);	gPad -> SetBottomMargin(0.2);	h1_ToF_tdc_uncorr -> Draw();
+	c2 -> cd(2);	gPad -> SetBottomMargin(0.2);	h1_ToF_tdc_corr      -> Draw();
 	c2 -> Modified();
 	c2 -> Update();
 
@@ -278,8 +279,8 @@ int main(int argc, char** argv) {
 
 	// Saving plots to a root file
 	TFile * output = new TFile("out.root","recreate");
-	h1_meantime_tdc -> Write("h1_meantime_tdc");
-	h1_ToF_tdc      -> Write("h1_ToF_tdc"     );
+	h1_ToF_tdc_uncorr -> Write("h1_ToF_tdc_uncorr");
+	h1_ToF_tdc_corr      -> Write("h1_ToF_tdc_corr"     );
 	output -> Close();
 
 	cout << "ROOT FILE HAS BEEN CREATED" << endl;
