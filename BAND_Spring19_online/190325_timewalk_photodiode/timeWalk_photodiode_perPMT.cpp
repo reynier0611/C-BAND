@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,18000,300,142,180);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{L};t_{TDC,L} - ref [ns]",400,100,18000,300,142,180);
 		h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,18000,300,142,180);
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
 	TProfile ** p_tdc_adc_L = new TProfile*[nHistos];
 	TProfile ** p_tdc_adc_R = new TProfile*[nHistos];
 
-	// Fitting paddle-to-paddle parameters
+	// Fitting time-walk parameters
 	for(int i = 0 ; i < nHistos ; i++){
 		int notEmpty = (h2_tdc_adc_L[i]->Integral());
 		if(notEmpty){

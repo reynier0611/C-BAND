@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_adc_R = new TH2F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{R};t_{TDC,L} - ref [ns]",400,100,18000,100,-2,2);
+		h2_tdc_adc_L[i] = new TH2F(Form("h2_tdc_adc_L_%i",i),";ADC_{L};t_{TDC,L} - ref [ns]",400,100,18000,100,-2,2);
                 h2_tdc_adc_R[i] = new TH2F(Form("h2_tdc_adc_R_%i",i),";ADC_{R};t_{TDC,R} - ref [ns]",400,100,18000,100,-2,2);
 		PrettyTH2F(h2_tdc_adc_L[i]);
 		PrettyTH2F(h2_tdc_adc_R[i]);
