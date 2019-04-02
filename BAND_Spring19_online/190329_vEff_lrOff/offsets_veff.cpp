@@ -29,6 +29,7 @@ void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
 void PrettyTH2F(TH2F * h2,TString titx,TString tity);
 
 double bandlen[]  = {163.7,201.9,51.2,51.2,201.9};
+int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,7,6,6,2}};
 // ========================================================================================================================================
 int main(int argc, char** argv) {
 
@@ -116,37 +117,47 @@ int main(int argc, char** argv) {
 	ofstream lr_offsets,effective_velocity;
 	lr_offsets.open("lr_offsets.txt");
 	effective_velocity.open("effective_velocity.txt");
-	for( int i = 0 ; i < nHistos ; i++ ){
-		if( h1_tdc_diff[i]->Integral() == 0 ) continue;
+	for( int sector = 1 ; sector < 6 ; sector++){
+		for( int layer = 1 ; layer < 7 ; layer++ ){
+			for( int component = 1 ; component <= slc[layer-1][sector-1] ; component++ ){
+				int i = sector*100 + layer*10 + component;
 
-		int sector = (i/100);
-		int layer = (i - sector*100)/10;
-		int component = (i - sector*100 - layer*10);
-		double barLength = bandlen[sector-1];
+				double tdc_vEff,tdc_lr_off,ftdc_vEff,ftdc_lr_off;
+				if( h1_tdc_diff[i]->Integral() == 0 ){
+					tdc_vEff = 0.;
+					tdc_lr_off = 0.;
+					ftdc_vEff = 0.;
+					ftdc_lr_off = 0.;
+				}
+				else{
+					double barLength = bandlen[sector-1];
 
-		// For FADC
-		int ftdc_low_Bin = h1_ftdc_diff[i]->FindFirstBinAbove(3);
-		int ftdc_high_Bin = h1_ftdc_diff[i]->FindLastBinAbove(3);
-		double ftdc_left = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_low_Bin);
-		double ftdc_right = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_high_Bin);
-		double ftdc_width = ftdc_right - ftdc_left;
-		double ftdc_vEff = (2*barLength) / ftdc_width;
-		double ftdc_lr_off = (ftdc_left+ftdc_right)/2.;
+					// For FADC
+					int ftdc_low_Bin = h1_ftdc_diff[i]->FindFirstBinAbove(3);
+					int ftdc_high_Bin = h1_ftdc_diff[i]->FindLastBinAbove(3);
+					double ftdc_left = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_low_Bin);
+					double ftdc_right = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_high_Bin);
+					double ftdc_width = ftdc_right - ftdc_left;
+					ftdc_vEff = (2*barLength) / ftdc_width;
+					ftdc_lr_off = (ftdc_left+ftdc_right)/2.;
 
-		// For TDC
-		int tdc_low_Bin = h1_tdc_diff[i]->FindFirstBinAbove(3);
-		int tdc_high_Bin = h1_tdc_diff[i]->FindLastBinAbove(3);
-		double tdc_left = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_low_Bin);
-		double tdc_right = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_high_Bin);
-		double tdc_width = tdc_right - tdc_left;
-		double tdc_vEff = (2*barLength) / tdc_width;
-		double tdc_lr_off = (tdc_left+tdc_right)/2.;
+					// For TDC
+					int tdc_low_Bin = h1_tdc_diff[i]->FindFirstBinAbove(3);
+					int tdc_high_Bin = h1_tdc_diff[i]->FindLastBinAbove(3);
+					double tdc_left = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_low_Bin);
+					double tdc_right = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_high_Bin);
+					double tdc_width = tdc_right - tdc_left;
+					tdc_vEff = (2*barLength) / tdc_width;
+					tdc_lr_off = (tdc_left+tdc_right)/2.;
 
-		if( isinf(tdc_vEff) ) tdc_vEff = 0.;
-		if( isinf(ftdc_vEff) ) ftdc_vEff = 0.;
-		
-		effective_velocity << sector << "\t" << layer << "\t" << component << "\t" << tdc_vEff << "\t" << ftdc_vEff << "\t" << 0.000 << "\t" << 0.000 << "\n";
-		lr_offsets << sector << "\t" << layer << "\t" << component << "\t" << tdc_lr_off << "\t" << ftdc_lr_off << "\t" << 0.000 << "\t" << 0.000 << "\n";
+					if( isinf(tdc_vEff) ) tdc_vEff = 0.;
+					if( isinf(ftdc_vEff) ) ftdc_vEff = 0.;
+				}
+				
+				effective_velocity << sector << "\t" << layer << "\t" << component << "\t" << tdc_vEff << "\t" << ftdc_vEff << "\t" << 0.000 << "\t" << 0.000 << "\n";
+				lr_offsets << sector << "\t" << layer << "\t" << component << "\t" << tdc_lr_off << "\t" << ftdc_lr_off << "\t" << 0.000 << "\t" << 0.000 << "\n";
+			}
+		}
 	}
 	lr_offsets.close();
 	effective_velocity.close();
