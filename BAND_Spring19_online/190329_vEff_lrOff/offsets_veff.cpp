@@ -36,7 +36,7 @@ int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,
 int main(int argc, char** argv) {
 
 
-        //TApplication *myapp = new TApplication("myapp",0,0);
+	TApplication *myapp = new TApplication("myapp",0,0);
 
 	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
 
@@ -63,13 +63,13 @@ int main(int argc, char** argv) {
 
 	TH1F ** h1_tdc_diff = new TH1F * [nHistos];
 	TH1F ** h1_ftdc_diff = new TH1F * [nHistos];
-	TH2F ** h1_empty = new TH2F * [nHistos];
-	TH2F ** h1_meantime = new TH2F * [nHistos];
+	TH2F ** h2_empty = new TH2F * [nHistos];
+	TH2F ** h2_meantime = new TH2F * [nHistos];
 	for( int i = 0 ; i < nHistos ; i++ ){
-		h1_tdc_diff[i] = new TH1F(Form("h1_tdc_diff_%i",i),"",400,-20,20);
+		h1_tdc_diff [i] = new TH1F(Form("h1_tdc_diff_%i" ,i),"",400,-20,20);
 		h1_ftdc_diff[i] = new TH1F(Form("h1_ftdc_diff_%i",i),"",400,-20,20);
-		h1_empty[i] = new TH2F(Form("h1_empty_%i",i),"",400,-20,20,400,-20,20);
-		h1_meantime[i] = new TH2F(Form("h1_meantime_%i",i),"",500,1140,1190,300,1050,1080);
+		h2_empty    [i] = new TH2F(Form("h2_empty_%i"    ,i),";TDC L-R;FADC L-R",400,-20,20,400,-20,20);
+		h2_meantime [i] = new TH2F(Form("h2_meantime_%i" ,i),";TDC L+R;TDC L+R - FADC L+R",500,1140,1190,300,1050,1080);
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ int main(int argc, char** argv) {
 			//cout << barKey << " " << tTdcLcorr - tFadcLcorr << " " << adcLcorr << "\n";
 			h1_tdc_diff[barKey]->Fill( difftimeTdc );
 			h1_ftdc_diff[barKey]->Fill( difftimeFadc );
-			h1_empty[barKey]->Fill( difftimeTdc,difftimeFadc);
-			h1_meantime[barKey]->Fill( meantimeTdc,(meantimeTdc-meantimeFadc));
+			h2_empty[barKey]->Fill( difftimeTdc,difftimeFadc);
+			h2_meantime[barKey]->Fill( meantimeTdc,(meantimeTdc-meantimeFadc));
 
 		}// end loop over hits in event
 	}// end file
@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
 					if( isinf(tdc_vEff) ) tdc_vEff = 0.;
 					if( isinf(ftdc_vEff) ) ftdc_vEff = 0.;
 				}
-				
+
 				effective_velocity << sector << "\t" << layer << "\t" << component << "\t" << tdc_vEff << "\t" << ftdc_vEff << "\t" << 0.000 << "\t" << 0.000 << "\n";
 				lr_offsets << sector << "\t" << layer << "\t" << component << "\t" << tdc_lr_off << "\t" << ftdc_lr_off << "\t" << 0.000 << "\t" << 0.000 << "\n";
 			}
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
 					// Draw TDC
 					PrettyTH1F( h1_tdc_diff[identifier] , "TDC L-R [ns]","", 2);
 					h1_tdc_diff[identifier]->Draw();
-						// make two lines based on TDC height of 0.1 of max
+					// make two lines based on TDC height of 0.1 of max
 					low_Bin  = h1_tdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
 					high_Bin = h1_tdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
 					low_x = h1_tdc_diff[identifier]->GetXaxis()->GetBinCenter(low_Bin);
@@ -206,13 +206,13 @@ int main(int argc, char** argv) {
 					lLow  -> Draw("same");
 					lHigh -> Draw("same");
 					across->Draw("Same");
-					
+
 					cSLC[is][il] -> cd(4*cIdx+2);
 					gPad -> SetBottomMargin(0.26);
 					// Draw FADC
 					PrettyTH1F( h1_ftdc_diff[identifier] , "FADC L-R [ns]","", 1);
 					h1_ftdc_diff[identifier]->Draw();
-						// make two lines
+					// make two lines
 					low_Bin  = h1_ftdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
 					high_Bin = h1_ftdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
 					low_x = h1_ftdc_diff[identifier]->GetXaxis()->GetBinCenter(low_Bin);
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
 					TLine * lLow2 = new TLine(low_x,0,low_x,h1_ftdc_diff[identifier]->GetMaximum());
 					TLine * lHigh2 = new TLine(high_x,0,high_x,h1_ftdc_diff[identifier]->GetMaximum());
 					TLine * across2 = new TLine(low_x,h1_ftdc_diff[identifier]->GetMaximum()/2.,high_x,h1_ftdc_diff[identifier]->GetMaximum()/2.);
-					
+
 					lLow2->SetLineColor(8);
 					lHigh2->SetLineColor(8);
 					across2->SetLineColor(8);
@@ -229,26 +229,21 @@ int main(int argc, char** argv) {
 					lHigh2 -> Draw("same");
 					across2->Draw("same");
 
-					
 					cSLC[is][il] -> cd(4*cIdx+3);
 					gPad -> SetBottomMargin(0.26);
-					h1_empty[identifier]->GetXaxis()->SetTitle("TDC L-R");
-					h1_empty[identifier]->GetYaxis()->SetTitle("FADC L-R");
-					h1_empty[identifier]->SetTitle(Form("FADC Length: %f / TDC Length: %f",fadc_len,tdc_len));
-					h1_empty[identifier]->SetStats(0);
-					h1_empty[identifier]->Draw("col");
+					h2_empty[identifier]->SetTitle(Form("FADC Length: %f / TDC Length: %f",fadc_len,tdc_len));
+					h2_empty[identifier]->SetStats(0);
+					h2_empty[identifier]->Draw("col");
 					TLine * slope1 = new TLine(-20,-20,20,20);
 					slope1->SetLineColor(1);
 					slope1->Draw("same");
 
 					cSLC[is][il] -> cd(4*cIdx+4);
 					gPad -> SetBottomMargin(0.26);
-					h1_meantime[identifier]->GetXaxis()->SetTitle("TDC L+R");
-					h1_meantime[identifier]->GetYaxis()->SetTitle("TDC L+R - FADC L+R");
-					h1_meantime[identifier]->SetStats(0);
-					h1_meantime[identifier]->Draw("col");
-					//h1_empty[identifier]->SetMaximum(h1_ftdc_diff[identifier]->GetMaximum());
-					//h1_empty[identifier]->Draw();
+					h2_meantime[identifier]->SetStats(0);
+					h2_meantime[identifier]->Draw("col");
+					//h2_empty[identifier]->SetMaximum(h1_ftdc_diff[identifier]->GetMaximum());
+					//h2_empty[identifier]->Draw();
 					//lLow  -> Draw("same");
 					//lHigh -> Draw("same");
 					//lLow2  -> Draw("same");
@@ -263,16 +258,16 @@ int main(int argc, char** argv) {
 	}
 	// Saving to pdf
 	TCanvas * c0 = new TCanvas("c0","",900,900);
-	c0 -> Print("results_timeWalk.pdf(");
+	c0 -> Print("results_offsets_veff.pdf(");
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC[is][il] -> Print("results_timeWalk.pdf");
+			cSLC[is][il] -> Print("results_offsets_veff.pdf");
 		}
 	}
-	c0 -> Print("results_timeWalk.pdf)");
+	c0 -> Print("results_offsets_veff.pdf)");
 
 
-	//myapp -> Run();
+	myapp -> Run();
 	return 0;
 }
 // ========================================================================================================================================
@@ -283,15 +278,15 @@ void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color) {
 	h1 -> SetLineWidth(2);
 
 	h1 -> GetXaxis() -> CenterTitle();
-        h1 -> GetYaxis() -> CenterTitle();
+	h1 -> GetYaxis() -> CenterTitle();
 
 	h1 -> GetXaxis() -> SetTitleSize(0.07);
 	h1 -> GetXaxis() -> SetLabelSize(0.07);
 	h1 -> GetXaxis() -> SetNdivisions(107);
 
 	h1 -> GetYaxis() -> SetTitleSize(0.07);
-        h1 -> GetYaxis() -> SetLabelSize(0.07);
-        h1 -> GetYaxis() -> SetNdivisions(107);
+	h1 -> GetYaxis() -> SetLabelSize(0.07);
+	h1 -> GetYaxis() -> SetNdivisions(107);
 	h1 -> GetYaxis() -> SetTitleOffset(0.63);
 }
 // ========================================================================================================================================
