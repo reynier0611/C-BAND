@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 		h1_tdc_diff [i] = new TH1F(Form("h1_tdc_diff_%i" ,i),"",400,-20,20);
 		h1_ftdc_diff[i] = new TH1F(Form("h1_ftdc_diff_%i",i),"",400,-20,20);
 		h2_empty    [i] = new TH2F(Form("h2_empty_%i"    ,i),";TDC L-R;FADC L-R",400,-20,20,400,-20,20);
-		h2_meantime [i] = new TH2F(Form("h2_meantime_%i" ,i),";TDC L+R;TDC L+R - FADC L+R",500,1140,1190,300,1050,1080);
+		h2_meantime [i] = new TH2F(Form("h2_meantime_%i" ,i),";#sqrt{ADC_{L}*ADC_{R}};TDC L+R - FADC L+R",500,0,50000,1000,1055,1075);
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -88,8 +88,6 @@ int main(int argc, char** argv) {
 		event_counter++;
 
 		int nHits = band_hits.getSize();
-		//if( nHits > 10 ) continue;
-		//cout << "**" << nHits <<"\n";
 		for(int hit = 0; hit < nHits; hit++) {
 
 			int    sector            = band_hits.getSector      (hit);
@@ -113,11 +111,13 @@ int main(int argc, char** argv) {
 			float ux         = band_hits.getUx        (hit);
 			float uy         = band_hits.getUy        (hit);
 			float uz         = band_hits.getUz        (hit);
-			//cout << barKey << " " << tTdcLcorr - tFadcLcorr << " " << adcLcorr << "\n";
-			h1_tdc_diff[barKey]->Fill( difftimeTdc );
+
+			if( TMath::Sqrt(adcLcorr*adcRcorr) < 10000 ) continue;
+
+			h1_tdc_diff [barKey]->Fill( difftimeTdc );
 			h1_ftdc_diff[barKey]->Fill( difftimeFadc );
-			h2_empty[barKey]->Fill( difftimeTdc,difftimeFadc);
-			h2_meantime[barKey]->Fill( meantimeTdc,(meantimeTdc-meantimeFadc));
+			h2_empty    [barKey]->Fill( difftimeTdc,difftimeFadc);
+			h2_meantime [barKey]->Fill( TMath::Sqrt(adcLcorr*adcRcorr) ,(meantimeTdc-meantimeFadc));
 
 		}// end loop over hits in event
 	}// end file
@@ -172,12 +172,19 @@ int main(int argc, char** argv) {
 	effective_velocity.close();
 
 	// Create plots for all the L-R distributions of TDC and FADC
-	TCanvas *** cSLC = new TCanvas**[5];
+	TCanvas *** c_tdc_diff  = new TCanvas**[5];
+	TCanvas *** c_empty     = new TCanvas**[5];
+	TCanvas *** c_meantime  = new TCanvas**[5];
+
 	for(int is = 0 ; is < 5 ; is++){
-		cSLC[is] = new TCanvas*[6];
+		c_tdc_diff [is] = new TCanvas*[6];
+		c_empty    [is] = new TCanvas*[6];
+		c_meantime [is] = new TCanvas*[6];
+
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC[is][il] = new TCanvas(Form("S%iL%i",is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);
-			cSLC[is][il] -> Divide(4,7);
+			c_tdc_diff [is][il] = new TCanvas(Form("c_tdc_diff_S%iL%i" ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_tdc_diff [is][il] -> Divide(2,7);
+			c_empty    [is][il] = new TCanvas(Form("c_empty_S%iL%i"    ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_empty    [is][il] -> Divide(1,7);
+			c_meantime [is][il] = new TCanvas(Form("c_meantime_S%iL%i" ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_meantime [is][il] -> Divide(1,7);
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
@@ -186,7 +193,7 @@ int main(int argc, char** argv) {
 					double low_x,high_x;
 					int low_Bin,high_Bin;
 					double tdc_len,fadc_len;
-					cSLC[is][il] -> cd(4*cIdx+1);
+					c_tdc_diff[is][il] -> cd(2*cIdx+1);
 					gPad -> SetBottomMargin(0.26);
 					// Draw TDC
 					PrettyTH1F( h1_tdc_diff[identifier] , "TDC L-R [ns]","", 2);
@@ -207,7 +214,7 @@ int main(int argc, char** argv) {
 					lHigh -> Draw("same");
 					across->Draw("Same");
 
-					cSLC[is][il] -> cd(4*cIdx+2);
+					c_tdc_diff[is][il] -> cd(2*cIdx+2);
 					gPad -> SetBottomMargin(0.26);
 					// Draw FADC
 					PrettyTH1F( h1_ftdc_diff[identifier] , "FADC L-R [ns]","", 1);
@@ -229,7 +236,7 @@ int main(int argc, char** argv) {
 					lHigh2 -> Draw("same");
 					across2->Draw("same");
 
-					cSLC[is][il] -> cd(4*cIdx+3);
+					c_empty[is][il] -> cd(cIdx+1);
 					gPad -> SetBottomMargin(0.26);
 					h2_empty[identifier]->SetTitle(Form("FADC Length: %f / TDC Length: %f",fadc_len,tdc_len));
 					h2_empty[identifier]->SetStats(0);
@@ -238,7 +245,7 @@ int main(int argc, char** argv) {
 					slope1->SetLineColor(1);
 					slope1->Draw("same");
 
-					cSLC[is][il] -> cd(4*cIdx+4);
+					c_meantime[is][il] -> cd(cIdx+1);
 					gPad -> SetBottomMargin(0.26);
 					h2_meantime[identifier]->SetStats(0);
 					h2_meantime[identifier]->Draw("col");
@@ -252,8 +259,10 @@ int main(int argc, char** argv) {
 					//across2->Draw("same");
 
 				}
-			}
-			cSLC[is][il] -> Modified();	cSLC[is][il] -> Update();
+			}		
+			c_tdc_diff [is][il] -> Modified();	c_tdc_diff [is][il] -> Update();	
+			c_empty    [is][il] -> Modified();	c_empty    [is][il] -> Update();
+			c_meantime [is][il] -> Modified();	c_meantime [is][il] -> Update();
 		}
 	}
 	// Saving to pdf
@@ -261,7 +270,17 @@ int main(int argc, char** argv) {
 	c0 -> Print("results_offsets_veff.pdf(");
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC[is][il] -> Print("results_offsets_veff.pdf");
+			c_tdc_diff[is][il] -> Print("results_offsets_veff.pdf");
+		}
+	}
+	for(int is = 0 ; is < 5 ; is++){
+		for(int il = 0 ; il < 5 ; il++){
+			c_empty[is][il] -> Print("results_offsets_veff.pdf");
+		}
+	}
+	for(int is = 0 ; is < 5 ; is++){
+		for(int il = 0 ; il < 5 ; il++){
+			c_meantime[is][il] -> Print("results_offsets_veff.pdf");
 		}
 	}
 	c0 -> Print("results_offsets_veff.pdf)");
