@@ -31,6 +31,13 @@
 
 using namespace std;
 
+double twAL  [600] = {0};
+double twBL  [600] = {0};
+double twAR  [600] = {0};
+double twBR  [600] = {0};
+double LRtdc [600] = {0};
+double LRfadc[600] = {0};
+
 // Forward-declaring functions
 void PrettyTH1F(TH1F * h1, int color);
 void PrettyTH2F(TH2F * h2);
@@ -38,6 +45,9 @@ void PrettyTGraphErrors(TGraphErrors * gP, int color);
 double getTriggerPhase( long timeStamp );
 int getMinNonEmptyBin(TH2F * h2);
 int getMaxNonEmptyBin(TH2F * h2);
+void LoadT_WalkCorrectionPar();
+void Load_LminRCorrectionPar();
+double TimeWalk_corr( int barId , TString LR , double ADC );
 
 int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,7,6,6,2}};
 
@@ -62,6 +72,9 @@ int main(int argc, char** argv) {
 		cout << "=========================\nRun this code as:\n./code path/to/input/file\n=========================" << endl;
 		exit(0);
 	}
+
+	LoadT_WalkCorrectionPar();
+	Load_LminRCorrectionPar();
 
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
@@ -93,10 +106,9 @@ int main(int argc, char** argv) {
 	hipo::reader reader;
 	reader.open(inputFile);
 
-	//hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
-	//hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
+	hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
+	hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
 	//hipo::bank RUN_config("RUN::config",reader);
-	BBand         band_hits   ("BAND::hits"       ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -110,63 +122,200 @@ int main(int argc, char** argv) {
 		//BAND_TDC.show();
 		//RUN_config.show();
 
-		int nHits = band_hits.getSize();
+		int nADC = BAND_ADC.getSize();
+		int nTDC = BAND_TDC.getSize();
 
 		// Skip events with no entries
-		if(nHits==0) continue;
+		if(nADC==0||nTDC==0) continue;
 
 		// Skip events with less than 200 entries (the laser lights all bars at the same time)
-		if(nHits<50) continue;
+		if(nADC<200||nTDC<200) continue;
 
 		// Skip all laser events
-		//if(nHits>100) continue;
+		//if(nADC>100||nTDC>100) continue;
 
-		for(int hit = 0; hit < nHits; hit++) {
-			int    sector            = band_hits.getSector    (hit);
-                        int    layer             = band_hits.getLayer     (hit);
-                        int    component         = band_hits.getComponent (hit);
-                        float  tTdcLcorr         = band_hits.getTtdcLcorr (hit);
-                        float  tTdcRcorr         = band_hits.getTtdcRcorr (hit);
+		//long timestamp = RUN_config.getLong(4,0);
+		//double phaseCorr = getTriggerPhase(timestamp);
 
-			if(sector==3&&layer==3&&component==1) cout << "FOUND 331" << endl;
 
-			if( (sector==2)&&(component==1) ){
-				ref_meantime[layer] = ( tTdcLcorr + tTdcRcorr )/2.;	
+		for(int aIdx1 = 0 ; aIdx1 < nADC ; aIdx1++){
+
+			int   ADC1_sector    = BAND_ADC.getInt  (0,aIdx1);
+			int   ADC1_layer     = BAND_ADC.getInt  (1,aIdx1);
+			int   ADC1_component = BAND_ADC.getInt  (2,aIdx1);
+			int   ADC1_order     = BAND_ADC.getInt  (3,aIdx1);
+			float ADC1_adc       = (float)(BAND_ADC.getInt(4,aIdx1));
+			float ADC1_time      = BAND_ADC.getFloat(5,aIdx1);
+
+			for(int aIdx2 = 0 ; aIdx2 < nADC ; aIdx2++){
+
+				int   ADC2_sector    = BAND_ADC.getInt  (0,aIdx2);
+				int   ADC2_layer     = BAND_ADC.getInt  (1,aIdx2);
+				int   ADC2_component = BAND_ADC.getInt  (2,aIdx2);
+				int   ADC2_order     = BAND_ADC.getInt  (3,aIdx2);
+				float ADC2_adc       = (float)(BAND_ADC.getInt(4,aIdx2));
+				float ADC2_time      = BAND_ADC.getFloat(5,aIdx2);
+
+				// Matching each ADC to the corresponding ADC from the other side of the bar
+				if(             (ADC1_sector   ==ADC2_sector          )&&
+						(ADC1_layer    ==ADC2_layer           )&&
+						(ADC1_component==ADC2_component       )&&
+						(ADC1_order+1==ADC2_order             )
+				  ){
+
+					bool already_matched = false;
+					for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
+
+						int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
+						int   TDC1_layer     = BAND_TDC.getInt  (1,tIdx1);
+						int   TDC1_component = BAND_TDC.getInt  (2,tIdx1);
+						int   TDC1_order     = BAND_TDC.getInt  (3,tIdx1);
+						float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
+						float TDC1_time      = TDC1_tdc*0.02345;
+
+						//TDC1_time -= phaseCorr;
+
+						// Matching these ADCs to a TDC
+						if(             (ADC1_sector   ==TDC1_sector   )&&
+								(ADC1_layer    ==TDC1_layer    )&&
+								(ADC1_component==TDC1_component)&&
+								(ADC1_order+2  ==TDC1_order    )
+						  ){
+
+							for(int tIdx2 = 0 ; tIdx2 < nTDC ; tIdx2++){
+
+								int   TDC2_sector    = BAND_TDC.getInt  (0,tIdx2);
+								int   TDC2_layer     = BAND_TDC.getInt  (1,tIdx2);
+								int   TDC2_component = BAND_TDC.getInt  (2,tIdx2);
+								int   TDC2_order     = BAND_TDC.getInt  (3,tIdx2);
+								float TDC2_tdc       = (float)(BAND_TDC.getInt(4,tIdx2));
+								float TDC2_time      = TDC2_tdc*0.02345;
+
+								//TDC2_time -= phaseCorr;
+
+								if(             (!already_matched                     )&& // Avoid multi-hits
+										(TDC1_sector   ==TDC2_sector          )&&
+										(TDC1_layer    ==TDC2_layer           )&&
+										(TDC1_component==TDC2_component       )&&
+										(TDC1_order+1==TDC2_order             )
+								  ){
+
+									already_matched = true;
+
+									int barKey = 100*ADC1_sector + 10*ADC1_layer + ADC1_component;
+
+									TDC1_time += TimeWalk_corr(barKey,"L",ADC1_adc) - LRtdc[barKey];
+									TDC2_time += TimeWalk_corr(barKey,"R",ADC2_adc)                ;
+
+									if( (TDC1_sector==2)&&(TDC1_component==1) ){
+										int barKey = 100*ADC1_sector + 10*ADC1_layer + ADC1_component;
+										ref_meantime[TDC1_layer] = ( TDC1_time + TDC2_time )/2.;
+									}
+
+								}
+							}
+						}
+					}
+				}
 			}
+
 		}
 
 		// Looping over entries of the event for a second time
 
-		for(int hit = 0; hit < nHits; hit++) {
-			
-			int    sector            = band_hits.getSector      (hit);
-                        int    layer             = band_hits.getLayer       (hit);
-                        int    component         = band_hits.getComponent   (hit);
-                        int    barKey            = band_hits.getBarKey      (hit);
-                        float  meantimeTdc       = band_hits.getMeantimeTdc (hit);
-                        float adcLcorr           = band_hits.getAdcLcorr    (hit);                        
-                        float adcRcorr           = band_hits.getAdcRcorr    (hit);
-                        float tTdcLcorr          = band_hits.getTtdcLcorr   (hit);
-                        float tTdcRcorr          = band_hits.getTtdcRcorr   (hit);
+		for(int aIdx1 = 0 ; aIdx1 < nADC ; aIdx1++){
 
-			double meantime = ( tTdcLcorr + tTdcRcorr )/2.;
-			//double delta_meantime = meantime - ref_meantime[layer];
-			double delta_meantime = meantimeTdc - ref_meantime[layer];
-			double adc_geometric_mean = TMath::Sqrt(adcLcorr*adcRcorr);
+			int   ADC1_sector    = BAND_ADC.getInt  (0,aIdx1);
+			int   ADC1_layer     = BAND_ADC.getInt  (1,aIdx1);
+			int   ADC1_component = BAND_ADC.getInt  (2,aIdx1);
+			int   ADC1_order     = BAND_ADC.getInt  (3,aIdx1);
+			float ADC1_adc       = (float)(BAND_ADC.getInt(4,aIdx1));
+			float ADC1_time      = BAND_ADC.getFloat(5,aIdx1);
 
-			h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,delta_meantime);
-			h2_dMeantime_adc_paddle[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));
+			for(int aIdx2 = 0 ; aIdx2 < nADC ; aIdx2++){
 
-			// 1-D projection to extract resolutions
-			h1_resolutions[barKey] -> Fill(delta_meantime);
-			h1_resolutions[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));	
-			
-			if(sector==2&&component==1){
-				double delta_meantime_layer = meantime - ref_meantime[5];
-				h2_dMeantime_adc_layer[barKey] -> Fill(adc_geometric_mean,delta_meantime_layer);
-				h2_dMeantime_adc_layer[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));
+				int   ADC2_sector    = BAND_ADC.getInt  (0,aIdx2);
+				int   ADC2_layer     = BAND_ADC.getInt  (1,aIdx2);
+				int   ADC2_component = BAND_ADC.getInt  (2,aIdx2);
+				int   ADC2_order     = BAND_ADC.getInt  (3,aIdx2);
+				float ADC2_adc       = (float)(BAND_ADC.getInt(4,aIdx2));
+				float ADC2_time      = BAND_ADC.getFloat(5,aIdx2);
+
+				// Matching each ADC to the corresponding ADC from the other side of the bar
+				if(             (ADC1_sector   ==ADC2_sector          )&&
+						(ADC1_layer    ==ADC2_layer           )&&
+						(ADC1_component==ADC2_component       )&&
+						(ADC1_order+1==ADC2_order             )
+				  ){
+
+					bool already_matched = false;
+					for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
+
+						int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
+						int   TDC1_layer     = BAND_TDC.getInt  (1,tIdx1);
+						int   TDC1_component = BAND_TDC.getInt  (2,tIdx1);
+						int   TDC1_order     = BAND_TDC.getInt  (3,tIdx1);
+						float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
+						float TDC1_time      = TDC1_tdc*0.02345;
+
+						//TDC1_time -= phaseCorr;
+
+						// Matching these ADCs to a TDC
+						if(             (ADC1_sector   ==TDC1_sector   )&&
+								(ADC1_layer    ==TDC1_layer    )&&
+								(ADC1_component==TDC1_component)&&
+								(ADC1_order+2  ==TDC1_order    )
+						  ){
+
+							for(int tIdx2 = 0 ; tIdx2 < nTDC ; tIdx2++){
+
+								int   TDC2_sector    = BAND_TDC.getInt  (0,tIdx2);
+								int   TDC2_layer     = BAND_TDC.getInt  (1,tIdx2);
+								int   TDC2_component = BAND_TDC.getInt  (2,tIdx2);
+								int   TDC2_order     = BAND_TDC.getInt  (3,tIdx2);
+								float TDC2_tdc       = (float)(BAND_TDC.getInt(4,tIdx2));
+								float TDC2_time      = TDC2_tdc*0.02345;
+
+								//TDC2_time -= phaseCorr;
+
+								if(             (!already_matched                     )&& // Avoid multi-hits
+										(TDC1_sector   ==TDC2_sector          )&&
+										(TDC1_layer    ==TDC2_layer           )&&
+										(TDC1_component==TDC2_component       )&&
+										(TDC1_order+1==TDC2_order             )
+								  ){	
+
+									already_matched = true;
+
+									int barKey = 100*ADC1_sector + 10*ADC1_layer + ADC1_component;			
+
+									TDC1_time += TimeWalk_corr(barKey,"L",ADC1_adc) - LRtdc[barKey];
+                                                                        TDC2_time += TimeWalk_corr(barKey,"R",ADC2_adc)                ;
+
+									double meantime = ( TDC1_time + TDC2_time )/2.;
+									double delta_meantime = meantime - ref_meantime[TDC1_layer];
+									double adc_geometric_mean = TMath::Sqrt(ADC1_adc*ADC2_adc);
+
+									h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,delta_meantime);
+									h2_dMeantime_adc_paddle[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
+									// 1-D projection to extract resolutions
+									h1_resolutions[barKey] -> Fill(delta_meantime);
+									h1_resolutions[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
+
+									if(TDC1_sector==2&&TDC1_component==1){
+										double delta_meantime_layer = meantime - ref_meantime[5];
+										h2_dMeantime_adc_layer[barKey] -> Fill(adc_geometric_mean,delta_meantime_layer);
+										h2_dMeantime_adc_layer[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
+
+
 	}// end file
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -203,7 +352,7 @@ int main(int argc, char** argv) {
 
 	// Fitting 1-d projections to get resolutions
 	for(int i = 0 ; i < nHistos ; i++){
-                int notEmpty = (h1_resolutions[i]->Integral());
+		int notEmpty = (h1_resolutions[i]->Integral());
 		if(notEmpty){
 			double mean = h1_resolutions[i]->GetMean();
 			TF1 * f_gaus = new TF1("f_gaus","gaus",mean-5,mean+5);
@@ -259,12 +408,12 @@ int main(int argc, char** argv) {
 					// Resolutions
 					cSLC_resol [is][il] -> cd(cIdx+1);
 					gPad -> SetBottomMargin(0.26);
-                                        gPad -> SetLeftMargin(0.14);
+					gPad -> SetLeftMargin(0.14);
 					h1_resolutions[identifier] -> Draw();
 
 					TLatex * tex_lay = new TLatex(-10,(h1_resolutions[identifier]->GetMaximum()/2.),Form("#sigma = %.1f #pm %.1f ps",1000*par_res[identifier][0],1000*par_res[identifier][1]));
 					tex_lay -> SetTextSize(0.08);
-                                        tex_lay -> Draw("same");
+					tex_lay -> Draw("same");
 				} 
 			}
 			cSLC_paddle[is][il] -> Modified();	cSLC_paddle[is][il] -> Update();		
@@ -284,8 +433,8 @@ int main(int argc, char** argv) {
 		p_dMeantime_adc_layer[i] -> Draw("same");
 
 		TLatex * tex_lay = new TLatex(1000,par_lay[i][0]-5,Form("y = %f #pm %f ns",par_lay[i][0],par_lay[i][1]));
-                tex_lay -> SetTextSize(0.08);
-                tex_lay -> Draw("same");
+		tex_lay -> SetTextSize(0.08);
+		tex_lay -> Draw("same");
 	}
 	cSLC_layer -> Modified();
 	cSLC_layer -> Update();
@@ -318,8 +467,8 @@ int main(int argc, char** argv) {
 	// -------------------------------------------------------------------------------------------------
 	// Saving fit values to ccdb tables
 	ofstream tab_pad, tab_lay;
-	tab_pad.open("TDC_paddle_offsets.txt");
-	tab_lay.open("TDC_layer_offsets.txt" );
+	tab_pad.open("TDC_paddle_offsets_rawBanks.txt");
+	tab_lay.open("TDC_layer_offsets_rawBanks.txt" );
 
 	for(int il = 1 ; il <= 6 ; il++){
 		for(int is = 1 ; is <= 5 ; is++){
@@ -355,19 +504,19 @@ int main(int argc, char** argv) {
 
 	// -------------------------------------------------------------------------------------------------
 	// Saving plots to a pdf file
-	c0 -> Print("results_paddle_corr.pdf(");
-	cSLC_layer -> Print("results_paddle_corr.pdf");
-	c0 -> Print("results_paddle_corr.pdf");
-	cres -> Print("results_resolutions.pdf(");
+	c0 -> Print("results_paddle_corr_rawBanks.pdf(");
+	cSLC_layer -> Print("results_paddle_corr_rawBanks.pdf");
+	c0 -> Print("results_paddle_corr_rawBanks.pdf");
+	cres -> Print("results_resolutions_rawBanks.pdf(");
 
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			cSLC_paddle[is][il] -> Print("results_paddle_corr.pdf");
-			cSLC_resol [is][il] -> Print("results_resolutions.pdf");
+			cSLC_paddle[is][il] -> Print("results_paddle_corr_rawBanks.pdf");
+			cSLC_resol [is][il] -> Print("results_resolutions_rawBanks.pdf");
 		}
 	}
-	c0 -> Print("results_paddle_corr.pdf)");
-	c0 -> Print("results_resolutions.pdf)");
+	c0 -> Print("results_paddle_corr_rawBanks.pdf)");
+	c0 -> Print("results_resolutions_rawBanks.pdf)");
 
 	myapp -> Run();
 	return 0;
@@ -460,10 +609,79 @@ void PrettyTGraphErrors(TGraphErrors * gP, int color){
 	gP -> GetXaxis() -> CenterTitle();
 	gP -> GetXaxis() -> SetTitle("Bar ID");
 	gP -> GetYaxis() -> CenterTitle();
-        gP -> GetYaxis() -> SetTitle("resolution/#sqrt{2} [ps]");
+	gP -> GetYaxis() -> SetTitle("resolution/#sqrt{2} [ps]");
 
 	gP -> GetYaxis() -> SetTitleOffset(1.30);
 
 	gP -> SetMinimum(150);
 	gP -> SetMaximum(400);
 }
+// ========================================================================================================================================
+void LoadT_WalkCorrectionPar(){
+	ifstream f;
+	int layer, sector, component, barId;
+	double parA, parB, temp;
+
+	f.open("input_params/timeWalkPar_L.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> parA;
+		f >> parB;
+		f >> temp;
+		f >> temp;
+		twAL[barId] = parA;
+		twBL[barId] = parB;
+	}
+	f.close();
+
+	f.open("input_params/timeWalkPar_R.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> parA;
+		f >> parB;
+		f >> temp;
+		f >> temp;
+		twAR[barId] = parA;
+		twBR[barId] = parB;
+	}
+	f.close();
+}
+// ========================================================================================================================================
+void Load_LminRCorrectionPar(){
+	ifstream f;
+	int layer, sector, component, barId;
+	double par_TDC, par_FADC, temp;
+
+	f.open("input_params/lr_offsets_261.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> par_TDC;
+		f >> par_FADC;
+		f >> temp;
+		f >> temp;
+		LRtdc [barId] = par_TDC;
+		LRfadc[barId] = par_FADC;
+	}
+	f.close();
+}
+// ========================================================================================================================================
+double TimeWalk_corr( int barId , TString LR , double ADC ){
+	if(LR=="L"||LR=="l"||LR=="Left"||LR=="left"){
+		return -( twAL[barId]/TMath::Sqrt(ADC) + twBL[barId] );
+	}
+	else if(LR=="R"||LR=="r"||LR=="Right"||LR=="right"){
+		return -( twAR[barId]/TMath::Sqrt(ADC) + twBR[barId] );
+	}
+	return 0;
+}
+
+// ========================================================================================================================================

@@ -14,17 +14,17 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: parameter_extraction parameter_test
+all: parameter_extraction parameter_extraction_rawBanks
 
 parameter_extraction: parameter_extraction.o
 	$(CXX) -o parameter_extraction $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
-parameter_test: parameter_test.o
-	$(CXX) -o parameter_test $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+parameter_extraction_rawBanks: parameter_extraction_rawBanks.o
+	$(CXX) -o parameter_extraction_rawBanks $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o parameter_extraction parameter_test *~
+	@rm -rf *.o parameter_extraction parameter_extraction_rawBanks parameter_test *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
