@@ -32,6 +32,8 @@ BAND_Spring19_online/190402_Paddle2Paddle_bandHits/TDC_paddle_offsets.txt
 BAND_Spring19_online/190402_Paddle2Paddle_bandHits/TDC_paddle_offsets_rawBanks.txt
 BAND_Spring19_online/190328_Calib_check/out.root
 BAND_Spring19_online/190329_vEff_lrOff/offsets_veff
+BAND_Spring19_online/190329_vEff_lrOff/TEST_effective_velocity.txt
+BAND_Spring19_online/190329_vEff_lrOff/TEST_lr_offsets.txt
 Examples/example
 lib/libclas12banks.a
 lib/libhipo.a
