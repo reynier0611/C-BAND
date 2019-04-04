@@ -34,6 +34,7 @@ BAND_Spring19_online/190328_Calib_check/out.root
 BAND_Spring19_online/190329_vEff_lrOff/offsets_veff
 BAND_Spring19_online/190329_vEff_lrOff/TEST_effective_velocity.txt
 BAND_Spring19_online/190329_vEff_lrOff/TEST_lr_offsets.txt
+BAND_Spring19_online/190404_CLAS_Res_Status/eppPim
 Examples/example
 lib/libclas12banks.a
 lib/libhipo.a
