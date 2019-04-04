@@ -29,6 +29,8 @@ using namespace std;
 void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
 void PrettyTH2F(TH2F * h2,TString titx,TString tity);
 void getLowXHighX( TH1F * h1, double &xL, double &xH);
+int getMinNonEmptyBin(TH2F * h2);
+int getMaxNonEmptyBin(TH2F * h2);
 
 double bandlen[]  = {163.7,201.9,51.2,51.2,201.9};
 int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,7,6,6,2}};
@@ -69,7 +71,10 @@ int main(int argc, char** argv) {
 		h1_tdc_diff [i] = new TH1F(Form("h1_tdc_diff_%i" ,i),"",400,-20,20);
 		h1_ftdc_diff[i] = new TH1F(Form("h1_ftdc_diff_%i",i),"",400,-20,20);
 		h2_empty    [i] = new TH2F(Form("h2_empty_%i"    ,i),";TDC L-R;FADC L-R",400,-20,20,400,-20,20);
-		h2_meantime [i] = new TH2F(Form("h2_meantime_%i" ,i),";#sqrt{ADC_{L}*ADC_{R}};TDC L+R - FADC L+R",500,0,50000,1000,1055,1075);
+		h2_meantime [i] = new TH2F(Form("h2_meantime_%i" ,i),";#sqrt{ADC_{L}*ADC_{R}};#frac{L+R}{2} TDC - FADC",500,0,25000,1000,1045,1075);
+	
+		PrettyTH2F(h2_empty    [i],"","");
+		PrettyTH2F(h2_meantime [i],"","");
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -112,7 +117,8 @@ int main(int argc, char** argv) {
 			float uy         = band_hits.getUy        (hit);
 			float uz         = band_hits.getUz        (hit);
 
-			if( TMath::Sqrt(adcLcorr*adcRcorr) < 10000 ) continue;
+			if( adcLcorr <  6000 || adcRcorr <  6000 ) continue;
+			if( adcLcorr > 20000 || adcRcorr > 20000 ) continue;
 
 			h1_tdc_diff [barKey]->Fill( difftimeTdc );
 			h1_ftdc_diff[barKey]->Fill( difftimeFadc );
@@ -176,6 +182,8 @@ int main(int argc, char** argv) {
 	TCanvas *** c_empty     = new TCanvas**[5];
 	TCanvas *** c_meantime  = new TCanvas**[5];
 
+	int min, max;
+
 	for(int is = 0 ; is < 5 ; is++){
 		c_tdc_diff [is] = new TCanvas*[6];
 		c_empty    [is] = new TCanvas*[6];
@@ -183,8 +191,8 @@ int main(int argc, char** argv) {
 
 		for(int il = 0 ; il < 5 ; il++){
 			c_tdc_diff [is][il] = new TCanvas(Form("c_tdc_diff_S%iL%i" ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_tdc_diff [is][il] -> Divide(2,7);
-			c_empty    [is][il] = new TCanvas(Form("c_empty_S%iL%i"    ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_empty    [is][il] -> Divide(1,7);
-			c_meantime [is][il] = new TCanvas(Form("c_meantime_S%iL%i" ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_meantime [is][il] -> Divide(1,7);
+			c_empty    [is][il] = new TCanvas(Form("c_empty_S%iL%i"    ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_empty    [is][il] -> Divide(2,4);
+			c_meantime [is][il] = new TCanvas(Form("c_meantime_S%iL%i" ,is,il),Form("Sector %i, Layer %i",is+1,il+1),900,900);	c_meantime [is][il] -> Divide(2,4);
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
@@ -214,6 +222,7 @@ int main(int argc, char** argv) {
 					lHigh -> Draw("same");
 					across->Draw("Same");
 
+					// --------------------------------------------------------------
 					c_tdc_diff[is][il] -> cd(2*cIdx+2);
 					gPad -> SetBottomMargin(0.26);
 					// Draw FADC
@@ -236,8 +245,11 @@ int main(int argc, char** argv) {
 					lHigh2 -> Draw("same");
 					across2->Draw("same");
 
+					// --------------------------------------------------------------
 					c_empty[is][il] -> cd(cIdx+1);
-					gPad -> SetBottomMargin(0.26);
+					gPad -> SetTopMargin   (0.00);
+                                        gPad -> SetBottomMargin(0.26);
+                                        gPad -> SetLeftMargin  (0.26);	
 					h2_empty[identifier]->SetTitle(Form("FADC Length: %f / TDC Length: %f",fadc_len,tdc_len));
 					h2_empty[identifier]->SetStats(0);
 					h2_empty[identifier]->Draw("col");
@@ -245,10 +257,16 @@ int main(int argc, char** argv) {
 					slope1->SetLineColor(1);
 					slope1->Draw("same");
 
+					// --------------------------------------------------------------
 					c_meantime[is][il] -> cd(cIdx+1);
+					gPad -> SetTopMargin   (0.00);
 					gPad -> SetBottomMargin(0.26);
+					gPad -> SetLeftMargin  (0.26);
 					h2_meantime[identifier]->SetStats(0);
-					h2_meantime[identifier]->Draw("col");
+					min = getMinNonEmptyBin(h2_meantime[identifier]);
+					max = getMaxNonEmptyBin(h2_meantime[identifier]);
+					h2_meantime[identifier] -> GetYaxis() -> SetRange(min,max);
+					h2_meantime[identifier] -> Draw("col");
 					//h2_empty[identifier]->SetMaximum(h1_ftdc_diff[identifier]->GetMaximum());
 					//h2_empty[identifier]->Draw();
 					//lLow  -> Draw("same");
@@ -265,6 +283,7 @@ int main(int argc, char** argv) {
 			c_meantime [is][il] -> Modified();	c_meantime [is][il] -> Update();
 		}
 	}
+	
 	// Saving to pdf
 	TCanvas * c0 = new TCanvas("c0","",900,900);
 	c0 -> Print("results_offsets_veff.pdf(");
@@ -284,7 +303,6 @@ int main(int argc, char** argv) {
 		}
 	}
 	c0 -> Print("results_offsets_veff.pdf)");
-
 
 	myapp -> Run();
 	return 0;
@@ -310,8 +328,16 @@ void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color) {
 }
 // ========================================================================================================================================
 void PrettyTH2F(TH2F * h2,TString titx,TString tity) {
-	h2 -> GetXaxis() -> SetTitle(titx);
-	h2 -> GetYaxis() -> SetTitle(tity);
+	//h2 -> GetXaxis() -> SetTitle(titx);
+	//h2 -> GetYaxis() -> SetTitle(tity);
+	h2 -> GetXaxis() -> SetTitleSize(0.10);
+        h2 -> GetYaxis() -> SetTitleSize(0.10);
+	h2 -> GetXaxis() -> SetLabelSize(0.10);
+        h2 -> GetYaxis() -> SetLabelSize(0.10);
+	h2 -> GetXaxis() -> CenterTitle();
+        h2 -> GetYaxis() -> CenterTitle();
+	h2 -> GetXaxis() -> SetNdivisions(105);
+        h2 -> GetYaxis() -> SetNdivisions(107);
 }
 // ========================================================================================================================================
 void getLowXHighX( TH1F * h1, double &xL, double &xH){
@@ -321,3 +347,46 @@ void getLowXHighX( TH1F * h1, double &xL, double &xH){
 	xH = h1->GetXaxis()->GetBinCenter(high_Bin);
 
 }
+// ========================================================================================================================================
+int getMinNonEmptyBin(TH2F * h2){
+        int nBinX = h2 -> GetXaxis() -> GetNbins();
+        int nBinY = h2 -> GetYaxis() -> GetNbins();
+
+        int binContent = 0;
+	int nextBinContent = 0;
+
+        for(int i = 1 ; i <= nBinY ; i++){
+                for(int j = 1 ; j <= nBinX ; j++){
+                        binContent     = h2 -> GetBinContent(j  ,i);
+                        nextBinContent = h2 -> GetBinContent(j+1,i);
+			if(binContent!=0&&nextBinContent!=0) return i;
+			else{
+				binContent     = 0;
+				nextBinContent = 0;
+			}
+                }
+        }
+        return 1;
+}
+// ========================================================================================================================================
+int getMaxNonEmptyBin(TH2F * h2){
+        int nBinX = h2 -> GetXaxis() -> GetNbins();
+        int nBinY = h2 -> GetYaxis() -> GetNbins();
+
+        int binContent = 0;
+	int nextBinContent = 0;
+
+        for(int i = nBinY ; i > 0 ; i--){
+                for(int j = 1 ; j <= nBinX ; j++){
+                        binContent = h2 -> GetBinContent(j,i);
+                        nextBinContent = h2 -> GetBinContent(j-1,i);
+			if(binContent!=0) return i;
+			 else{
+                                binContent     = 0;
+                                nextBinContent = 0;
+                        }
+                }
+        }
+        return nBinY;
+}
+// ========================================================================================================================================
