@@ -73,6 +73,16 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 
+	cout << "*************************************************************" << endl;
+        cout << "                  ___                  ___" << endl;
+        cout << "\\    /\\    / /\\   |  \\ |\\  | | |\\  |  /" << endl;
+        cout << " \\  /  \\  / /--\\  |-\\/ | \\ | | | \\ | |  --\\" << endl;
+        cout << "  \\/    \\/ /    \\ |  \\ |  \\| | |  \\|  \\___/" << endl << endl;
+        cout << "Run this code on laser data" << endl << endl;
+        cout << "Make sure you have the most updated CCDB-style files needed" << endl;
+        cout << "in 'input_params'" << endl << endl;
+        cout << "*************************************************************" << endl;
+
 	LoadT_WalkCorrectionPar();
 	Load_LminRCorrectionPar();
 
