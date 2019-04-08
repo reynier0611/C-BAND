@@ -12,7 +12,8 @@
 #include "TLorentzVector.h"
 #include "TCanvas.h"
 #include "TLine.h"
-
+#include "TProfile.h"
+#include "TF1.h"
 #include "reader.h"
 #include "node.h"
 #include "bank.h"
@@ -52,6 +53,14 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 
+	cout << "*************************************************************" << endl;
+        cout << "                  ___                  ___" << endl;
+        cout << "\\    /\\    / /\\   |  \\ |\\  | | |\\  |  /" << endl;
+        cout << " \\  /  \\  / /--\\  |-\\/ | \\ | | | \\ | |  --\\" << endl;
+        cout << "  \\/    \\/ /    \\ |  \\ |  \\| | |  \\|  \\___/" << endl << endl;
+        cout << "Run this code on cosmic data" << endl << endl;
+        cout << "*************************************************************" << endl;
+
 	// ----------------------------------------------------------------------------------
 	// Useful variables
 	double mp      = 0.93827; //GeV
@@ -76,6 +85,11 @@ int main(int argc, char** argv) {
 		PrettyTH2F(h2_empty    [i],"","");
 		PrettyTH2F(h2_meantime [i],"","");
 	}
+
+	double par_pad[nHistos][2] = {0};
+	double val_slope = 0;
+	int ctr_slope = 0;
+	TH1D * h1_slopes = new TH1D("h1_slopes",";slope",100,0.5,1.5);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -177,6 +191,39 @@ int main(int argc, char** argv) {
 	lr_offsets.close();
 	effective_velocity.close();
 
+	// --------------------------------------------------------------------------------------------------------
+	// Fitting lines to extract the slope and try to determine the needed TDC -> time conversion factor
+        TProfile ** p_empty = new TProfile*[nHistos];
+        // Fitting paddle-to-paddle parameters
+        for(int i = 0 ; i < nHistos ; i++){
+                int notEmpty = (h2_empty[i]->Integral());
+                if(notEmpty){
+                        int nBins = h2_empty[i] -> GetXaxis() -> GetNbins();
+                        p_empty[i] = h2_empty[i]->ProfileX(Form("px_%i",i), 1, nBins );
+                        TF1 * f_line = new TF1("f_line","pol1");
+                        p_empty[i] -> Fit("f_line","Q");
+                        par_pad[i][0] = f_line->GetParameter(1);
+                        par_pad[i][1] = f_line->GetParError (1);
+                
+			val_slope += par_pad[i][0];
+        		ctr_slope++;
+
+			h1_slopes -> Fill(par_pad[i][0]);
+		}
+        }
+
+	double avg_m = val_slope/((double)(ctr_slope));
+	double std_T2ns = 0.02345;
+	cout << "Average slope = " << avg_m << endl;
+	cout << "TDC  to ns conversion factor (assuming FADC t conversion factor is " << std_T2ns << "): " << avg_m*std_T2ns << endl;
+	cout << "FADC to ns conversion factor (assuming TDC  t conversion factor is " << std_T2ns << "): " << std_T2ns/avg_m << endl;
+
+	TCanvas * c1 = new TCanvas("c1","c1");
+        h1_slopes -> Draw();
+        c1 -> Modified();
+        c1 -> Update();
+
+	// --------------------------------------------------------------------------------------------------------
 	// Create plots for all the L-R distributions of TDC and FADC
 	TCanvas *** c_tdc_diff  = new TCanvas**[5];
 	TCanvas *** c_empty     = new TCanvas**[5];
@@ -253,6 +300,7 @@ int main(int argc, char** argv) {
 					h2_empty[identifier]->SetTitle(Form("FADC Length: %f / TDC Length: %f",fadc_len,tdc_len));
 					h2_empty[identifier]->SetStats(0);
 					h2_empty[identifier]->Draw("col");
+					p_empty [identifier]->Draw("same");
 					TLine * slope1 = new TLine(-20,-20,20,20);
 					slope1->SetLineColor(1);
 					slope1->Draw("same");
@@ -283,7 +331,7 @@ int main(int argc, char** argv) {
 			c_meantime [is][il] -> Modified();	c_meantime [is][il] -> Update();
 		}
 	}
-	
+
 	// Saving to pdf
 	TCanvas * c0 = new TCanvas("c0","",900,900);
 	c0 -> Print("results_offsets_veff.pdf(");
