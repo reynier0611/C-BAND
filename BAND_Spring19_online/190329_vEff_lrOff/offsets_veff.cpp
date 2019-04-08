@@ -213,10 +213,11 @@ int main(int argc, char** argv) {
         }
 
 	double avg_m = val_slope/((double)(ctr_slope));
-	double std_T2ns = 0.02345;
+	double std_TDC2ns  = 0.02345;
+	double std_FADC2ns = 0.0625;
 	cout << "Average slope = " << avg_m << endl;
-	cout << "TDC  to ns conversion factor (assuming FADC t conversion factor is " << std_T2ns << "): " << avg_m*std_T2ns << endl;
-	cout << "FADC to ns conversion factor (assuming TDC  t conversion factor is " << std_T2ns << "): " << std_T2ns/avg_m << endl;
+	cout << "TDC  to ns conversion factor (assuming FADC t conversion factor is " << std_FADC2ns << "): " << avg_m*std_TDC2ns  << endl;
+	cout << "FADC to ns conversion factor (assuming TDC  t conversion factor is " << std_TDC2ns  << "): " << std_FADC2ns/avg_m << endl;
 
 	TCanvas * c1 = new TCanvas("c1","c1");
         h1_slopes -> Draw();
