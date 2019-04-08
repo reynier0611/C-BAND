@@ -35,6 +35,8 @@ BAND_Spring19_online/190329_vEff_lrOff/offsets_veff
 BAND_Spring19_online/190329_vEff_lrOff/TEST_effective_velocity.txt
 BAND_Spring19_online/190329_vEff_lrOff/TEST_lr_offsets.txt
 BAND_Spring19_online/190404_CLAS_Res_Status/eppPim
+BAND_Spring19_online/190329_vEff_lrOff/offsets_veff_rawBanks
+BAND_Spring19_online/190402_Paddle2Paddle_bandHits/parameter_extraction
 Examples/example
 lib/libclas12banks.a
 lib/libhipo.a

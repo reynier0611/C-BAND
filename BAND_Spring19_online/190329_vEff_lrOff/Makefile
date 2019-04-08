@@ -14,14 +14,17 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: offsets_veff
-
+all: offsets_veff offsets_veff_rawBanks
 
 offsets_veff: offsets_veff.o
 	$(CXX) -o offsets_veff $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+
+offsets_veff_rawBanks: offsets_veff_rawBanks.o
+	$(CXX) -o offsets_veff_rawBanks $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o mean_time *~
+	@rm -rf *.o offsets_veff offsets_veff_rawBanks *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
