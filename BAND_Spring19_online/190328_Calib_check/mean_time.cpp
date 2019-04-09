@@ -237,8 +237,6 @@ int main(int argc, char** argv) {
 			float adcLcorr           = band_hits.getAdcLcorr    (hit);
 			float adcRcorr           = band_hits.getAdcRcorr    (hit);
 
-			double meantimeTdcCorr = meantimeTdc - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
-
 			//if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
 			if( TMath::Sqrt(adcLcorr*adcRcorr) < 6000 ) continue;
 			//if( sector < 3 || sector > 4 ) continue; // Use this line to not include long bars
@@ -254,6 +252,9 @@ int main(int argc, char** argv) {
 			float ux         = band_hits.getUx        (hit);
 			float uy         = band_hits.getUy        (hit);
 			float uz         = band_hits.getUz        (hit);
+
+			double meantimeTdc_byHand = (tTdcLcorr+tTdcRcorr)/2.;
+                        double meantimeTdcCorr = meantimeTdc_byHand - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
 
 			//if( sector == 3 || sector == 4 ) continue;
 
