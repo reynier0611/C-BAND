@@ -14,6 +14,7 @@
 #include "TLine.h"
 #include "TProfile.h"
 #include "TF1.h"
+#include "TLegend.h"
 #include "reader.h"
 #include "node.h"
 #include "bank.h"
@@ -58,7 +59,7 @@ int main(int argc, char** argv) {
         cout << "\\    /\\    / /\\   |  \\ |\\  | | |\\  |  /" << endl;
         cout << " \\  /  \\  / /--\\  |-\\/ | \\ | | | \\ | |  --\\" << endl;
         cout << "  \\/    \\/ /    \\ |  \\ |  \\| | |  \\|  \\___/" << endl << endl;
-        cout << "Run this code on cosmic data" << endl << endl;
+        cout << "Run this code on cosmic or production data" << endl << endl;
         cout << "*************************************************************" << endl;
 
 	// ----------------------------------------------------------------------------------
@@ -89,14 +90,16 @@ int main(int argc, char** argv) {
 	double par_pad[nHistos][2] = {0};
 	double val_slope = 0;
 	int ctr_slope = 0;
-	TH1D * h1_slopes = new TH1D("h1_slopes",";slope",100,0.5,1.5);
+	TH1D * h1_slopes       = new TH1D("h1_slopes"      ,";slope",100,0.8,1.5);	h1_slopes       -> SetLineColor( 1);	h1_slopes       -> SetLineWidth(2);	h1_slopes -> SetLineStyle(2);
+	TH1D * h1_slopes_short = new TH1D("h1_slopes_short",";slope",100,0.8,1.5);	h1_slopes_short -> SetLineColor( 2);	h1_slopes_short -> SetLineWidth(2);
+	TH1D * h1_slopes_long  = new TH1D("h1_slopes_long" ,";slope",100,0.8,1.5);	h1_slopes_long  -> SetLineColor(62);	h1_slopes_long  -> SetLineWidth(2);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
 	hipo::reader reader;
 	reader.open(inputFile);
 
-	BBand         band_hits   ("BAND::hits"       ,reader);
+	BBand band_hits   ("BAND::hits"       ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -209,6 +212,11 @@ int main(int argc, char** argv) {
         		ctr_slope++;
 
 			h1_slopes -> Fill(par_pad[i][0]);
+
+			if( i >= 300 && i < 500 )
+				h1_slopes_short -> Fill(par_pad[i][0]);
+			else
+				h1_slopes_long -> Fill(par_pad[i][0]);
 		}
         }
 
@@ -220,8 +228,15 @@ int main(int argc, char** argv) {
 	cout << "FADC to ns conversion factor (assuming TDC  t conversion factor is " << std_TDC2ns  << "): " << std_FADC2ns/avg_m << endl;
 
 	TCanvas * c1 = new TCanvas("c1","c1");
-        h1_slopes -> Draw();
-        c1 -> Modified();
+	h1_slopes_long  -> Draw();
+	h1_slopes_short -> Draw("same");
+	//h1_slopes       -> Draw("same");
+        TLegend * leg = new TLegend (0.6,0.5,0.8,0.7);
+	leg -> SetLineColor(0);
+	leg -> AddEntry(h1_slopes_short,"short");
+	leg -> AddEntry(h1_slopes_long ,"long" );
+	leg -> Draw("same");
+	c1 -> Modified();
         c1 -> Update();
 
 	// --------------------------------------------------------------------------------------------------------
@@ -336,6 +351,7 @@ int main(int argc, char** argv) {
 	// Saving to pdf
 	TCanvas * c0 = new TCanvas("c0","",900,900);
 	c0 -> Print("results_offsets_veff.pdf(");
+	c1 -> Print("results_offsets_veff.pdf");
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
 			c_tdc_diff[is][il] -> Print("results_offsets_veff.pdf");
