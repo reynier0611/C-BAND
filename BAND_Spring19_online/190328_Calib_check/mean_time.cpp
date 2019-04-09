@@ -306,7 +306,7 @@ int main(int argc, char** argv) {
 	c2 -> Print("results_mean_time.pdf");
 
 	// Saving plots to a root file
-	TFile * output = new TFile("out.root","recreate");
+	TFile * output = new TFile(outRootName,"recreate");
 	h1_ToF_tdc_uncorr -> Write("h1_ToF_tdc_uncorr");
 	h1_ToF_tdc_corr      -> Write("h1_ToF_tdc_corr"     );
 	output -> Close();
