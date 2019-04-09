@@ -131,8 +131,12 @@ int main(int argc, char** argv) {
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
 	// 1D histograms
-	TH1F * h1_ToF_tdc_uncorr  = new TH1F("h1_ToF_tdc_uncorr" ,"uncorrected",1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc_uncorr  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
-	TH1F * h1_ToF_tdc_corr    = new TH1F("h1_ToF_tdc_corr"   ,"corrected"  ,1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc_corr    ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
+	TH1F * h1_ToF_tdc_uncorr_s = new TH1F("h1_ToF_tdc_uncorr_s","uncorrected, short",1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_uncorr_s,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+	TH1F * h1_ToF_tdc_corr_s   = new TH1F("h1_ToF_tdc_corr_s"  ,"corrected, short"  ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_corr_s  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
+	TH1F * h1_ToF_tdc_uncorr_l = new TH1F("h1_ToF_tdc_uncorr_l","uncorrected, long" ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_uncorr_l,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+        TH1F * h1_ToF_tdc_corr_l   = new TH1F("h1_ToF_tdc_corr_l"  ,"corrected, long"   ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_corr_l  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
+	TH1F * h1_ToF_tdc_uncorr   = new TH1F("h1_ToF_tdc_uncorr"  ,"uncorrected"       ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_uncorr  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+        TH1F * h1_ToF_tdc_corr     = new TH1F("h1_ToF_tdc_corr"    ,"corrected"         ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_corr    ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -250,7 +254,7 @@ int main(int argc, char** argv) {
 			//if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
 			if( TMath::Sqrt(adcLcorr*adcRcorr) < 6000 ) continue;
 			//if( sector < 3 || sector > 4 ) continue; // Use this line to not include long bars
-			if( sector == 3 || sector == 4 ) continue; // Use this line to not include short bars
+			//if( sector == 3 || sector == 4 ) continue; // Use this line to not include short bars
 
 			float tFadcLcorr = band_hits.getTfadcLcorr(hit);
 			float tFadcRcorr = band_hits.getTfadcRcorr(hit);
@@ -267,13 +271,20 @@ int main(int argc, char** argv) {
                         //                                                 L-R corr         P2P & L2L corr                              time-walk corrections
 			double meantimeTdcCorr = meantimeTdc_byHand - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
 
-			//if( sector == 3 || sector == 4 ) continue;
-
 			double dL = TMath::Sqrt( pow(x,2) + pow(y,2) + pow(z,2) );
 
 			// Fill histograms
 			h1_ToF_tdc_uncorr      -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
 			h1_ToF_tdc_corr        -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
+		
+			if( sector == 3 || sector == 4 ){
+				h1_ToF_tdc_uncorr_s -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
+				h1_ToF_tdc_corr_s   -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
+			}
+			else{
+				h1_ToF_tdc_uncorr_l -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
+                        	h1_ToF_tdc_corr_l   -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
+			}
 
 		}// end loop over hits in event
 
@@ -308,8 +319,13 @@ int main(int argc, char** argv) {
 
 	// Saving plots to a root file
 	TFile * output = new TFile(outRootName,"recreate");
-	h1_ToF_tdc_uncorr -> Write("h1_ToF_tdc_uncorr");
-	h1_ToF_tdc_corr      -> Write("h1_ToF_tdc_corr"     );
+	h1_ToF_tdc_uncorr   -> Write("h1_ToF_tdc_uncorr"   );
+	h1_ToF_tdc_corr     -> Write("h1_ToF_tdc_corr"     );
+	h1_ToF_tdc_uncorr_s -> Write("h1_ToF_tdc_uncorr_s" );
+        h1_ToF_tdc_corr_s   -> Write("h1_ToF_tdc_corr_s"   );
+	h1_ToF_tdc_uncorr_l -> Write("h1_ToF_tdc_uncorr_l" );
+        h1_ToF_tdc_corr_l   -> Write("h1_ToF_tdc_corr_l"   );
+	
 	output -> Close();
 
 	cout << "ROOT FILE HAS BEEN CREATED" << endl;
