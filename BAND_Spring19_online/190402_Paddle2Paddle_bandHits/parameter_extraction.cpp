@@ -68,7 +68,9 @@ int main(int argc, char** argv) {
 	cout << "\\    /\\    / /\\   |  \\ |\\  | | |\\  |  /" << endl;
 	cout << " \\  /  \\  / /--\\  |-\\/ | \\ | | | \\ | |  --\\" << endl;
 	cout << "  \\/    \\/ /    \\ |  \\ |  \\| | |  \\|  \\___/" << endl << endl;
-	cout << "Run this code on laser data" << endl << endl;
+	cout << "Run this code on laser data on a file that does not have" << endl;
+        cout << "paddle-to-paddle corrections yet, but already has time-walk" << endl;
+        cout << "and L-R corrections" << endl << endl;
 	cout << "*************************************************************" << endl;
 
 	// ----------------------------------------------------------------------------------
@@ -87,8 +89,8 @@ int main(int argc, char** argv) {
 	TH1F ** h1_resolutions          = new TH1F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,15000,401,-15,15);
-		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,15000,401,-15,15);
+		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,25000,401,-15,15);
+		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,25000,401,-15,15);
 		PrettyTH2F(h2_dMeantime_adc_paddle[i]);
 		PrettyTH2F(h2_dMeantime_adc_layer [i]);
 
@@ -130,14 +132,15 @@ int main(int argc, char** argv) {
 		//if(nHits>100) continue;
 
 		for(int hit = 0; hit < nHits; hit++) {
-			int    sector            = band_hits.getSector    (hit);
-                        int    layer             = band_hits.getLayer     (hit);
-                        int    component         = band_hits.getComponent (hit);
-                        float  tTdcLcorr         = band_hits.getTtdcLcorr (hit);
-                        float  tTdcRcorr         = band_hits.getTtdcRcorr (hit);
+			int    sector            = band_hits.getSector     (hit);
+                        int    layer             = band_hits.getLayer      (hit);
+                        int    component         = band_hits.getComponent  (hit);
+                        float  tTdcLcorr         = band_hits.getTtdcLcorr  (hit);
+                        float  tTdcRcorr         = band_hits.getTtdcRcorr  (hit);
+			float  meantimeTdc       = band_hits.getMeantimeTdc(hit);
 
 			if( (sector==2)&&(component==1) ){
-				ref_meantime[layer] = ( tTdcLcorr + tTdcRcorr )/2.;	
+				ref_meantime[layer] = meantimeTdc;
 			}
 		}
 
@@ -155,8 +158,9 @@ int main(int argc, char** argv) {
                         float tTdcLcorr          = band_hits.getTtdcLcorr   (hit);
                         float tTdcRcorr          = band_hits.getTtdcRcorr   (hit);
 
-			double meantime = ( tTdcLcorr + tTdcRcorr )/2.;
-			//double delta_meantime = meantime - ref_meantime[layer];
+			if(adcLcorr< 6000||adcRcorr< 6000) continue; // To avoid area sensitive to time-walk corrections
+			if(adcLcorr>20000||adcRcorr>20000) continue; // To avoid area sensitive to adc overflow
+
 			double delta_meantime = meantimeTdc - ref_meantime[layer];
 			double adc_geometric_mean = TMath::Sqrt(adcLcorr*adcRcorr);
 
@@ -168,7 +172,7 @@ int main(int argc, char** argv) {
 			h1_resolutions[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));	
 			
 			if(sector==2&&component==1){
-				double delta_meantime_layer = meantime - ref_meantime[5];
+				double delta_meantime_layer = meantimeTdc - ref_meantime[5];
 				h2_dMeantime_adc_layer[barKey] -> Fill(adc_geometric_mean,delta_meantime_layer);
 				h2_dMeantime_adc_layer[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));
 			}
