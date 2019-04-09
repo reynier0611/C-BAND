@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 
+	TString outRootName = "out";
 	// ----------------------------------------------------------------------------------
         // Load time-walk correction parameters only if data is not already corrected
         cout << "Is your data already timewalk corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
@@ -74,8 +75,10 @@ int main(int argc, char** argv) {
                 cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
                 exit(0);
         }
-        if(optionTW==1)
+        if(optionTW==1){
                 LoadT_WalkCorrectionPar();
+		outRootName + "_TW";
+	}
 	// ----------------------------------------------------------------------------------
         // Load L-R correction parameters only if data is not already corrected
 	cout << "Is your data already L-R time corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
@@ -85,8 +88,10 @@ int main(int argc, char** argv) {
                 cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
                 exit(0);
         }
-	if(optionLR==1)
+	if(optionLR==1){
 		Load_LminRCorrectionPar();
+		outRootName + "_LR";
+	}
 	// ----------------------------------------------------------------------------------
         // Load TDC paddle-to-paddle correction parameters only if data is not already corrected
         cout << "Is your data already TDC paddle offset corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
@@ -96,9 +101,13 @@ int main(int argc, char** argv) {
                 cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
                 exit(0);
         }
-        if(option==1)
+        if(option==1){
                 LoadPaddleCorrectionPar();
+		outRootName + "_p2p";
+	}
 	// ---------------------------------------------------------------------------------- 
+
+	outRootName + ".root";
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
@@ -254,7 +263,8 @@ int main(int argc, char** argv) {
 			float uz         = band_hits.getUz        (hit);
 
 			double meantimeTdc_byHand = (tTdcLcorr+tTdcRcorr)/2.;
-                        double meantimeTdcCorr = meantimeTdc_byHand - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
+                        //                                                 L-R corr         P2P & L2L corr                              time-walk corrections
+			double meantimeTdcCorr = meantimeTdc_byHand - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
 
 			//if( sector == 3 || sector == 4 ) continue;
 
@@ -420,8 +430,8 @@ void Load_LminRCorrectionPar(){
                 f >> par_FADC;
                 f >> temp;
                 f >> temp;
-                LRtdc [barId] = par_TDC;
-                LRfadc[barId] = par_FADC;
+                LRtdc [barId] = TMath::Abs(par_TDC );
+                LRfadc[barId] = TMath::Abs(par_FADC);
         }
         f.close();
 }
