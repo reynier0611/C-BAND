@@ -274,10 +274,12 @@ int main(int argc, char** argv) {
 	f_photopeak_1 -> SetParameter(0,100);
 	f_photopeak_1 -> SetParameter(1,278);
 	f_photopeak_1 -> SetParameter(2,  1);
+	f_photopeak_1 -> SetParLimits(2,0,5);
 	TF1 * f_photopeak_2 = new TF1("f_photopeak_2","gaus(0) + pol2(3)",270,290);
 	f_photopeak_2 -> SetParameter(0,100);
         f_photopeak_2 -> SetParameter(1,278);
         f_photopeak_2 -> SetParameter(2,  1);
+	f_photopeak_2 -> SetParLimits(2,0,5);
 
 	h1_ToF_tdc_uncorr -> Fit("f_photopeak_1","R");
 	h1_ToF_tdc_corr      -> Fit("f_photopeak_2","R");
