@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
         }
         if(optionTW==1){
                 LoadT_WalkCorrectionPar();
-		outRootName + "_TW";
+		outRootName += "_TW";
 	}
 	// ----------------------------------------------------------------------------------
         // Load L-R correction parameters only if data is not already corrected
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
         }
 	if(optionLR==1){
 		Load_LminRCorrectionPar();
-		outRootName + "_LR";
+		outRootName += "_LR";
 	}
 	// ----------------------------------------------------------------------------------
         // Load TDC paddle-to-paddle correction parameters only if data is not already corrected
@@ -103,11 +103,12 @@ int main(int argc, char** argv) {
         }
         if(option==1){
                 LoadPaddleCorrectionPar();
-		outRootName + "_p2p";
+		outRootName += "_p2p";
 	}
 	// ---------------------------------------------------------------------------------- 
 
-	outRootName + ".root";
+	outRootName += ".root";
+	cout << "output root file will be named: " << outRootName << endl;
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
