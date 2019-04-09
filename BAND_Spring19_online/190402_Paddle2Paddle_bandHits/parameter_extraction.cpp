@@ -136,8 +136,6 @@ int main(int argc, char** argv) {
                         float  tTdcLcorr         = band_hits.getTtdcLcorr (hit);
                         float  tTdcRcorr         = band_hits.getTtdcRcorr (hit);
 
-			if(sector==3&&layer==3&&component==1) cout << "FOUND 331" << endl;
-
 			if( (sector==2)&&(component==1) ){
 				ref_meantime[layer] = ( tTdcLcorr + tTdcRcorr )/2.;	
 			}
@@ -472,6 +470,6 @@ void PrettyTGraphErrors(TGraphErrors * gP, int color){
 
 	gP -> GetYaxis() -> SetTitleOffset(1.30);
 
-	gP -> SetMinimum(150);
-	gP -> SetMaximum(400);
+	gP -> SetMinimum( 80);
+	gP -> SetMaximum(200);
 }
