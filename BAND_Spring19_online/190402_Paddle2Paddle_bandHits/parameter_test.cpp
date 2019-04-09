@@ -84,15 +84,15 @@ int main(int argc, char** argv) {
 	// Declaring histograms
 	const int nHistos = 600;
 
-	double ref_meantime[10] = {0};
+	double ref_meantime = 0;
 
 	TH2F ** h2_dMeantime_adc_paddle = new TH2F * [nHistos];
 
-	TH2F * h2_dMeantime_adc_before = new TH2F("h2_dMeantime_adc_before","Before;#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}",500,0,25000,500,-15,15);
-	TH2F * h2_dMeantime_adc_after  = new TH2F("h2_dMeantime_adc_after" ,"After ;#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}",500,0,25000,500,-15,15);
+	TH2F * h2_dMeantime_adc_before = new TH2F("h2_dMeantime_adc_before","Before;#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}",500,0,25000,500,-10,10);
+	TH2F * h2_dMeantime_adc_after  = new TH2F("h2_dMeantime_adc_after" ,"After ;#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}",500,0,25000,500,-10,10);
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}",500,0,15000,500,-15,15);
+		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}",500,0,25000,500,-10,10);
 		PrettyTH2F(h2_dMeantime_adc_paddle[i]);
 	}
 
@@ -137,8 +137,8 @@ int main(int argc, char** argv) {
 			float  tTdcRcorr         = band_hits.getTtdcRcorr (hit);
 			float  meantimeTdc       = band_hits.getMeantimeTdc (hit);
 
-			if( (sector==2)&&(component==1) ){
-				ref_meantime[layer] = meantimeTdc;
+			if( (sector==2)&&(component==1)&&(layer==5) ){
+				ref_meantime = meantimeTdc;
 			}
 		}
 
@@ -161,11 +161,11 @@ int main(int argc, char** argv) {
 				double meantime_corr = meantimeTdc + TDC_corr(barKey);
 				double adc_geometric_mean = TMath::Sqrt(adcLcorr*adcRcorr);	
 
-				h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,meantime_corr-ref_meantime[layer]);
+				h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,meantime_corr-ref_meantime);
 				h2_dMeantime_adc_paddle[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));
 
-				h2_dMeantime_adc_before -> Fill(adc_geometric_mean,meantimeTdc  -ref_meantime[layer]);
-				h2_dMeantime_adc_after  -> Fill(adc_geometric_mean,meantime_corr-ref_meantime[layer]);
+				h2_dMeantime_adc_before -> Fill(adc_geometric_mean,meantimeTdc  -ref_meantime);
+				h2_dMeantime_adc_after  -> Fill(adc_geometric_mean,meantime_corr-ref_meantime);
 			}
 		}
 	}// end file
@@ -185,8 +185,8 @@ int main(int argc, char** argv) {
 
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
-				int notEmpty = (h2_dMeantime_adc_paddle[identifier]->Integral());
-				if(notEmpty){
+				//int notEmpty = (h2_dMeantime_adc_paddle[identifier]->Integral());
+				//if(notEmpty){
 					int min, max;
 					cSLC_paddle[is][il] -> cd(cIdx+1);
 					gPad -> SetBottomMargin(0.26);
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 					//max = getMaxNonEmptyBin(h2_dMeantime_adc_paddle[identifier]);
 					//h2_dMeantime_adc_paddle[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_dMeantime_adc_paddle[identifier] -> Draw("COLZ");
-				}
+				//}
 			}
 			cSLC_paddle[is][il] -> Modified();      cSLC_paddle[is][il] -> Update();
 		}
