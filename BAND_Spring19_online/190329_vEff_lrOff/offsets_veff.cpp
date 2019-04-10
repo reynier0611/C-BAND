@@ -95,6 +95,15 @@ int main(int argc, char** argv) {
 	TH1D * h1_slopes_long  = new TH1D("h1_slopes_long" ,";slope",100,0.8,1.5);	h1_slopes_long  -> SetLineColor(62);	h1_slopes_long  -> SetLineWidth(2);
 	TH1D * h1_slopes_med   = new TH1D("h1_slopes_med"  ,";slope",100,0.8,1.5);	h1_slopes_med   -> SetLineColor( 8);	h1_slopes_med   -> SetLineWidth(2);
 
+	TH1D * h1_vEff_tdc_s   = new TH1D("h1_vEff_tdc_s"  ,"short bars only;effective speed of light [cm/ns]" ,60,10,17);	h1_vEff_tdc_s  -> SetLineColor(1);
+	TH1D * h1_vEff_fadc_s  = new TH1D("h1_vEff_fadc_s" ,"short bars only;effective speed of light [cm/ns]" ,60,10,17);	h1_vEff_fadc_s -> SetLineColor(2);
+	TH1D * h1_vEff_tdc_m   = new TH1D("h1_vEff_tdc_m"  ,"medium bars only;effective speed of light [cm/ns]",60,10,17);	h1_vEff_tdc_m  -> SetLineColor(1);
+        TH1D * h1_vEff_fadc_m  = new TH1D("h1_vEff_fadc_m" ,"medium bars only;effective speed of light [cm/ns]",60,10,17);	h1_vEff_fadc_m -> SetLineColor(2);
+	TH1D * h1_vEff_tdc_l   = new TH1D("h1_vEff_tdc_l"  ,"long bars only;effective speed of light [cm/ns]"  ,60,10,17);	h1_vEff_tdc_l  -> SetLineColor(1);
+        TH1D * h1_vEff_fadc_l  = new TH1D("h1_vEff_fadc_l" ,"long bars only;effective speed of light [cm/ns]"  ,60,10,17);	h1_vEff_fadc_l -> SetLineColor(2);
+	TH1D * h1_vEff_tdc     = new TH1D("h1_vEff_tdc"    ,"all bars;effective speed of light [cm/ns]"        ,60,10,17);	h1_vEff_tdc    -> SetLineColor(1);
+        TH1D * h1_vEff_fadc    = new TH1D("h1_vEff_fadc"   ,"all bars;effective speed of light [cm/ns]"        ,60,10,17);	h1_vEff_fadc   -> SetLineColor(2);
+
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
 	hipo::reader reader;
@@ -166,8 +175,8 @@ int main(int argc, char** argv) {
 					double barLength = bandlen[sector-1];
 
 					// For FADC
-					int ftdc_low_Bin = h1_ftdc_diff[i]->FindFirstBinAbove(h1_tdc_diff[i]->GetMaximum()*0.1);
-					int ftdc_high_Bin = h1_ftdc_diff[i]->FindLastBinAbove(h1_tdc_diff[i]->GetMaximum()*0.1);
+					int ftdc_low_Bin = h1_ftdc_diff[i]->FindFirstBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
+					int ftdc_high_Bin = h1_ftdc_diff[i]->FindLastBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
 					double ftdc_left = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_low_Bin);
 					double ftdc_right = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_high_Bin);
 					double ftdc_width = ftdc_right - ftdc_left;
@@ -175,8 +184,8 @@ int main(int argc, char** argv) {
 					ftdc_lr_off = (ftdc_left+ftdc_right)/2.;
 
 					// For TDC
-					int tdc_low_Bin = h1_tdc_diff[i]->FindFirstBinAbove(h1_tdc_diff[i]->GetMaximum()*0.1);
-					int tdc_high_Bin = h1_tdc_diff[i]->FindLastBinAbove(h1_tdc_diff[i]->GetMaximum()*0.1);
+					int tdc_low_Bin = h1_tdc_diff[i]->FindFirstBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
+					int tdc_high_Bin = h1_tdc_diff[i]->FindLastBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
 					double tdc_left = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_low_Bin);
 					double tdc_right = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_high_Bin);
 					double tdc_width = tdc_right - tdc_left;
@@ -189,6 +198,22 @@ int main(int argc, char** argv) {
 
 				effective_velocity << sector << "\t" << layer << "\t" << component << "\t" << tdc_vEff << "\t" << ftdc_vEff << "\t" << 0.000 << "\t" << 0.000 << "\n";
 				lr_offsets << sector << "\t" << layer << "\t" << component << "\t" << tdc_lr_off << "\t" << ftdc_lr_off << "\t" << 0.000 << "\t" << 0.000 << "\n";
+			
+				h1_vEff_tdc  -> Fill(tdc_vEff );
+				h1_vEff_fadc -> Fill(ftdc_vEff);
+
+				if(i>=300&&i<500){ // Short bars only
+					h1_vEff_tdc_s  -> Fill(tdc_vEff );
+                                	h1_vEff_fadc_s -> Fill(ftdc_vEff);
+				}
+				else if(i<200){ // Medium bars only
+					h1_vEff_tdc_m  -> Fill(tdc_vEff );
+                                        h1_vEff_fadc_m -> Fill(ftdc_vEff);
+				}
+				else{ // Long bars only
+					h1_vEff_tdc_l  -> Fill(tdc_vEff );
+                                        h1_vEff_fadc_l -> Fill(ftdc_vEff);
+				}
 			}
 		}
 	}
@@ -245,6 +270,24 @@ int main(int argc, char** argv) {
         c1 -> Update();
 
 	// --------------------------------------------------------------------------------------------------------
+	// Histograms with all the extracted speeds of light
+	TCanvas * c2 = new TCanvas("c2","c2");
+	c2 -> Divide(2,2);
+	c2 -> cd(1);	h1_vEff_tdc_s -> Draw();	h1_vEff_fadc_s -> Draw("same");
+	c2 -> cd(2);	h1_vEff_tdc_m -> Draw();	h1_vEff_fadc_m -> Draw("same");
+	c2 -> cd(3);	h1_vEff_tdc_l -> Draw();	h1_vEff_fadc_l -> Draw("same");
+	c2 -> cd(4);	h1_vEff_tdc   -> Draw();	h1_vEff_fadc   -> Draw("same");
+	
+	c2 -> cd(2);
+	TLegend * leg1 = new TLegend(0.15,0.6,0.30,0.87);
+	leg1 -> SetLineColor(0);
+	leg1 -> AddEntry( h1_vEff_tdc  , "TDC"  );
+	leg1 -> AddEntry( h1_vEff_fadc , "FADC" );
+	leg1 -> Draw("same");
+	c2 -> Modified();
+	c2 -> Update();
+
+	// --------------------------------------------------------------------------------------------------------
 	// Create plots for all the L-R distributions of TDC and FADC
 	TCanvas *** c_tdc_diff  = new TCanvas**[5];
 	TCanvas *** c_empty     = new TCanvas**[5];
@@ -275,8 +318,8 @@ int main(int argc, char** argv) {
 					PrettyTH1F( h1_tdc_diff[identifier] , "TDC L-R [ns]","", 2);
 					h1_tdc_diff[identifier]->Draw();
 					// make two lines based on TDC height of 0.1 of max
-					low_Bin  = h1_tdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
-					high_Bin = h1_tdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
+					low_Bin  = h1_tdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
+					high_Bin = h1_tdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
 					low_x = h1_tdc_diff[identifier]->GetXaxis()->GetBinCenter(low_Bin);
 					high_x = h1_tdc_diff[identifier]->GetXaxis()->GetBinCenter(high_Bin);
 					tdc_len = high_x-low_x;
@@ -297,8 +340,8 @@ int main(int argc, char** argv) {
 					PrettyTH1F( h1_ftdc_diff[identifier] , "FADC L-R [ns]","", 1);
 					h1_ftdc_diff[identifier]->Draw();
 					// make two lines
-					low_Bin  = h1_ftdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
-					high_Bin = h1_ftdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.1);
+					low_Bin  = h1_ftdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
+					high_Bin = h1_ftdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
 					low_x = h1_ftdc_diff[identifier]->GetXaxis()->GetBinCenter(low_Bin);
 					high_x = h1_ftdc_diff[identifier]->GetXaxis()->GetBinCenter(high_Bin);
 					fadc_len = high_x - low_x;
@@ -411,8 +454,8 @@ void PrettyTH2F(TH2F * h2,TString titx,TString tity) {
 }
 // ========================================================================================================================================
 void getLowXHighX( TH1F * h1, double &xL, double &xH){
-	int low_Bin  = h1->FindFirstBinAbove(h1->GetMaximum()*0.1);
-	int high_Bin = h1->FindLastBinAbove(h1->GetMaximum()*0.1);
+	int low_Bin  = h1->FindFirstBinAbove(h1->GetMaximum()*0.5);
+	int high_Bin = h1->FindLastBinAbove(h1->GetMaximum()*0.5);
 	xL = h1->GetXaxis()->GetBinCenter(low_Bin);
 	xH = h1->GetXaxis()->GetBinCenter(high_Bin);
 
