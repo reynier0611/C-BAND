@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
 	TH1D * h1_slopes       = new TH1D("h1_slopes"      ,";slope",100,0.8,1.5);	h1_slopes       -> SetLineColor( 1);	h1_slopes       -> SetLineWidth(2);	h1_slopes -> SetLineStyle(2);
 	TH1D * h1_slopes_short = new TH1D("h1_slopes_short",";slope",100,0.8,1.5);	h1_slopes_short -> SetLineColor( 2);	h1_slopes_short -> SetLineWidth(2);
 	TH1D * h1_slopes_long  = new TH1D("h1_slopes_long" ,";slope",100,0.8,1.5);	h1_slopes_long  -> SetLineColor(62);	h1_slopes_long  -> SetLineWidth(2);
+	TH1D * h1_slopes_med   = new TH1D("h1_slopes_med"  ,";slope",100,0.8,1.5);	h1_slopes_med   -> SetLineColor( 8);	h1_slopes_med   -> SetLineWidth(2);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -215,6 +216,8 @@ int main(int argc, char** argv) {
 
 			if( i >= 300 && i < 500 )
 				h1_slopes_short -> Fill(par_pad[i][0]);
+			else if( i < 200 )
+				h1_slopes_med -> Fill(par_pad[i][0]);
 			else
 				h1_slopes_long -> Fill(par_pad[i][0]);
 		}
@@ -230,11 +233,13 @@ int main(int argc, char** argv) {
 	TCanvas * c1 = new TCanvas("c1","c1");
 	h1_slopes_long  -> Draw();
 	h1_slopes_short -> Draw("same");
+	h1_slopes_med   -> Draw("same");
 	//h1_slopes       -> Draw("same");
         TLegend * leg = new TLegend (0.6,0.5,0.8,0.7);
 	leg -> SetLineColor(0);
-	leg -> AddEntry(h1_slopes_short,"short");
-	leg -> AddEntry(h1_slopes_long ,"long" );
+	leg -> AddEntry(h1_slopes_short,"short" );
+	leg -> AddEntry(h1_slopes_med  ,"medium");
+	leg -> AddEntry(h1_slopes_long ,"long"  );
 	leg -> Draw("same");
 	c1 -> Modified();
         c1 -> Update();
