@@ -66,45 +66,28 @@ int main(int argc, char** argv) {
 	}
 
 	TString outRootName = "out";
+	cout << "Do you want to correct your data for:" << endl;
 	// ----------------------------------------------------------------------------------
         // Load time-walk correction parameters only if data is not already corrected
-        cout << "Is your data already timewalk corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
-        int optionTW;
+        cout << "timewalk?\n1) yes, 2) no, 3) I don't know" << endl;
+	int optionTW;
         cin >> optionTW;
-        if(optionTW==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-        if(optionTW==1){
-                LoadT_WalkCorrectionPar();
-		outRootName += "_TW";
-	}
+	if(optionTW==3){ cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl; exit(0);}
+        if(optionTW==1){ LoadT_WalkCorrectionPar(); outRootName += "_TW";}
 	// ----------------------------------------------------------------------------------
         // Load L-R correction parameters only if data is not already corrected
-	cout << "Is your data already L-R time corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+	cout << "time L-R?\n1) yes, 2) no, 3) I don't know" << endl;
 	int optionLR;
 	cin >> optionLR;
-	if(optionLR==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-	if(optionLR==1){
-		Load_LminRCorrectionPar();
-		outRootName += "_LR";
-	}
+	if(optionLR==3){ cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl; exit(0);}
+	if(optionLR==1){ Load_LminRCorrectionPar(); outRootName += "_LR";}
 	// ----------------------------------------------------------------------------------
         // Load TDC paddle-to-paddle correction parameters only if data is not already corrected
-        cout << "Is your data already TDC paddle offset corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+      	cout << "paddle-to-paddle and layer-to-layer?\n1) yes, 2) no, 3) I don't know" << endl; 
         int option;
         cin >> option;
-        if(option==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-        if(option==1){
-                LoadPaddleCorrectionPar();
-		outRootName += "_p2p";
-	}
+        if(option==3){ cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl; exit(0);}
+        if(option==1){ LoadPaddleCorrectionPar(); outRootName += "_p2p";}
 	// ---------------------------------------------------------------------------------- 
 
 	outRootName += ".root";
@@ -268,8 +251,8 @@ int main(int argc, char** argv) {
 			float uz         = band_hits.getUz        (hit);
 
 			double meantimeTdc_byHand = (tTdcLcorr+tTdcRcorr)/2.;
-                        //                                                 L-R corr         P2P & L2L corr                              time-walk corrections
 			double meantimeTdcCorr = meantimeTdc_byHand - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
+			//                                                 L-R corr         P2P & L2L corr                              time-walk corrections
 
 			double dL = TMath::Sqrt( pow(x,2) + pow(y,2) + pow(z,2) );
 
