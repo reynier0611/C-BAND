@@ -65,40 +65,33 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 
+	TString outRootName = "out";
+	cout << "Do you want to correct your data for:" << endl;
 	// ----------------------------------------------------------------------------------
         // Load time-walk correction parameters only if data is not already corrected
-        cout << "Is your data already timewalk corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
-        int optionTW;
+        cout << "timewalk?\n1) yes, 2) no, 3) I don't know" << endl;
+	int optionTW;
         cin >> optionTW;
-        if(optionTW==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-        if(optionTW==1)
-                LoadT_WalkCorrectionPar();
+	if(optionTW==3){ cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl; exit(0);}
+        if(optionTW==1){ LoadT_WalkCorrectionPar(); outRootName += "_TW";}
 	// ----------------------------------------------------------------------------------
         // Load L-R correction parameters only if data is not already corrected
-	cout << "Is your data already L-R time corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+	cout << "time L-R?\n1) yes, 2) no, 3) I don't know" << endl;
 	int optionLR;
 	cin >> optionLR;
-	if(optionLR==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-	if(optionLR==1)
-		Load_LminRCorrectionPar();
+	if(optionLR==3){ cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl; exit(0);}
+	if(optionLR==1){ Load_LminRCorrectionPar(); outRootName += "_LR";}
 	// ----------------------------------------------------------------------------------
         // Load TDC paddle-to-paddle correction parameters only if data is not already corrected
-        cout << "Is your data already TDC paddle offset corrected?\n1) no, 2) yes, 3) I don't know?" << endl;
+      	cout << "paddle-to-paddle and layer-to-layer?\n1) yes, 2) no, 3) I don't know" << endl; 
         int option;
         cin >> option;
-        if(option==3){
-                cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl;
-                exit(0);
-        }
-        if(option==1)
-                LoadPaddleCorrectionPar();
+        if(option==3){ cout << "Bitch please! Get your shit together and then come back. I cannot answer this for you." << endl; exit(0);}
+        if(option==1){ LoadPaddleCorrectionPar(); outRootName += "_p2p";}
 	// ---------------------------------------------------------------------------------- 
+
+	outRootName += ".root";
+	cout << "output root file will be named: " << outRootName << endl;
 
 	// ----------------------------------------------------------------------------------
 	// Useful variables
@@ -121,8 +114,12 @@ int main(int argc, char** argv) {
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
 	// 1D histograms
-	TH1F * h1_ToF_tdc_uncorr  = new TH1F("h1_ToF_tdc_uncorr" ,"uncorrected",1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc_uncorr  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
-	TH1F * h1_ToF_tdc_corr    = new TH1F("h1_ToF_tdc_corr"   ,"corrected"  ,1800 ,200,  600);	PrettyTH1F(h1_ToF_tdc_corr    ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
+	TH1F * h1_ToF_tdc_uncorr_s = new TH1F("h1_ToF_tdc_uncorr_s","uncorrected, short",1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_uncorr_s,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+	TH1F * h1_ToF_tdc_corr_s   = new TH1F("h1_ToF_tdc_corr_s"  ,"corrected, short"  ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_corr_s  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
+	TH1F * h1_ToF_tdc_uncorr_l = new TH1F("h1_ToF_tdc_uncorr_l","uncorrected, long" ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_uncorr_l,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+        TH1F * h1_ToF_tdc_corr_l   = new TH1F("h1_ToF_tdc_corr_l"  ,"corrected, long"   ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_corr_l  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
+	TH1F * h1_ToF_tdc_uncorr   = new TH1F("h1_ToF_tdc_uncorr"  ,"uncorrected"       ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_uncorr  ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",4);
+        TH1F * h1_ToF_tdc_corr     = new TH1F("h1_ToF_tdc_corr"    ,"corrected"         ,1800 ,200,  600);  PrettyTH1F(h1_ToF_tdc_corr    ,"(L+R)/2 corrected - RF - pathlength (TDC)","Counts",8);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -237,12 +234,10 @@ int main(int argc, char** argv) {
 			float adcLcorr           = band_hits.getAdcLcorr    (hit);
 			float adcRcorr           = band_hits.getAdcRcorr    (hit);
 
-			double meantimeTdcCorr = meantimeTdc - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
-
 			//if( adcLcorr < 4000 || adcRcorr < 4000 ) continue;
 			if( TMath::Sqrt(adcLcorr*adcRcorr) < 6000 ) continue;
 			//if( sector < 3 || sector > 4 ) continue; // Use this line to not include long bars
-			if( sector == 3 || sector == 4 ) continue; // Use this line to not include short bars
+			//if( sector == 3 || sector == 4 ) continue; // Use this line to not include short bars
 
 			float tFadcLcorr = band_hits.getTfadcLcorr(hit);
 			float tFadcRcorr = band_hits.getTfadcRcorr(hit);
@@ -255,13 +250,24 @@ int main(int argc, char** argv) {
 			float uy         = band_hits.getUy        (hit);
 			float uz         = band_hits.getUz        (hit);
 
-			//if( sector == 3 || sector == 4 ) continue;
+			double meantimeTdc_byHand = (tTdcLcorr+tTdcRcorr)/2.;
+			double meantimeTdcCorr = meantimeTdc_byHand - (LRtdc[barKey]/2.) + TDC_corr(barKey) + (TimeWalk_corr(barKey,"L",adcLcorr) + TimeWalk_corr(barKey,"R",adcRcorr))/2.;
+			//                                                 L-R corr         P2P & L2L corr                              time-walk corrections
 
 			double dL = TMath::Sqrt( pow(x,2) + pow(y,2) + pow(z,2) );
 
 			// Fill histograms
 			h1_ToF_tdc_uncorr      -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
 			h1_ToF_tdc_corr        -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
+		
+			if( sector == 3 || sector == 4 ){
+				h1_ToF_tdc_uncorr_s -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
+				h1_ToF_tdc_corr_s   -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
+			}
+			else{
+				h1_ToF_tdc_uncorr_l -> Fill(meantimeTdc     -t_vtx -(442.741-287.925) - dL/30.);
+                        	h1_ToF_tdc_corr_l   -> Fill(meantimeTdcCorr -t_vtx                    - dL/30.);
+			}
 
 		}// end loop over hits in event
 
@@ -273,10 +279,12 @@ int main(int argc, char** argv) {
 	f_photopeak_1 -> SetParameter(0,100);
 	f_photopeak_1 -> SetParameter(1,278);
 	f_photopeak_1 -> SetParameter(2,  1);
+	f_photopeak_1 -> SetParLimits(2,0,5);
 	TF1 * f_photopeak_2 = new TF1("f_photopeak_2","gaus(0) + pol2(3)",270,290);
 	f_photopeak_2 -> SetParameter(0,100);
         f_photopeak_2 -> SetParameter(1,278);
         f_photopeak_2 -> SetParameter(2,  1);
+	f_photopeak_2 -> SetParLimits(2,0,5);
 
 	h1_ToF_tdc_uncorr -> Fit("f_photopeak_1","R");
 	h1_ToF_tdc_corr      -> Fit("f_photopeak_2","R");
@@ -293,9 +301,14 @@ int main(int argc, char** argv) {
 	c2 -> Print("results_mean_time.pdf");
 
 	// Saving plots to a root file
-	TFile * output = new TFile("out.root","recreate");
-	h1_ToF_tdc_uncorr -> Write("h1_ToF_tdc_uncorr");
-	h1_ToF_tdc_corr      -> Write("h1_ToF_tdc_corr"     );
+	TFile * output = new TFile(outRootName,"recreate");
+	h1_ToF_tdc_uncorr   -> Write("h1_ToF_tdc_uncorr"   );
+	h1_ToF_tdc_corr     -> Write("h1_ToF_tdc_corr"     );
+	h1_ToF_tdc_uncorr_s -> Write("h1_ToF_tdc_uncorr_s" );
+        h1_ToF_tdc_corr_s   -> Write("h1_ToF_tdc_corr_s"   );
+	h1_ToF_tdc_uncorr_l -> Write("h1_ToF_tdc_uncorr_l" );
+        h1_ToF_tdc_corr_l   -> Write("h1_ToF_tdc_corr_l"   );
+	
 	output -> Close();
 
 	cout << "ROOT FILE HAS BEEN CREATED" << endl;
@@ -417,8 +430,8 @@ void Load_LminRCorrectionPar(){
                 f >> par_FADC;
                 f >> temp;
                 f >> temp;
-                LRtdc [barId] = par_TDC;
-                LRfadc[barId] = par_FADC;
+                LRtdc [barId] = TMath::Abs(par_TDC );
+                LRfadc[barId] = TMath::Abs(par_FADC);
         }
         f.close();
 }

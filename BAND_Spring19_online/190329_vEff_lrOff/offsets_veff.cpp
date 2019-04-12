@@ -92,6 +92,16 @@ int main(int argc, char** argv) {
 	TH1D * h1_slopes       = new TH1D("h1_slopes"      ,";slope",100,0.8,1.5);	h1_slopes       -> SetLineColor( 1);	h1_slopes       -> SetLineWidth(2);	h1_slopes -> SetLineStyle(2);
 	TH1D * h1_slopes_short = new TH1D("h1_slopes_short",";slope",100,0.8,1.5);	h1_slopes_short -> SetLineColor( 2);	h1_slopes_short -> SetLineWidth(2);
 	TH1D * h1_slopes_long  = new TH1D("h1_slopes_long" ,";slope",100,0.8,1.5);	h1_slopes_long  -> SetLineColor(62);	h1_slopes_long  -> SetLineWidth(2);
+	TH1D * h1_slopes_med   = new TH1D("h1_slopes_med"  ,";slope",100,0.8,1.5);	h1_slopes_med   -> SetLineColor( 8);	h1_slopes_med   -> SetLineWidth(2);
+
+	TH1D * h1_vEff_tdc_s   = new TH1D("h1_vEff_tdc_s"  ,"short bars only;effective speed of light [cm/ns]" ,60,10,17);	h1_vEff_tdc_s  -> SetLineColor(1);
+	TH1D * h1_vEff_fadc_s  = new TH1D("h1_vEff_fadc_s" ,"short bars only;effective speed of light [cm/ns]" ,60,10,17);	h1_vEff_fadc_s -> SetLineColor(2);
+	TH1D * h1_vEff_tdc_m   = new TH1D("h1_vEff_tdc_m"  ,"medium bars only;effective speed of light [cm/ns]",60,10,17);	h1_vEff_tdc_m  -> SetLineColor(1);
+        TH1D * h1_vEff_fadc_m  = new TH1D("h1_vEff_fadc_m" ,"medium bars only;effective speed of light [cm/ns]",60,10,17);	h1_vEff_fadc_m -> SetLineColor(2);
+	TH1D * h1_vEff_tdc_l   = new TH1D("h1_vEff_tdc_l"  ,"long bars only;effective speed of light [cm/ns]"  ,60,10,17);	h1_vEff_tdc_l  -> SetLineColor(1);
+        TH1D * h1_vEff_fadc_l  = new TH1D("h1_vEff_fadc_l" ,"long bars only;effective speed of light [cm/ns]"  ,60,10,17);	h1_vEff_fadc_l -> SetLineColor(2);
+	TH1D * h1_vEff_tdc     = new TH1D("h1_vEff_tdc"    ,"all bars;effective speed of light [cm/ns]"        ,60,10,17);	h1_vEff_tdc    -> SetLineColor(1);
+        TH1D * h1_vEff_fadc    = new TH1D("h1_vEff_fadc"   ,"all bars;effective speed of light [cm/ns]"        ,60,10,17);	h1_vEff_fadc   -> SetLineColor(2);
 
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
@@ -211,6 +221,22 @@ int main(int argc, char** argv) {
 
 				effective_velocity << sector << "\t" << layer << "\t" << component << "\t" << tdc_vEff << "\t" << ftdc_vEff << "\t" << 0.000 << "\t" << 0.000 << "\n";
 				lr_offsets << sector << "\t" << layer << "\t" << component << "\t" << tdc_lr_off << "\t" << ftdc_lr_off << "\t" << 0.000 << "\t" << 0.000 << "\n";
+			
+				h1_vEff_tdc  -> Fill(tdc_vEff );
+				h1_vEff_fadc -> Fill(ftdc_vEff);
+
+				if(i>=300&&i<500){ // Short bars only
+					h1_vEff_tdc_s  -> Fill(tdc_vEff );
+                                	h1_vEff_fadc_s -> Fill(ftdc_vEff);
+				}
+				else if(i<200){ // Medium bars only
+					h1_vEff_tdc_m  -> Fill(tdc_vEff );
+                                        h1_vEff_fadc_m -> Fill(ftdc_vEff);
+				}
+				else{ // Long bars only
+					h1_vEff_tdc_l  -> Fill(tdc_vEff );
+                                        h1_vEff_fadc_l -> Fill(ftdc_vEff);
+				}
 			}
 		}
 	}
@@ -238,6 +264,8 @@ int main(int argc, char** argv) {
 
 			if( i >= 300 && i < 500 )
 				h1_slopes_short -> Fill(par_pad[i][0]);
+			else if( i < 200 )
+				h1_slopes_med -> Fill(par_pad[i][0]);
 			else
 				h1_slopes_long -> Fill(par_pad[i][0]);
 		}
@@ -247,20 +275,40 @@ int main(int argc, char** argv) {
 	double std_TDC2ns  = 0.02345;
 	double std_FADC2ns = 0.0625;
 	cout << "Average slope = " << avg_m << endl;
-	cout << "TDC  to ns conversion factor (assuming FADC t conversion factor is " << std_FADC2ns << "): " << avg_m*std_TDC2ns  << endl;
-	cout << "FADC to ns conversion factor (assuming TDC  t conversion factor is " << std_TDC2ns  << "): " << std_FADC2ns/avg_m << endl;
+	cout << "TDC  to ns conversion factor (assuming TDC  t conversion factor is " << std_TDC2ns << "): " << avg_m*std_TDC2ns  << endl;
+	cout << "FADC to ns conversion factor (assuming FADC t conversion factor is " << std_FADC2ns  << "): " << std_FADC2ns/avg_m << endl;
 
 	TCanvas * c1 = new TCanvas("c1","c1");
 	h1_slopes_long  -> Draw();
 	h1_slopes_short -> Draw("same");
+	h1_slopes_med   -> Draw("same");
 	//h1_slopes       -> Draw("same");
         TLegend * leg = new TLegend (0.6,0.5,0.8,0.7);
 	leg -> SetLineColor(0);
-	leg -> AddEntry(h1_slopes_short,"short");
-	leg -> AddEntry(h1_slopes_long ,"long" );
+	leg -> AddEntry(h1_slopes_short,"short" );
+	leg -> AddEntry(h1_slopes_med  ,"medium");
+	leg -> AddEntry(h1_slopes_long ,"long"  );
 	leg -> Draw("same");
 	c1 -> Modified();
         c1 -> Update();
+
+	// --------------------------------------------------------------------------------------------------------
+	// Histograms with all the extracted speeds of light
+	TCanvas * c2 = new TCanvas("c2","c2");
+	c2 -> Divide(2,2);
+	c2 -> cd(1);	h1_vEff_tdc_s -> Draw();	h1_vEff_fadc_s -> Draw("same");
+	c2 -> cd(2);	h1_vEff_tdc_m -> Draw();	h1_vEff_fadc_m -> Draw("same");
+	c2 -> cd(3);	h1_vEff_tdc_l -> Draw();	h1_vEff_fadc_l -> Draw("same");
+	c2 -> cd(4);	h1_vEff_tdc   -> Draw();	h1_vEff_fadc   -> Draw("same");
+	
+	c2 -> cd(2);
+	TLegend * leg1 = new TLegend(0.15,0.6,0.30,0.87);
+	leg1 -> SetLineColor(0);
+	leg1 -> AddEntry( h1_vEff_tdc  , "TDC"  );
+	leg1 -> AddEntry( h1_vEff_fadc , "FADC" );
+	leg1 -> Draw("same");
+	c2 -> Modified();
+	c2 -> Update();
 
 	// --------------------------------------------------------------------------------------------------------
 	// Create plots for all the L-R distributions of TDC and FADC
@@ -291,6 +339,7 @@ int main(int argc, char** argv) {
 					// Draw TDC
 					PrettyTH1F( h1_tdc_diff[identifier] , "TDC L-R [ns]","", 2);
 					h1_tdc_diff[identifier]->Draw();
+
 					// Draw two lines:
 					TLine * lLow 	= new TLine( tdc_LEFTS[identifier],  0, tdc_LEFTS[identifier],  tdc_HEIGHTS[identifier] );
 					TLine * lHigh 	= new TLine( tdc_RIGHTS[identifier], 0, tdc_RIGHTS[identifier], tdc_HEIGHTS[identifier] );
