@@ -30,7 +30,6 @@ using namespace std;
 // Forward-declaring functions
 void PrettyTH1F(TH1F * h1,TString titx,TString tity,int color);
 void PrettyTH2F(TH2F * h2,TString titx,TString tity);
-void getLowXHighX( TH1F * h1, double &xL, double &xH);
 int getMinNonEmptyBin(TH2F * h2);
 int getMaxNonEmptyBin(TH2F * h2);
 
@@ -40,7 +39,7 @@ int slc[6][5] = {{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,6,6,2},{3,7,5,5,0},{3,
 int main(int argc, char** argv) {
 
 
-	TApplication *myapp = new TApplication("myapp",0,0);
+	//TApplication *myapp = new TApplication("myapp",0,0);
 
 	std::cout << " reading file example program (HIPO) "  << __cplusplus << std::endl;
 
@@ -157,8 +156,14 @@ int main(int argc, char** argv) {
 
 	// Get the width for each histogram:
 	ofstream lr_offsets,effective_velocity;
-	lr_offsets.open("TEST_lr_offsets.txt");
-	effective_velocity.open("TEST_effective_velocity.txt");
+	lr_offsets.open("output/TEST_lr_offsets.txt");
+	effective_velocity.open("output/TEST_effective_velocity.txt");
+	double ftdc_LEFTS[600] = {0.};
+	double ftdc_RIGHTS[600] = {0.};
+	double ftdc_HEIGHTS[600] = {0.};
+	double tdc_LEFTS[600] = {0.};
+	double tdc_RIGHTS[600] = {0.};
+	double tdc_HEIGHTS[600] = {0.};
 	for( int sector = 1 ; sector < 6 ; sector++){
 		for( int layer = 1 ; layer < 7 ; layer++ ){
 			for( int component = 1 ; component <= slc[layer-1][sector-1] ; component++ ){
@@ -173,22 +178,40 @@ int main(int argc, char** argv) {
 				}
 				else{
 					double barLength = bandlen[sector-1];
-
+			
+					// Taking just 50% is problematic for some bars as the L-R distribution is asymmetric. What I
+					// will do now is first find the rough middle of the distribution given by the mean and then 
+					// taking an average in the middle, and finding first bin about 50% for that average. This will
+					// also help with FADC
+					
 					// For FADC
-					int ftdc_low_Bin = h1_ftdc_diff[i]->FindFirstBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
-					int ftdc_high_Bin = h1_ftdc_diff[i]->FindLastBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
-					double ftdc_left = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_low_Bin);
-					double ftdc_right = h1_ftdc_diff[i]->GetXaxis()->GetBinCenter(ftdc_high_Bin);
-					double ftdc_width = ftdc_right - ftdc_left;
-					ftdc_vEff = (2*barLength) / ftdc_width;
-					ftdc_lr_off = (ftdc_left+ftdc_right)/2.;
+					int meanBin_ftdc = h1_ftdc_diff[i]->FindBin( h1_ftdc_diff[i]->GetMean() );
+					double avg_ftdc = h1_ftdc_diff[i]->Integral( meanBin_ftdc-5, meanBin_ftdc+5, "width");
+	
+					// Now get the bin that correponds to 20% of max for this
+					int ftdc_low_bin 	= h1_ftdc_diff[i]->FindFirstBinAbove( avg_ftdc * 0.2 );
+					int ftdc_high_bin	= h1_ftdc_diff[i]->FindLastBinAbove ( avg_ftdc * 0.2 );
+					double ftdc_left	= h1_ftdc_diff[i]->GetXaxis()->GetBinCenter( ftdc_low_bin  );
+					double ftdc_right	= h1_ftdc_diff[i]->GetXaxis()->GetBinCenter( ftdc_high_bin );
+					double ftdc_width	= ftdc_right - ftdc_left;
+					ftdc_LEFTS[i] 	= ftdc_left;
+					ftdc_RIGHTS[i]	= ftdc_right;
+					ftdc_HEIGHTS[i] = avg_ftdc * 0.2;
+					ftdc_vEff 		= (2*barLength) / ftdc_width;
+					ftdc_lr_off 		= (ftdc_left+ftdc_right)/2.;
 
 					// For TDC
-					int tdc_low_Bin = h1_tdc_diff[i]->FindFirstBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
-					int tdc_high_Bin = h1_tdc_diff[i]->FindLastBinAbove(h1_tdc_diff[i]->GetMaximum()*0.5);
-					double tdc_left = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_low_Bin);
-					double tdc_right = h1_tdc_diff[i]->GetXaxis()->GetBinCenter(tdc_high_Bin);
+					int meanBin_tdc = h1_tdc_diff[i]->FindBin( h1_tdc_diff[i]->GetMean() );
+					double avg_tdc = h1_tdc_diff[i]->Integral( meanBin_tdc-5 , meanBin_tdc+5, "width");
+					
+					int tdc_low_bin		= h1_tdc_diff[i]->FindFirstBinAbove( avg_tdc * 0.2 );
+					int tdc_high_bin	= h1_tdc_diff[i]->FindLastBinAbove ( avg_tdc * 0.2 );
+					double tdc_left		= h1_tdc_diff[i]->GetXaxis()->GetBinCenter( tdc_low_bin  );
+					double tdc_right	= h1_tdc_diff[i]->GetXaxis()->GetBinCenter( tdc_high_bin );
 					double tdc_width = tdc_right - tdc_left;
+					tdc_LEFTS[i]	= tdc_left;
+					tdc_RIGHTS[i]	= tdc_right;
+					tdc_HEIGHTS[i]  = avg_tdc * 0.2;
 					tdc_vEff = (2*barLength) / tdc_width;
 					tdc_lr_off = (tdc_left+tdc_right)/2.;
 
@@ -309,23 +332,18 @@ int main(int argc, char** argv) {
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
 				int notEmpty = (h1_tdc_diff[identifier]->Integral()+h1_ftdc_diff[identifier]->Integral());
 				if(notEmpty){
-					double low_x,high_x;
-					int low_Bin,high_Bin;
-					double tdc_len,fadc_len;
+					// --------------------------------------------------------------
 					c_tdc_diff[is][il] -> cd(2*cIdx+1);
 					gPad -> SetBottomMargin(0.26);
+
 					// Draw TDC
 					PrettyTH1F( h1_tdc_diff[identifier] , "TDC L-R [ns]","", 2);
 					h1_tdc_diff[identifier]->Draw();
-					// make two lines based on TDC height of 0.1 of max
-					low_Bin  = h1_tdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
-					high_Bin = h1_tdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
-					low_x = h1_tdc_diff[identifier]->GetXaxis()->GetBinCenter(low_Bin);
-					high_x = h1_tdc_diff[identifier]->GetXaxis()->GetBinCenter(high_Bin);
-					tdc_len = high_x-low_x;
-					TLine * lLow = new TLine(low_x,0,low_x,h1_tdc_diff[identifier]->GetMaximum());
-					TLine * lHigh = new TLine(high_x,0,high_x,h1_tdc_diff[identifier]->GetMaximum());
-					TLine * across = new TLine(low_x,h1_tdc_diff[identifier]->GetMaximum()/2.,high_x,h1_tdc_diff[identifier]->GetMaximum()/2.);
+
+					// Draw two lines:
+					TLine * lLow 	= new TLine( tdc_LEFTS[identifier],  0, tdc_LEFTS[identifier],  tdc_HEIGHTS[identifier] );
+					TLine * lHigh 	= new TLine( tdc_RIGHTS[identifier], 0, tdc_RIGHTS[identifier], tdc_HEIGHTS[identifier] );
+					TLine * across	= new TLine( tdc_LEFTS[identifier],  tdc_HEIGHTS[identifier], tdc_RIGHTS[identifier], tdc_HEIGHTS[identifier]);
 					lLow->SetLineColor(4);
 					lHigh->SetLineColor(4);
 					across->SetLineColor(4);
@@ -336,19 +354,14 @@ int main(int argc, char** argv) {
 					// --------------------------------------------------------------
 					c_tdc_diff[is][il] -> cd(2*cIdx+2);
 					gPad -> SetBottomMargin(0.26);
+
 					// Draw FADC
 					PrettyTH1F( h1_ftdc_diff[identifier] , "FADC L-R [ns]","", 1);
 					h1_ftdc_diff[identifier]->Draw();
 					// make two lines
-					low_Bin  = h1_ftdc_diff[identifier]->FindFirstBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
-					high_Bin = h1_ftdc_diff[identifier]->FindLastBinAbove(h1_tdc_diff[identifier]->GetMaximum()*0.5);
-					low_x = h1_ftdc_diff[identifier]->GetXaxis()->GetBinCenter(low_Bin);
-					high_x = h1_ftdc_diff[identifier]->GetXaxis()->GetBinCenter(high_Bin);
-					fadc_len = high_x - low_x;
-					TLine * lLow2 = new TLine(low_x,0,low_x,h1_ftdc_diff[identifier]->GetMaximum());
-					TLine * lHigh2 = new TLine(high_x,0,high_x,h1_ftdc_diff[identifier]->GetMaximum());
-					TLine * across2 = new TLine(low_x,h1_ftdc_diff[identifier]->GetMaximum()/2.,high_x,h1_ftdc_diff[identifier]->GetMaximum()/2.);
-
+					TLine * lLow2 	= new TLine( ftdc_LEFTS[identifier],  0, ftdc_LEFTS[identifier],  ftdc_HEIGHTS[identifier] );
+					TLine * lHigh2 	= new TLine( ftdc_RIGHTS[identifier], 0, ftdc_RIGHTS[identifier], ftdc_HEIGHTS[identifier] );
+					TLine * across2 = new TLine( ftdc_LEFTS[identifier],  ftdc_HEIGHTS[identifier], ftdc_RIGHTS[identifier], ftdc_HEIGHTS[identifier] );
 					lLow2->SetLineColor(8);
 					lHigh2->SetLineColor(8);
 					across2->SetLineColor(8);
@@ -361,6 +374,8 @@ int main(int argc, char** argv) {
 					gPad -> SetTopMargin   (0.00);
                                         gPad -> SetBottomMargin(0.26);
                                         gPad -> SetLeftMargin  (0.26);	
+					double fadc_len = ftdc_RIGHTS[identifier] - ftdc_LEFTS[identifier];
+					double tdc_len = tdc_RIGHTS[identifier] - tdc_LEFTS[identifier];
 					h2_empty[identifier]->SetTitle(Form("FADC Length: %f / TDC Length: %f",fadc_len,tdc_len));
 					h2_empty[identifier]->SetStats(0);
 					h2_empty[identifier]->Draw("col");
@@ -379,14 +394,6 @@ int main(int argc, char** argv) {
 					max = getMaxNonEmptyBin(h2_meantime[identifier]);
 					h2_meantime[identifier] -> GetYaxis() -> SetRange(min,max);
 					h2_meantime[identifier] -> Draw("col");
-					//h2_empty[identifier]->SetMaximum(h1_ftdc_diff[identifier]->GetMaximum());
-					//h2_empty[identifier]->Draw();
-					//lLow  -> Draw("same");
-					//lHigh -> Draw("same");
-					//lLow2  -> Draw("same");
-					//lHigh2 -> Draw("same");
-					//across->Draw("same");
-					//across2->Draw("same");
 
 				}
 			}		
@@ -398,26 +405,26 @@ int main(int argc, char** argv) {
 
 	// Saving to pdf
 	TCanvas * c0 = new TCanvas("c0","",900,900);
-	c0 -> Print("results_offsets_veff.pdf(");
-	c1 -> Print("results_offsets_veff.pdf");
+	c0 -> Print("output/results_offsets_veff.pdf(");
+	c1 -> Print("output/results_offsets_veff.pdf");
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			c_tdc_diff[is][il] -> Print("results_offsets_veff.pdf");
+			c_tdc_diff[is][il] -> Print("output/results_offsets_veff.pdf");
 		}
 	}
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			c_empty[is][il] -> Print("results_offsets_veff.pdf");
+			c_empty[is][il] -> Print("output/results_offsets_veff.pdf");
 		}
 	}
 	for(int is = 0 ; is < 5 ; is++){
 		for(int il = 0 ; il < 5 ; il++){
-			c_meantime[is][il] -> Print("results_offsets_veff.pdf");
+			c_meantime[is][il] -> Print("output/results_offsets_veff.pdf");
 		}
 	}
-	c0 -> Print("results_offsets_veff.pdf)");
+	c0 -> Print("output/results_offsets_veff.pdf)");
 
-	myapp -> Run();
+	//myapp -> Run();
 	return 0;
 }
 // ========================================================================================================================================
@@ -451,14 +458,6 @@ void PrettyTH2F(TH2F * h2,TString titx,TString tity) {
         h2 -> GetYaxis() -> CenterTitle();
 	h2 -> GetXaxis() -> SetNdivisions(105);
         h2 -> GetYaxis() -> SetNdivisions(107);
-}
-// ========================================================================================================================================
-void getLowXHighX( TH1F * h1, double &xL, double &xH){
-	int low_Bin  = h1->FindFirstBinAbove(h1->GetMaximum()*0.5);
-	int high_Bin = h1->FindLastBinAbove(h1->GetMaximum()*0.5);
-	xL = h1->GetXaxis()->GetBinCenter(low_Bin);
-	xH = h1->GetXaxis()->GetBinCenter(high_Bin);
-
 }
 // ========================================================================================================================================
 int getMinNonEmptyBin(TH2F * h2){
