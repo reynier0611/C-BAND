@@ -143,6 +143,9 @@ int main(int argc, char** argv) {
 			float uy         = band_hits.getUy        (hit);
 			float uz         = band_hits.getUz        (hit);
 
+		
+			//band_hits.show();
+
 			if( adcLcorr <  6000 || adcRcorr <  6000 ) continue;
 			if( adcLcorr > 20000 || adcRcorr > 20000 ) continue;
 
