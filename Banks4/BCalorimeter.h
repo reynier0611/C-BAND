@@ -25,7 +25,7 @@ class BCalorimeter : public hipo::bank {
 		int x_order        ;
 		int y_order        ;
 		int z_order        ;
-		int lu_order       ; 
+		int lu_order       ;
 		int lv_order       ;
 		int lw_order       ;
 
@@ -33,25 +33,10 @@ class BCalorimeter : public hipo::bank {
 
 		BCalorimeter(){};
 
-		BCalorimeter(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
-			pindex_order   = getEntryOrder("pindex"   );
-			detector_order = getEntryOrder("detector" );
-			sector_order   = getEntryOrder("sector"   );
-			layer_order    = getEntryOrder("layer"    );
-			energy_order   = getEntryOrder("energy"   );
-			time_order     = getEntryOrder("time"     );
-			path_order     = getEntryOrder("path"     );
-			x_order        = getEntryOrder("x"        );
-			y_order        = getEntryOrder("y"        );
-			z_order        = getEntryOrder("z"        );
-			lu_order       = getEntryOrder("lu"       );
-			lv_order       = getEntryOrder("lv"       );
-			lw_order       = getEntryOrder("lw"       );
-		}
+		BCalorimeter(hipo::schema __schema);
 
 		~BCalorimeter();
 
-		void  init(const char *bankName, hipo::reader &r);
 		int   getIndex   (int index) { return getInt  (pindex_order    ,index);}
 		int   getDetector(int index) { return getInt  (detector_order  ,index);}
 		int   getSector  (int index) { return getInt  (sector_order    ,index);}

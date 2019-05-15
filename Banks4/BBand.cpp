@@ -1,28 +1,29 @@
 #include "BBand.h"
 #include "TVector3.h"
 // ==============================================================
-void   BBand::init(const char *bankName, hipo::reader &r){
-	initBranches(bankName,r);
-	id_order           = getEntryOrder("id"          );
-        sector_order       = getEntryOrder("sector"      );
-        layer_order        = getEntryOrder("layer"       );
-        component_order    = getEntryOrder("component"   );
-        meantimeTdc_order  = getEntryOrder("meantimeTdc" );
-        meantimeFadc_order = getEntryOrder("meantimeFadc");
-        difftimeTdc_order  = getEntryOrder("difftimeTdc" );
-        difftimeFadc_order = getEntryOrder("difftimeFadc");
-        adcLcorr_order     = getEntryOrder("adcLcorr"    );
-        adcRcorr_order     = getEntryOrder("adcRcorr"    );
-        tFadcLcorr_order   = getEntryOrder("tFadcLcorr"  );
-        tFadcRcorr_order   = getEntryOrder("tFadcRcorr"  );
-        tTdcLcorr_order    = getEntryOrder("tTdcLcorr"   );
-        tTdcRcorr_order    = getEntryOrder("tTdcRcorr"   );
-        x_order            = getEntryOrder("x"           );
-        y_order            = getEntryOrder("y"           );
-        z_order            = getEntryOrder("z"           );
-        ux_order           = getEntryOrder("ux"          );
-        uy_order           = getEntryOrder("uy"          );
-        uz_order           = getEntryOrder("uz"          );
+BBand::BBand(hipo::schema __schema) : hipo::bank(__schema){
+
+	id_order           = __schema.getEntryOrder("id"          );
+	sector_order       = __schema.getEntryOrder("sector"      );
+	layer_order        = __schema.getEntryOrder("layer"       );
+	component_order    = __schema.getEntryOrder("component"   );
+	meantimeTdc_order  = __schema.getEntryOrder("meantimeTdc" );
+	meantimeFadc_order = __schema.getEntryOrder("meantimeFadc");
+	difftimeTdc_order  = __schema.getEntryOrder("difftimeTdc" );
+	difftimeFadc_order = __schema.getEntryOrder("difftimeFadc");
+	adcLcorr_order     = __schema.getEntryOrder("adcLcorr"    );
+	adcRcorr_order     = __schema.getEntryOrder("adcRcorr"    );
+	tFadcLcorr_order   = __schema.getEntryOrder("tFadcLcorr"  );
+	tFadcRcorr_order   = __schema.getEntryOrder("tFadcRcorr"  );
+	tTdcLcorr_order    = __schema.getEntryOrder("tTdcLcorr"   );
+	tTdcRcorr_order    = __schema.getEntryOrder("tTdcRcorr"   );
+	x_order            = __schema.getEntryOrder("x"           );
+	y_order            = __schema.getEntryOrder("y"           );
+	z_order            = __schema.getEntryOrder("z"           );
+	ux_order           = __schema.getEntryOrder("ux"          );
+	uy_order           = __schema.getEntryOrder("uy"          );
+	uz_order           = __schema.getEntryOrder("uz"          );
+
 }
 // ==============================================================
 BBand::~BBand(){}

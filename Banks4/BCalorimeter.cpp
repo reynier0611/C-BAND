@@ -1,22 +1,23 @@
 #include "BCalorimeter.h"
 #include "TVector3.h"
 // ==============================================================
-void   BCalorimeter::init(const char *bankName, hipo::reader &r){
-	initBranches(bankName,r);
-	pindex_order   = getEntryOrder("pindex"   );
-	detector_order = getEntryOrder("detector" );
-	sector_order   = getEntryOrder("sector"   );
-	layer_order    = getEntryOrder("layer"    );
-	energy_order   = getEntryOrder("energy"   );
-	time_order     = getEntryOrder("time"     );
-	path_order     = getEntryOrder("path"     );
-	x_order        = getEntryOrder("x"        );
-	y_order        = getEntryOrder("y"        );
-	z_order        = getEntryOrder("z"        );
-	lu_order       = getEntryOrder("lu"       );
-	lv_order       = getEntryOrder("lv"       );
-	lw_order       = getEntryOrder("lw"       );
+BCalorimeter::BCalorimeter(hipo::schema __schema) : hipo::bank(__schema){
+
+	pindex_order   = __schema.getEntryOrder("pindex"   );
+	detector_order = __schema.getEntryOrder("detector" );
+	sector_order   = __schema.getEntryOrder("sector"   );
+	layer_order    = __schema.getEntryOrder("layer"    );
+	energy_order   = __schema.getEntryOrder("energy"   );
+	time_order     = __schema.getEntryOrder("time"     );
+	path_order     = __schema.getEntryOrder("path"     );
+	x_order        = __schema.getEntryOrder("x"        );
+	y_order        = __schema.getEntryOrder("y"        );
+	z_order        = __schema.getEntryOrder("z"        );
+	lu_order       = __schema.getEntryOrder("lu"       );
+	lv_order       = __schema.getEntryOrder("lv"       );
+	lw_order       = __schema.getEntryOrder("lw"       );
 }
+
 // ==============================================================
 BCalorimeter::~BCalorimeter(){}
 // ==============================================================

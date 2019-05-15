@@ -1,19 +1,19 @@
 #include "BParticle.h"
 #include "TVector3.h"
 // ==============================================================
-void   BParticle::init(const char *bankName, hipo::reader &r){
-	initBranches(bankName,r);
-	pid_order     = getEntryOrder("pid"    );
-	px_order      = getEntryOrder("px"     );
-	py_order      = getEntryOrder("py"     );
-	pz_order      = getEntryOrder("pz"     );
-	vx_order      = getEntryOrder("vx"     );
-	vz_order      = getEntryOrder("vy"     );
-	vz_order      = getEntryOrder("vz"     );
-	charge_order  = getEntryOrder("charge" );
-	beta_order    = getEntryOrder("beta"   );
-	chi2pid_order = getEntryOrder("chi2pid");
-	status_order  = getEntryOrder("status" );
+BParticle::BParticle(hipo::schema __schema) : hipo::bank(__schema){
+
+	pid_order     = __schema.getEntryOrder("pid"    );
+	px_order      = __schema.getEntryOrder("px"     );
+	py_order      = __schema.getEntryOrder("py"     );
+	pz_order      = __schema.getEntryOrder("pz"     );
+	vx_order      = __schema.getEntryOrder("vx"     );
+	vy_order      = __schema.getEntryOrder("vy"     );
+	vz_order      = __schema.getEntryOrder("vz"     );
+	charge_order  = __schema.getEntryOrder("charge" );
+	beta_order    = __schema.getEntryOrder("beta"   );
+	chi2pid_order = __schema.getEntryOrder("chi2pid");
+	status_order  = __schema.getEntryOrder("status" );
 }
 // ==============================================================
 BParticle::~BParticle(){}

@@ -31,24 +31,9 @@ class BEvent : public hipo::bank {
 
 		BEvent(){};
 
-		BEvent(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
-
-			Category_order  = getEntryOrder("category"  );
-			Topo_order      = getEntryOrder("topology"   );
-			BCG_order       = getEntryOrder("beamCharge");
-			LiveTime_order  = getEntryOrder("liveTime"  );
-			StartTime_order = getEntryOrder("startTime" );
-			RFTime_order    = getEntryOrder("RFTime" );
-			Helic_order     = getEntryOrder("helicity"  );
-			HelicRaw_order  = getEntryOrder("helicityRaw"  );
-			ProcTime_order  = getEntryOrder("procTime"  );
-
-		}
+		BEvent(hipo::schema __schema);
 
 		~BEvent();
-
-		void  init(const char *bankName, hipo::reader &r);
-
 
 		int   getCategory(int index) { return getInt   ( Category_order   ,index);}
 		int   getTopo    (int index) { return getInt   ( Topo_order       ,index);}

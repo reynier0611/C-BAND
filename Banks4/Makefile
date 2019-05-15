@@ -13,7 +13,7 @@ OBJECTS := $(SOURCES:.cpp=.o)
 
 LIBDIR  = ../lib
 
-HIPOINCLUDES := -I../Hipo
+HIPOINCLUDES := -I../Hipo4
 
 libhipo: checkdirs $(OBJECTS)
 	ar cr ../lib/libclas12banks4.a $(OBJECTS)

@@ -38,31 +38,9 @@ class BScintillator : public hipo::bank {
 
 		BScintillator(){};
 
-		BScintillator(const char *bankName, hipo::reader &r) : hipo::bank(bankName,r){
-
-			index_order     = getEntryOrder("index"    );
-			pindex_order    = getEntryOrder("pindex"   );
-			detector_order  = getEntryOrder("detector" );
-			sector_order    = getEntryOrder("sector"   );
-			layer_order     = getEntryOrder("layer"    );
-			component_order = getEntryOrder("component");
-			energy_order    = getEntryOrder("energy"   );
-			time_order      = getEntryOrder("time"     );
-			path_order      = getEntryOrder("path"     );
-			chi2_order      = getEntryOrder("chi2"     );
-			x_order         = getEntryOrder("x"        );
-			y_order         = getEntryOrder("y"        );
-			z_order         = getEntryOrder("z"        );
-			hx_order        = getEntryOrder("hx"       );
-			hy_order        = getEntryOrder("hy"       );
-			hz_order        = getEntryOrder("hz"       );
-			status_order    = getEntryOrder("status"   );
-
-		}
+		BScintillator(hipo::schema __schema);
 
 		~BScintillator();
-
-		void  init(const char *bankName, hipo::reader &r);
 
 		int   getIndex	  (int index) { return getInt   ( index_order     ,index);}
 		int   getPindex   (int index) { return getInt   ( pindex_order    ,index);}
