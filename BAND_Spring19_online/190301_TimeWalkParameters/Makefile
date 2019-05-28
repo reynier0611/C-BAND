@@ -14,14 +14,18 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: timeWalk
+all: timeWalk meanTime-timeWalk
 
 timeWalk: timeWalk.o
 	$(CXX) -o timeWalk $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
+meanTime-timeWalk: meanTime-timeWalk.o
+	$(CXX) -o meanTime-timeWalk $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+
 clean:
 	@echo 'Removing all build files'
 	@rm -rf *.o timeWalk *~
+	@rm -rf *.o meanTime-timeWalk *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

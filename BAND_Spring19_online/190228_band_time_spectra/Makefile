@@ -6,11 +6,10 @@ ROOTGLIBS   := $(shell root-config --glibs)
 HIPOCFLAGS  := -I../../Hipo -I../../Banks
 HIPOLIBS    := -L../../lib -lhipo -lclas12banks
 
-LZ4LIBS     := -L/group/clas12/packages/lz4/lib -llz4
-LZ4INCLUDES := -I/group/clas12/packages/lz4/lib
+LZ4LIBS     := -llz4
 
 CXX       := g++
-CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
+CXXFLAGS  += -std=c++11 -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
@@ -24,4 +23,4 @@ clean:
 	@rm -rf *.o mean_time *~
 
 %.o: %.cpp
-	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
+	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS)
