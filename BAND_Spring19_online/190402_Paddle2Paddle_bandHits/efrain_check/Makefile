@@ -9,21 +9,21 @@ HIPOLIBS    := -L../../../lib -lhipo -lclas12banks
 LZ4LIBS     := -L/group/clas12/packages/lz4/lib -llz4
 LZ4INCLUDES := -I/group/clas12/packages/lz4/lib
 
-INCLUDES    := -I../include
-
 CXX       := g++
-CXXFLAGS  += -std=c++11 -Wall -fPIC $(ROOTCFLAGS)
+CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: psMomentum
+all: efrain_check parameter_test
 
-psMomentum: psMomentum.o
-	$(CXX) -o psMomentum $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+efrain_check: efrain_check.o
+	$(CXX) -o efrain_check $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
+parameter_test: parameter_test.o
+	$(CXX) -o parameter_test $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o psMomentum *~
+	@rm -rf *.o parameter_extraction parameter_extraction_rawBanks parameter_test *~
 
-%.o: ../%.cpp
-	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(INCLUDES) $(LZ4INCLUDES)
+%.o: %.cpp
+	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

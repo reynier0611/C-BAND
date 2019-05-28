@@ -63,6 +63,16 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 
+	cout << "*************************************************************" << endl;
+	cout << "                  ___                  ___" << endl;
+	cout << "\\    /\\    / /\\   |  \\ |\\  | | |\\  |  /" << endl;
+	cout << " \\  /  \\  / /--\\  |-\\/ | \\ | | | \\ | |  --\\" << endl;
+	cout << "  \\/    \\/ /    \\ |  \\ |  \\| | |  \\|  \\___/" << endl << endl;
+	cout << "Run this code on laser data on a file that does not have" << endl;
+        cout << "paddle-to-paddle corrections yet, but already has time-walk" << endl;
+        cout << "and L-R corrections" << endl << endl;
+	cout << "*************************************************************" << endl;
+
 	// ----------------------------------------------------------------------------------
 	// Declaring histograms
 	const int nHistos = 600;
@@ -79,8 +89,8 @@ int main(int argc, char** argv) {
 	TH1F ** h1_resolutions          = new TH1F * [nHistos];
 
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,15000,401,-15,15);
-		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,15000,401,-15,15);
+		h2_dMeantime_adc_paddle[i] = new TH2F(Form("h2_dMeantime_adc_paddle_%i",i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,25000,401,-15,15);
+		h2_dMeantime_adc_layer [i] = new TH2F(Form("h2_dMeantime_adc_layer_%i" ,i),";#sqrt{ADC_{L}ADC_{R}};((t_{L}+t_{R})/2)_{TDC}(bar - ref)",400,0,25000,401,-15,15);
 		PrettyTH2F(h2_dMeantime_adc_paddle[i]);
 		PrettyTH2F(h2_dMeantime_adc_layer [i]);
 
@@ -93,9 +103,10 @@ int main(int argc, char** argv) {
 	hipo::reader reader;
 	reader.open(inputFile);
 
-	hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
-	hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
-	hipo::bank RUN_config("RUN::config",reader);
+	//hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
+	//hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
+	//hipo::bank RUN_config("RUN::config",reader);
+	BBand         band_hits   ("BAND::hits"       ,reader);
 
 	int event_counter = 0;
 	// ----------------------------------------------------------------------------------
@@ -109,148 +120,63 @@ int main(int argc, char** argv) {
 		//BAND_TDC.show();
 		//RUN_config.show();
 
-		int nADC = BAND_ADC.getSize();
-		int nTDC = BAND_TDC.getSize();
+		int nHits = band_hits.getSize();
 
 		// Skip events with no entries
-		if(nADC==0||nTDC==0) continue;
+		if(nHits==0) continue;
 
 		// Skip events with less than 200 entries (the laser lights all bars at the same time)
-		if(nADC<200||nTDC<200) continue;
+		if(nHits<50) continue;
 
 		// Skip all laser events
-		//if(nADC>100||nTDC>100) continue;
+		//if(nHits>100) continue;
 
-		long timestamp = RUN_config.getLong(4,0);
-		double phaseCorr = getTriggerPhase(timestamp);
+		for(int hit = 0; hit < nHits; hit++) {
+			int    sector            = band_hits.getSector     (hit);
+                        int    layer             = band_hits.getLayer      (hit);
+                        int    component         = band_hits.getComponent  (hit);
+                        float  tTdcLcorr         = band_hits.getTtdcLcorr  (hit);
+                        float  tTdcRcorr         = band_hits.getTtdcRcorr  (hit);
+			float  meantimeTdc       = band_hits.getMeantimeTdc(hit);
 
-		for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
-			int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
-			int   TDC1_layer     = BAND_TDC.getInt  (1,tIdx1);
-			int   TDC1_component = BAND_TDC.getInt  (2,tIdx1);
-			int   TDC1_order     = BAND_TDC.getInt  (3,tIdx1);
-			float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
-			float TDC1_time      = TDC1_tdc*0.02345;
-
-			TDC1_time -= phaseCorr;
-
-			for(int tIdx2 = 0 ; tIdx2 < nTDC ; tIdx2++){
-
-				int   TDC2_sector    = BAND_TDC.getInt  (0,tIdx2);
-				int   TDC2_layer     = BAND_TDC.getInt  (1,tIdx2);
-				int   TDC2_component = BAND_TDC.getInt  (2,tIdx2);
-				int   TDC2_order     = BAND_TDC.getInt  (3,tIdx2);
-				float TDC2_tdc       = (float)(BAND_TDC.getInt(4,tIdx2));
-				float TDC2_time      = TDC2_tdc*0.02345; 
-
-				TDC2_time -= phaseCorr;
-
-				if(             (TDC1_sector   ==TDC2_sector          )&&
-						(TDC1_layer    ==TDC2_layer           )&&
-						(TDC1_component==TDC2_component       )&&
-						(TDC1_order+1  ==TDC2_order           )
-				  ){
-
-					if( (TDC1_sector==2)&&(TDC1_component==1) ){
-						ref_meantime[TDC1_layer] = ( TDC1_time + TDC2_time )/2.;	
-					}
-				}			
+			if( (sector==2)&&(component==1) ){
+				ref_meantime[layer] = meantimeTdc;
 			}
 		}
 
 		// Looping over entries of the event for a second time
 
-		for(int aIdx1 = 0 ; aIdx1 < nADC ; aIdx1++){
+		for(int hit = 0; hit < nHits; hit++) {
+			
+			int    sector            = band_hits.getSector      (hit);
+                        int    layer             = band_hits.getLayer       (hit);
+                        int    component         = band_hits.getComponent   (hit);
+                        int    barKey            = band_hits.getBarKey      (hit);
+                        float  meantimeTdc       = band_hits.getMeantimeTdc (hit);
+                        float adcLcorr           = band_hits.getAdcLcorr    (hit);                        
+                        float adcRcorr           = band_hits.getAdcRcorr    (hit);
+                        float tTdcLcorr          = band_hits.getTtdcLcorr   (hit);
+                        float tTdcRcorr          = band_hits.getTtdcRcorr   (hit);
 
-			int   ADC1_sector    = BAND_ADC.getInt  (0,aIdx1);
-			int   ADC1_layer     = BAND_ADC.getInt  (1,aIdx1);
-			int   ADC1_component = BAND_ADC.getInt  (2,aIdx1);
-			int   ADC1_order     = BAND_ADC.getInt  (3,aIdx1);
-			float ADC1_adc       = (float)(BAND_ADC.getInt(4,aIdx1));
-			float ADC1_time      = BAND_ADC.getFloat(5,aIdx1);
+			if(adcLcorr< 6000||adcRcorr< 6000) continue; // To avoid area sensitive to time-walk corrections
+			if(adcLcorr>20000||adcRcorr>20000) continue; // To avoid area sensitive to adc overflow
 
-			for(int aIdx2 = 0 ; aIdx2 < nADC ; aIdx2++){
+			double delta_meantime = meantimeTdc - ref_meantime[layer];
+			double adc_geometric_mean = TMath::Sqrt(adcLcorr*adcRcorr);
 
-				int   ADC2_sector    = BAND_ADC.getInt  (0,aIdx2);
-				int   ADC2_layer     = BAND_ADC.getInt  (1,aIdx2);
-				int   ADC2_component = BAND_ADC.getInt  (2,aIdx2);
-				int   ADC2_order     = BAND_ADC.getInt  (3,aIdx2);
-				float ADC2_adc       = (float)(BAND_ADC.getInt(4,aIdx2));
-				float ADC2_time      = BAND_ADC.getFloat(5,aIdx2);
+			h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,delta_meantime);
+			h2_dMeantime_adc_paddle[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));
 
-				// Matching each ADC to the corresponding ADC from the other side of the bar
-				if(             (ADC1_sector   ==ADC2_sector          )&&
-						(ADC1_layer    ==ADC2_layer           )&&
-						(ADC1_component==ADC2_component       )&&
-						(ADC1_order+1==ADC2_order             )
-				  ){
-
-					bool already_matched = false;
-					for(int tIdx1 = 0 ; tIdx1 < nTDC ; tIdx1++){
-
-						int   TDC1_sector    = BAND_TDC.getInt  (0,tIdx1);
-						int   TDC1_layer     = BAND_TDC.getInt  (1,tIdx1);
-						int   TDC1_component = BAND_TDC.getInt  (2,tIdx1);
-						int   TDC1_order     = BAND_TDC.getInt  (3,tIdx1);
-						float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
-						float TDC1_time      = TDC1_tdc*0.02345;
-
-						TDC1_time -= phaseCorr;
-
-						// Matching these ADCs to a TDC
-						if(             (ADC1_sector   ==TDC1_sector   )&&
-								(ADC1_layer    ==TDC1_layer    )&&
-								(ADC1_component==TDC1_component)&&
-								(ADC1_order+2  ==TDC1_order    )
-						  ){
-
-							for(int tIdx2 = 0 ; tIdx2 < nTDC ; tIdx2++){
-
-								int   TDC2_sector    = BAND_TDC.getInt  (0,tIdx2);
-								int   TDC2_layer     = BAND_TDC.getInt  (1,tIdx2);
-								int   TDC2_component = BAND_TDC.getInt  (2,tIdx2);
-								int   TDC2_order     = BAND_TDC.getInt  (3,tIdx2);
-								float TDC2_tdc       = (float)(BAND_TDC.getInt(4,tIdx2));
-								float TDC2_time      = TDC2_tdc*0.02345;
-
-								TDC2_time -= phaseCorr;
-
-								if(             (!already_matched                     )&& // Avoid multi-hits
-									        (TDC1_sector   ==TDC2_sector          )&&
-										(TDC1_layer    ==TDC2_layer           )&&
-										(TDC1_component==TDC2_component       )&&
-										(TDC1_order+1==TDC2_order             )
-								  ){	
-							
-									already_matched = true;
-
-									int barKey = 100*ADC1_sector + 10*ADC1_layer + ADC1_component;			
-
-									double meantime = ( TDC1_time + TDC2_time )/2.;
-									double delta_meantime = meantime - ref_meantime[TDC1_layer];
-									double adc_geometric_mean = TMath::Sqrt(ADC1_adc*ADC2_adc);
-
-									h2_dMeantime_adc_paddle[barKey] -> Fill(adc_geometric_mean,delta_meantime);
-									h2_dMeantime_adc_paddle[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
-
-									// 1-D projection to extract resolutions
-									h1_resolutions[barKey] -> Fill(delta_meantime);
-									h1_resolutions[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
-
-									if(TDC1_sector==2&&TDC1_component==1){
-										double delta_meantime_layer = meantime - ref_meantime[5];
-										h2_dMeantime_adc_layer[barKey] -> Fill(adc_geometric_mean,delta_meantime_layer);
-										h2_dMeantime_adc_layer[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",TDC1_sector,TDC1_layer,TDC1_component));
-									}
-								}
-							}
-						}
-					}
-				}
+			// 1-D projection to extract resolutions
+			h1_resolutions[barKey] -> Fill(delta_meantime);
+			h1_resolutions[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));	
+			
+			if(sector==2&&component==1){
+				double delta_meantime_layer = meantimeTdc - ref_meantime[5];
+				h2_dMeantime_adc_layer[barKey] -> Fill(adc_geometric_mean,delta_meantime_layer);
+				h2_dMeantime_adc_layer[barKey] -> SetTitle(Form("Sector: %i, Layer: %i, Component: %i",sector,layer,component));
 			}
 		}
-
-
 	}// end file
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -548,6 +474,6 @@ void PrettyTGraphErrors(TGraphErrors * gP, int color){
 
 	gP -> GetYaxis() -> SetTitleOffset(1.30);
 
-	gP -> SetMinimum(150);
-	gP -> SetMaximum(400);
+	gP -> SetMinimum( 80);
+	gP -> SetMaximum(200);
 }

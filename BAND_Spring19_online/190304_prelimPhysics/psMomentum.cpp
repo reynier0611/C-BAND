@@ -30,6 +30,7 @@ using namespace std;
 
 
 double p2p[600] = {0};
+double aLengths[600] = {0};
 double l2l[600] = {0};
 void LoadPaddleCorrectionPar();
 double TDC_corr( int barId );
@@ -374,6 +375,18 @@ void LoadPaddleCorrectionPar(){
                 f >> parameter;
                 f >> temp;
                 l2l[barId] = parameter;
+        }
+        f.close();
+        
+	f.open("attenuation_lengths.txt");
+        while(!f.eof()){
+		f >> sector;
+                f >> layer;
+                f >> component;
+                barId = 100*sector + 10*layer + component;
+                f >> parameter;
+                f >> temp;
+                aLength[barId] = parameter;
         }
         f.close();
 }
