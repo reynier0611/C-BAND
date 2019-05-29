@@ -29,18 +29,13 @@
 using namespace std;
 
 
-double p2p[600] = {0};
-double aLengths[600] = {0};
-double l2l[600] = {0};
-void LoadPaddleCorrectionPar();
-double TDC_corr( int barId );
 int main(int argc, char** argv) {
 
 	TApplication *myapp = new TApplication("myapp",0,0);
 
 	// check number of arguments
-	if( argc != 2 ){
-		cerr << "Incorrect number of arguments. Instead use:\n\t./psMomentum [inputFile]\n";
+	if( argc != 3 ){
+		cerr << "Incorrect number of arguments. Instead use:\n\t./psMomentum [inputFile] [outputFile]\n";
 		return -1;
 	}
 
@@ -55,7 +50,7 @@ int main(int argc, char** argv) {
 	double cut_tof_e   =    10; //ns
 
 	// Create output tree
-	TFile * outFile = new TFile("clas_band_physics.root","RECREATE");
+	TFile * outFile = new TFile(argv[2],"RECREATE");
 	TTree * outTree = new TTree("skim","CLAS and BAND Physics");
 		// BAND variables
 	int nHits;
@@ -68,6 +63,16 @@ int main(int argc, char** argv) {
 	double beta, pN_mag, theta_n, phi_n;
 	double En, pN_cosTheta, phi_en;
 	double CosTheta_qn, Xp, Wp, As, theta_qn;
+		// Raw BAND variables 
+	double adcLraw, adcRraw;
+	double tTdcLraw, tTdcRraw;
+	double tFadcLraw, tFadcRraw;
+		// By hand variables using tables
+	double byHand_adcL, byHand_adcR;
+	double byHand_meantimeFadc, byHand_meantimeTdc;
+	double byHand_difftimeFadc, byHand_difftimeTdc;
+	double byHand_x, byHand_y, byHand_z;
+	double byHand_dL;
 		// CLAS variables
 	double theta_e, phi_e;
 	double theta_q, phi_q;
@@ -102,6 +107,24 @@ int main(int argc, char** argv) {
 	outTree->Branch("Wp",			&Wp		,	"Wp/D");
 	outTree->Branch("As",			&As		,	"As/D");
 	outTree->Branch("theta_qn",		&theta_qn	,	"theta_qn/D");
+	// Raw branches for BAND
+	outTree->Branch("adcLraw",		&adcLraw	,	"adcLraw/D");
+	outTree->Branch("adcRraw",		&adcRraw	,	"adcRraw/D");
+	outTree->Branch("tTdcLraw",		&tTdcLraw	,	"tTdcLraw/D");
+	outTree->Branch("tTdcRraw",		&tTdcRraw	,	"tTdcRraw/D");
+	outTree->Branch("tFadcLraw",		&tFadcLraw	, 	"tFadcLraw/D");
+	outTree->Branch("tFadcRraw",		&tFadcRraw	,	"tFadcRraw/D");
+	// By-hand branches for BAND
+	outTree->Branch("byHand_adcL",		&byHand_adcL	,	"byHand_adcL/D");
+	outTree->Branch("byHand_adcR",		&byHand_adcR	, 	"byHand_adcR/D");
+	outTree->Branch("byHand_meantimeFadc",	&byHand_meantimeFadc	,	"byHand_meantimeFadc/D");
+	outTree->Branch("byHand_meantimeTdc",	&byHand_meantimeTdc	,	"byHand_meantimeTdc/D");
+	outTree->Branch("byHand_difftimeFadc",	&byHand_difftimeFadc	,	"byHand_difftimeFadc/D");
+	outTree->Branch("byHand_difftimeTdc",	&byHand_difftimeTdc	,	"byHand_difftimeTdc/D");
+	outTree->Branch("byHand_x",		&byHand_x	,	"byHand_x/D");
+	outTree->Branch("byHand_y",		&byHand_y	,	"byHand_y/D");
+	outTree->Branch("byHand_z",		&byHand_z	,	"byHand_z/D");
+	outTree->Branch("byHand_dL",		&byHand_dL	,	"byHand_dL/D");
 	// Branches for CLAS
 	outTree->Branch("theta_e",		&theta_e	,	"theta_e/D");
 	outTree->Branch("phi_e",		&phi_e		,	"phi_e/D");
@@ -130,6 +153,9 @@ int main(int argc, char** argv) {
 	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
 	BScintillator scintillator("REC::Scintillator",reader);
 	BBand         band_hits   ("BAND::hits"       ,reader);
+	hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
+	hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
+	hipo::bank RUN_config("RUN::config",reader);
 
 	// Setup initial vector for beam
 	TVector3 e0(0,0,Ebeam);
@@ -144,6 +170,10 @@ int main(int argc, char** argv) {
 		phi_en,CosTheta_qn,Xp,Wp,As,theta_qn 				= 0.;
 		theta_e,phi_e,theta_q,phi_q,Q2,nu,xB,W2,q 			= 0.;
 
+		adcLraw, adcRraw, tTdcLraw, tTdcRraw, tFadcLraw, tFadcRraw 	= 0.;
+		byHand_adcL, byHand_adcR, byHand_meantimeFadc			= 0.;
+		byHand_meantimeTdc, byHand_difftimeFadc, byHand_difftimeTdc	= 0.;
+		byHand_x, byHand_y, byHand_z, byHand_dL				= 0.;
 
 		if(event_counter%1000000==0) cout << "event: " << event_counter << endl;
 		event_counter++;
@@ -230,7 +260,6 @@ int main(int argc, char** argv) {
 
 				//if( sector == 3 || sector == 4 ) continue; 	// Don't want short bars for now because they have a systematic
 										// shift from long bars due to length of bar
-				meantimeTdc += TDC_corr(barKey);
 				start_time = t_vtx;					
 				ToF = meantimeFadc-t_vtx;	// [ns]
 				dL  = sqrt( x*x + y*y + z*z );	// [cm]
@@ -281,6 +310,9 @@ int main(int argc, char** argv) {
 
 			
 			}// end loop over band hits in an event
+			// Now check the corresponding ADC banks -- we should only have 2 ADCs, 2 TDCs, 2 FADCs:
+			cout << " ADC size: " << BAND_ADC.getSize() << " TDC size: " << BAND_TDC.getSize() << "\n";
+
 		}
 		outTree->Fill();
 
@@ -348,49 +380,3 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-
-void LoadPaddleCorrectionPar(){
-        ifstream f;
-        int layer, sector, component, barId;
-        double parameter, temp;
-
-        f.open("TDC_paddle_offsets.txt");
-        while(!f.eof()){
-		f >> sector;
-                f >> layer;
-                f >> component;
-                barId = 100*sector + 10*layer + component;
-                f >> parameter;
-                f >> temp;
-                p2p[barId] = parameter;
-        }
-        f.close();
-
-        f.open("TDC_layer_offsets.txt");
-        while(!f.eof()){
-		f >> sector;
-                f >> layer;
-                f >> component;
-                barId = 100*sector + 10*layer + component;
-                f >> parameter;
-                f >> temp;
-                l2l[barId] = parameter;
-        }
-        f.close();
-        
-	f.open("attenuation_lengths.txt");
-        while(!f.eof()){
-		f >> sector;
-                f >> layer;
-                f >> component;
-                barId = 100*sector + 10*layer + component;
-                f >> parameter;
-                f >> temp;
-                aLength[barId] = parameter;
-        }
-        f.close();
-}
-
-double TDC_corr( int barId ){
-        return -( p2p[barId] + l2l[barId] );
-}
