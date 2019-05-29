@@ -312,6 +312,7 @@ int main(int argc, char** argv) {
 			}// end loop over band hits in an event
 			// Now check the corresponding ADC banks -- we should only have 2 ADCs, 2 TDCs, 2 FADCs:
 			cout << " ADC size: " << BAND_ADC.getSize() << " TDC size: " << BAND_TDC.getSize() << "\n";
+			BAND_ADC.show();
 
 		}
 		outTree->Fill();
