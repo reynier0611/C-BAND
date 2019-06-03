@@ -413,22 +413,27 @@ int main(int argc, char** argv) {
 					// TDC time walk
 					tTdcLraw = tTdcLraw - (parA_L[barID]/sqrt(adcLraw) + parB_L[barID]);
 					tTdcRraw = tTdcRraw - (parA_R[barID]/sqrt(adcRraw) + parB_R[barID]);
-					//cout << sector << " " << layer << " " << component << " " 
-					//	<< parA_L[barID] << " " << parB_L[barID] << " "
-					//	<< parA_R[barID] << " " << parB_R[barID] << " "
-					//	<< TDC_TDIFF[barID] << " " << FADC_TDIFF[barID] << " "
-					//	<< TDC_P2P[barID] << " " << TDC_L2L[barID] << " " 
-					//	<< FADC_P2P[barID] << " " << FADC_L2L[barID] << " "
-					//	<< TDC_VEFF[barID] << " " << FADC_VEFF[barID] << " "
-					//	<< FADC_ATTEN_LENGTH[barID] << " "
-					//	<< globPos[barID][0] << " " << globPos[barID][1] << " " << globPos[barID][2] << "\n";
-													
 					// TDiff:
 					byHand_difftimeTdc = (tTdcLraw-tTdcRraw) - TDC_TDIFF[barID];
 					byHand_difftimeFadc = (tFadcLraw-tFadcRraw) - FADC_TDIFF[barID];
 					// Meantime:
-					byHand_meantimeTdc = (tTdcLraw+tTdcRraw)/2. - TDC_TDIFF[barID]/2. - TDC_P2P[barID] - TDC_L2L[barID];
-					byHand_meantimeFadc = (tFadcLraw+tFadcRraw)/2. - FADC_TDIFF[barID]/2. - FADC_P2P[barID] - FADC_L2L[barID];
+					byHand_meantimeTdc = (tTdcLraw+tTdcRraw)/2. - fabs(TDC_TDIFF[barID]/2.) - TDC_P2P[barID] - TDC_L2L[barID];
+					byHand_meantimeFadc = (tFadcLraw+tFadcRraw)/2. - fabs(FADC_TDIFF[barID]/2.) - FADC_P2P[barID] - FADC_L2L[barID];
+					//cout << "Raw, corrected TDC mean time: " << (tTdcLraw+tTdcRraw)/2. << " " << byHand_meantimeTdc << "\n";
+					//cout << sector << " " << layer << " " << component << " " 
+						//<< parA_L[barID] << " " << parB_L[barID] << " "
+						//<< parA_R[barID] << " " << parB_R[barID] << " "
+						//<< TDC_TDIFF[barID] << " " << FADC_TDIFF[barID] << " "
+						//<< TDC_TDIFF[barID] << " " 
+						//<< TDC_P2P[barID] << " " << TDC_L2L[barID] << "\n"; 
+						//<< FADC_P2P[barID] << " " << FADC_L2L[barID] << "\n";
+						//<< TDC_VEFF[barID] << " " << FADC_VEFF[barID] << " "
+						//<< FADC_ATTEN_LENGTH[barID] << " "
+						//<< globPos[barID][0] << " " << globPos[barID][1] << " " << globPos[barID][2] << "\n";
+					//cout << "HitFinder mean time: " << meantimeTdc << "\n";
+					//cout << "difference : " << fabs(meantimeTdc-byHand_meantimeTdc) << "\n\n";
+					//if( fabs(meantimeTdc-byHand_meantimeTdc) > 1 ) cout << "********BIG DIFF********\n\n";
+													
 					// ADC attenuation corr:
 					double xpos_tdc = (-1./2) * byHand_difftimeTdc * TDC_VEFF[barID];
 					double xpos_fadc = (-1./2) * byHand_difftimeFadc * FADC_VEFF[barID];
