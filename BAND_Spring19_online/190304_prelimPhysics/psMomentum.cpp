@@ -25,6 +25,7 @@
 
 // Loading files from include directory
 #include "constants.h"
+#include "colors.h"
 
 using namespace std;
 double parA_L[600];		// loaded
@@ -54,26 +55,25 @@ void CreateGeo();
 
 int main(int argc, char** argv) {
 
-
-	// Load calibration constants from include DIR:
-	cout << "Loading constants...\n";
-	LoadTimeWalk();
-	LoadLROffsets();
-	LoadPaddleOffsets();
-	LoadLayerOffsets();
-	LoadVelocityMap();
-	LoadAttenuation();
-	CreateGeo();
-	cout << "...Done!\n";
-
-
-	TApplication *myapp = new TApplication("myapp",0,0);
-
 	// check number of arguments
-	if( argc != 3 ){
-		cerr << "Incorrect number of arguments. Instead use:\n\t./psMomentum [inputFile] [outputFile]\n";
+	if( argc < 4 ){
+		cerr << BOLD(FRED("Incorrect number of arguments. Instead use:\n\t./psMomentum [outputFile] [byHand (0,1)] [intputFiles]\n"));
 		return -1;
 	}
+	bool doByHand = (atoi(argv[2]) == 1 ? true : false );
+	if( doByHand ){
+		// Load calibration constants from include DIR:
+		cout << BOLD(FYEL("Doing byHand -- Loading constants...\n"));
+		LoadTimeWalk();
+		LoadLROffsets();
+		LoadPaddleOffsets();
+		LoadLayerOffsets();
+		LoadVelocityMap();
+		LoadAttenuation();
+		CreateGeo();
+		cout << BOLD(FGRN("...Done!\n"));
+	}
+
 
 	// Event selection cuts for electron
 	double cut_ep      =     2; //GeV
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 	double cut_tof_e   =    10; //ns
 
 	// Create output tree
-	TFile * outFile = new TFile(argv[2],"RECREATE");
+	TFile * outFile = new TFile(argv[1],"RECREATE");
 	TTree * outTree = new TTree("skim","CLAS and BAND Physics");
 	// BAND variables
 	int nHits;
@@ -101,6 +101,7 @@ int main(int argc, char** argv) {
 	double CosTheta_qn, Xp, Wp, As, theta_qn;
 	// Raw BAND variables 
 	int nADC, nTDC;
+	double phaseCorr;
 	double adcLraw, adcRraw;
 	double tTdcLraw, tTdcRraw;
 	double tFadcLraw, tFadcRraw;
@@ -147,6 +148,7 @@ int main(int argc, char** argv) {
 	// Raw branches for BAND
 	outTree->Branch("nADC",			&nADC		,	"nADC/I");
 	outTree->Branch("nTDC",			&nTDC		,	"nTDC/I");
+	outTree->Branch("phaseCorr",		&phaseCorr	,	"phaseCorr/D");
 	outTree->Branch("adcLraw",		&adcLraw	,	"adcLraw/D");
 	outTree->Branch("adcRraw",		&adcRraw	,	"adcRraw/D");
 	outTree->Branch("tTdcLraw",		&tTdcLraw	,	"tTdcLraw/D");
@@ -177,287 +179,285 @@ int main(int argc, char** argv) {
 	outTree->Branch("STTime",		&start_time	,	"STTime/D");
 
 
-	// Declaring histograms
-	TH1F * hToF_sig 	= new TH1F("hToF_sig","hToF",40,20,60);
-	TH1F * hToF_full 	= new TH1F("hToF_full","hToF",450,-100,350);
-
-
 	// Load input file
-	TString inputFile = argv[1];
-	hipo::reader reader;
-	reader.open(inputFile);
-	// Banks for EMC-SRC physics
-	BEvent        event       ("REC::Event"       ,reader);
-	BParticle     particles   ("REC::Particle"    ,reader);
-	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
-	BScintillator scintillator("REC::Scintillator",reader);
-	BBand         band_hits   ("BAND::hits"       ,reader);
-	hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
-	hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
-	hipo::bank RUN_config("RUN::config",reader);
+	for( int i = 3 ; i < argc ; i++ ){
+		TString inputFile = argv[i];
+		cout << BOLD(FBLU("Now working on file: ")) << inputFile << "\n";
+		hipo::reader reader;
+		reader.open(inputFile);
+		// Banks for EMC-SRC physics
+		BEvent        event       ("REC::Event"       ,reader);
+		BParticle     particles   ("REC::Particle"    ,reader);
+		BCalorimeter  calo        ("REC::Calorimeter" ,reader);
+		BScintillator scintillator("REC::Scintillator",reader);
+		BBand         band_hits   ("BAND::hits"       ,reader);
+		hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
+		hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
+		hipo::bank RUN_config("RUN::config",reader);
 
-	// Setup initial vector for beam
-	TVector3 e0(0,0,Ebeam);
-	TLorentzVector e0_4(e0,Ebeam);
+		// Setup initial vector for beam
+		TVector3 e0(0,0,Ebeam);
+		TLorentzVector e0_4(e0,Ebeam);
 
-	// Loop over events in hipo fil
-	int event_counter = 0;
-	while(reader.next()==true){
-		nHits,sector,layer,component,adcLcorr,adcRcorr			= 0.;
-		meantimeFadc,meantimeTdc,difftimeFadc,difftimeTdc 		= 0.;
-		x,y,z,dL,ToF,beta,pN_mag,theta_n,phi_n,En,pN_cosTheta 		= 0.;
-		phi_en,CosTheta_qn,Xp,Wp,As,theta_qn 				= 0.;
-		theta_e,phi_e,theta_q,phi_q,Q2,nu,xB,W2,q 			= 0.;
+		// Loop over events in hipo fil
+		int event_counter = 0;
+		while(reader.next()==true){
+			nHits,sector,layer,component,adcLcorr,adcRcorr			= 0.;
+			meantimeFadc,meantimeTdc,difftimeFadc,difftimeTdc 		= 0.;
+			x,y,z,dL,ToF,beta,pN_mag,theta_n,phi_n,En,pN_cosTheta 		= 0.;
+			phi_en,CosTheta_qn,Xp,Wp,As,theta_qn 				= 0.;
+			theta_e,phi_e,theta_q,phi_q,Q2,nu,xB,W2,q 			= 0.;
 
-		nADC, nTDC 							= 0.;
-		adcLraw, adcRraw, tTdcLraw, tTdcRraw, tFadcLraw, tFadcRraw 	= 0.;
-		byHand_adcL, byHand_adcR, byHand_meantimeFadc			= 0.;
-		byHand_meantimeTdc, byHand_difftimeFadc, byHand_difftimeTdc	= 0.;
-		byHand_x, byHand_y, byHand_z, byHand_dL				= 0.;
+			nADC, nTDC 							= 0.;
+			phaseCorr							= 0.;
+			adcLraw, adcRraw, tTdcLraw, tTdcRraw, tFadcLraw, tFadcRraw 	= 0.;
+			byHand_adcL, byHand_adcR, byHand_meantimeFadc			= 0.;
+			byHand_meantimeTdc, byHand_difftimeFadc, byHand_difftimeTdc	= 0.;
+			byHand_x, byHand_y, byHand_z, byHand_dL				= 0.;
 
-		if(event_counter%1000000==0) cout << "event: " << event_counter << endl;
-		event_counter++;
+			if(event_counter%1000000==0) cout << BOLD(FBLU("\tevent: ")) << event_counter << endl;
+			event_counter++;
 
-		// Debugging print option
-		//band_hits.show();
-		//event.show();
-		//scintillator.show();	
+			// Debugging print option
+			//band_hits.show();
+			//event.show();
+			//scintillator.show();	
 
-		// Particle bank
-		int pid0		= particles.getPid    (0);       // electron candidate id assigned by clas
-		TVector3 eP_vertex	= particles.getV3v    (0);       // electron candidate vertex vector
-		TVector3 eP 		= particles.getV3P    (0);       // electron candidate momentum vector
-		float chr0     		= particles.getCharge (0);       // electron candidate charge
-		float eBeta    		= particles.getBeta   (0);       // electron candidate beta = v/c
-		float chi2pid  		= particles.getChi2pid(0);       // electron candidate goodness of pid fit
-		int eStatus    		= particles.getStatus (0);       // electron candidate status
-		// Calorimeter bank
-		float Epcal = calo.getPcalE(0); 
-		float Ee    = calo.getTotE (0);
-		float lU    = calo.getLU   (0);	// electron candidate distance on U-side [cm?]
-		float lV    = calo.getLV   (0);	// electron candidate distance on V-side [cm?]
-		float lW    = calo.getLW   (0);	// electron candidate distance on W-side [cm?]
+			// Particle bank
+			int pid0		= particles.getPid    (0);       // electron candidate id assigned by clas
+			TVector3 eP_vertex	= particles.getV3v    (0);       // electron candidate vertex vector
+			TVector3 eP 		= particles.getV3P    (0);       // electron candidate momentum vector
+			float chr0     		= particles.getCharge (0);       // electron candidate charge
+			float eBeta    		= particles.getBeta   (0);       // electron candidate beta = v/c
+			float chi2pid  		= particles.getChi2pid(0);       // electron candidate goodness of pid fit
+			int eStatus    		= particles.getStatus (0);       // electron candidate status
+			// Calorimeter bank
+			float Epcal = calo.getPcalE(0); 
+			float Ee    = calo.getTotE (0);
+			float lU    = calo.getLU   (0);	// electron candidate distance on U-side [cm?]
+			float lV    = calo.getLV   (0);	// electron candidate distance on V-side [cm?]
+			float lW    = calo.getLW   (0);	// electron candidate distance on W-side [cm?]
 
-		// Event vertex time calibrated from FTOF
-		double t_vtx   = event.getSTTime(0);
-		double t_e     = scintillator.getTime(0);
-		double tof_e  = t_e - t_vtx;		// electron candidate time-of-flight [ns]
+			// Event vertex time calibrated from FTOF
+			double t_vtx   = event.getSTTime(0);
+			double t_e     = scintillator.getTime(0);
+			double tof_e  = t_e - t_vtx;		// electron candidate time-of-flight [ns]
 
-		// Only keep events for which the first particle is an electron
-		if(             (pid0!=11              )||
-				(chr0!=-1              )||
-				(chi2pid>=cut_chi2pid  )||
-				(eP.Mag()<=cut_ep      )||
-				(eP.Mag()>=Ebeam       )||
-				(eP_vertex.Z()>cut_max_vz  )||
-				(eP_vertex.Z()<cut_min_vz  )||
-				(lU<cut_uvw            )||
-				(lV<cut_uvw            )||
-				(lW<cut_uvw            )||
-				(Epcal<cut_Epcal       )||
-				//(TMath::Sqrt(W2)<=cut_W)||
-				(tof_e<cut_tof_e       )
-		  ) continue;
-
-
-		// Calculate kinematic variables
-		theta_e 	= eP.Theta();
-		Q2 		= 4. * e0_4.Energy() * eP.Mag() * pow( TMath::Sin(theta_e/2.) , 2 );	// momentum transfer
-		nu 		= e0_4.Energy() - eP.Mag();						// energy transfer
-		xB		= Q2 / (2.*mP*nu);
-		q		= sqrt( Q2 + pow(nu,2) ); 						// 3 vector q-magnitude
-		phi_q		= eP.Phi() + M_PI;	  						// q vector phi angle
-		W2     		= mP*mP - Q2 + 2*nu*mP;						// invariant jet mass based on e kinematics
-		if (phi_q > M_PI) phi_q -= 2.*M_PI;
-		theta_q 	= acos(  ( e0_4.Energy() - eP.Mag() * TMath::Cos(theta_e) ) / q );	// q vector theta angle
-		phi_e		= eP.Phi();
+			// Only keep events for which the first particle is an electron
+			if(             (pid0!=11              )||
+					(chr0!=-1              )||
+					(chi2pid>=cut_chi2pid  )||
+					(eP.Mag()<=cut_ep      )||
+					(eP.Mag()>=Ebeam       )||
+					(eP_vertex.Z()>cut_max_vz  )||
+					(eP_vertex.Z()<cut_min_vz  )||
+					(lU<cut_uvw            )||
+					(lV<cut_uvw            )||
+					(lW<cut_uvw            )||
+					(Epcal<cut_Epcal       )||
+					//(TMath::Sqrt(W2)<=cut_W)||
+					(tof_e<cut_tof_e       )
+			  ) continue;
 
 
-		// Looking in BAND
-		nHits = band_hits.getSize();
-		if( nHits == 1){
-			for(int hit = 0; hit < nHits; hit++) {
-
-				int    barKey           = band_hits.getBarKey  		(hit); 
-				sector          	= band_hits.getSector      	(hit);
-				layer			= band_hits.getLayer		(hit);
-				component		= band_hits.getComponent	(hit);
-
-				adcLcorr         	= band_hits.getAdcLcorr    	(hit);
-				adcRcorr         	= band_hits.getAdcRcorr    	(hit);
-				meantimeFadc    	= band_hits.getMeantimeFadc	(hit);
-				meantimeTdc		= band_hits.getMeantimeTdc	(hit);	
-
-				difftimeFadc		= band_hits.getDifftimeFadc	(hit);
-				difftimeTdc		= band_hits.getDifftimeTdc	(hit);
-
-				x			= band_hits.getX		(hit);
-				y			= band_hits.getY		(hit);
-				z			= band_hits.getZ		(hit);
-
-				//double cutMeVee = 5.;
-				//if( adcLcorr < cutMeVee*2000. || adcRcorr < cutMeVee*2000. ) continue;
-
-				//if( sector == 3 || sector == 4 ) continue; 	// Don't want short bars for now because they have a systematic
-				// shift from long bars due to length of bar
-				start_time = t_vtx;					
-				ToF = meantimeFadc-t_vtx;	// [ns]
-				dL  = sqrt( x*x + y*y + z*z );	// [cm]
-
-				// Real ToF = (measured ToF - gamma peak position) + (where gamma peak should really be)
-				ToF = ToF - 4.99481e+01 + dL/cAir;
-				hToF_sig->Fill( ToF );
-				hToF_full->Fill( ToF );
-
-				// Calculate beta
-				beta = dL/(cAir*ToF);	
-
-				// Build neutron 4 vector
-				pN_mag = 1./sqrt( 1./(beta*beta) - 1.) * mN; 	// [GeV]
-				En = sqrt( pN_mag*pN_mag + mN*mN );		// [GeV]
-
-				pN_cosTheta = z/dL;
-				theta_n = acos( pN_cosTheta );
-				phi_n = atan2( y , x );
-
-				TVector3 pN( pN_mag*sin(theta_n)*sin(phi_n) , pN_mag*sin(theta_n)*cos(phi_n) , pN_mag*cos(theta_n) );
-				TLorentzVector pN_4( pN , En );
-
-				// Now look at electron-neutron quantities to build the physics
-				phi_en = phi_n - phi_e;
-				if (phi_en < -M_PI) phi_en += 2.*M_PI;
-				if (phi_en >  M_PI) phi_en -= 2.*M_PI;
-				CosTheta_qn = cos(theta_n)*cos(theta_q) - sin(theta_n)*sin(theta_q)*cos(phi_en);
-				theta_qn = acos(CosTheta_qn);
-				Xp = Q2/(2.*( nu*(mD-En) + pN_mag*q*CosTheta_qn));
-				Wp = sqrt((mD*mD) - Q2 + (mP*mP) + 2.*mD*(nu-En) -2.* nu * En + 2.*q*pN_mag*CosTheta_qn);
-				As = (En - pN_mag*CosTheta_qn)/mN;
+			// Calculate kinematic variables
+			theta_e 	= eP.Theta();
+			Q2 		= 4. * e0_4.Energy() * eP.Mag() * pow( TMath::Sin(theta_e/2.) , 2 );	// momentum transfer
+			nu 		= e0_4.Energy() - eP.Mag();						// energy transfer
+			xB		= Q2 / (2.*mP*nu);
+			q		= sqrt( Q2 + pow(nu,2) ); 						// 3 vector q-magnitude
+			phi_q		= eP.Phi() + M_PI;	  						// q vector phi angle
+			W2     		= mP*mP - Q2 + 2*nu*mP;						// invariant jet mass based on e kinematics
+			if (phi_q > M_PI) phi_q -= 2.*M_PI;
+			theta_q 	= acos(  ( e0_4.Energy() - eP.Mag() * TMath::Cos(theta_e) ) / q );	// q vector theta angle
+			phi_e		= eP.Phi();
 
 
+			// Looking in BAND
+			nHits = band_hits.getSize();
+			if( nHits == 1){
+				for(int hit = 0; hit < nHits; hit++) {
 
-				//if (Q2 < 2)       				continue;
-				//if (acos(CosTheta_qn)*180./M_PI < 110.)		continue;
-				//if (Xp > 0.8)      				continue;
-				//if (Wp < 1.8)     	 			continue;
+					int    barKey           = band_hits.getBarKey  		(hit); 
+					sector          	= band_hits.getSector      	(hit);
+					layer			= band_hits.getLayer		(hit);
+					component		= band_hits.getComponent	(hit);
 
-				//if( beta > 1 ) 					continue;
-				//if( ToF > 100 && ToF < 250 )			continue;
-				//if( ToF < 0 )	 				continue; 	// these are below our photon peak, so ignore
-				//if( ToF < 3*1.19734e+00) 			continue; 	// this is our photon peak, so ignore
-				//if( pN_mag < 0.2)				continue;
-				//if (pN_mag < 0.25) 				continue;
-				//if (pN_mag > 0.6)  	    			continue;
+					adcLcorr         	= band_hits.getAdcLcorr    	(hit);
+					adcRcorr         	= band_hits.getAdcRcorr    	(hit);
+					meantimeFadc    	= band_hits.getMeantimeFadc	(hit);
+					meantimeTdc		= band_hits.getMeantimeTdc	(hit);	
 
+					difftimeFadc		= band_hits.getDifftimeFadc	(hit);
+					difftimeTdc		= band_hits.getDifftimeTdc	(hit);
 
-			}// end loop over band hits in an event
+					x			= band_hits.getX		(hit);
+					y			= band_hits.getY		(hit);
+					z			= band_hits.getZ		(hit);
 
-			// Now check the corresponding ADC banks -- we should only have 2 ADCs, 2 TDCs:
-			nADC = BAND_ADC.getSize();
-			nTDC = BAND_TDC.getSize();
-			if( nADC == 2 && nTDC == 2){
-				//RUN_config.show();
-				//long timestamp = RUN_config.getLong(4,0);
-				//double phaseCorr = getTriggerPhase(timestamp);
-				int adc_barKey, tdc_barKey;
+					//double cutMeVee = 5.;
+					//if( adcLcorr < cutMeVee*2000. || adcRcorr < cutMeVee*2000. ) continue;
 
-				// Get the raw ADC information, uncorrected
-				//BAND_ADC.show();
-				for(int aIdx = 0 ; aIdx < nADC ; aIdx++){
-					int   ADC_order     = BAND_ADC.getInt  (3,aIdx);
-					int   ADC_sector    = BAND_ADC.getInt  (0,aIdx);
-					int   ADC_layer     = BAND_ADC.getInt  (1,aIdx);
-					int   ADC_component = BAND_ADC.getInt  (2,aIdx);
-					if( ADC_order == 0 ){
-						adcLraw = (float)(BAND_ADC.getInt(4,aIdx));
-						tFadcLraw = BAND_ADC.getFloat(5,aIdx);
-						adc_barKey = ADC_sector*100 + ADC_layer*10 + ADC_component;
-					}
-					if( ADC_order == 1 ){
-						adcRraw = (float)(BAND_ADC.getInt(4,aIdx));
-						tFadcRraw = BAND_ADC.getFloat(5,aIdx);
-						adc_barKey = ADC_sector*100 + ADC_layer*10 + ADC_component;
-					}
-				}
+					//if( sector == 3 || sector == 4 ) continue; 	// Don't want short bars for now because they have a systematic
+					// shift from long bars due to length of bar
+					start_time = t_vtx;					
+					ToF = meantimeFadc-t_vtx;	// [ns]
+					dL  = sqrt( x*x + y*y + z*z );	// [cm]
 
-				// Get the raw TDC information, uncorrected
-				//BAND_TDC.show();
-				for(int tIdx = 0 ; tIdx < nTDC ; tIdx++){
-					int   TDC_order     = BAND_TDC.getInt  (3,tIdx);
-					int   TDC_sector    = BAND_TDC.getInt  (0,tIdx);
-					int   TDC_layer     = BAND_TDC.getInt  (1,tIdx);
-					int   TDC_component = BAND_TDC.getInt  (2,tIdx);
-					TDC_order -= 2;
-					if( TDC_order == 0 ){
-						tTdcLraw = (float)(BAND_TDC.getInt(4,tIdx))*0.02345;
-						tdc_barKey = TDC_sector*100 + TDC_layer*10 + TDC_component;
-					}
-					if( TDC_order == 1 ){
-						tTdcRraw = (float)(BAND_TDC.getInt(4,tIdx))*0.02345;
-						tdc_barKey = TDC_sector*100 + TDC_layer*10 + TDC_component;
-					}
+					// Real ToF = (measured ToF - gamma peak position) + (where gamma peak should really be)
+					ToF = ToF - 4.99481e+01 + dL/cAir;
 
-				}
+					// Calculate beta
+					beta = dL/(cAir*ToF);	
 
-				// Correct everything by hand using tables in include DIR
-				if( 	adcLraw != 0. && adcRraw != 0. && 			// ADC non zero
-						tFadcLraw != 0. && tFadcRraw != 0. &&			// ADC time non zero
-						tTdcLraw != 0. && tTdcRraw != 0. && 			// TDC time non zero
-						adc_barKey == sector*100+layer*10+component && 		// matching bar ID for ADC
-						tdc_barKey == sector*100+layer*10+component ){		/// matching bar ID for TDC
+					// Build neutron 4 vector
+					pN_mag = 1./sqrt( 1./(beta*beta) - 1.) * mN; 	// [GeV]
+					En = sqrt( pN_mag*pN_mag + mN*mN );		// [GeV]
 
-					int barID = sector*100+layer*10+component;					
+					pN_cosTheta = z/dL;
+					theta_n = acos( pN_cosTheta );
+					phi_n = atan2( y , x );
 
-					// TDC phase correction:
-					//tTdcLraw -= phaseCorr;
-					//tTdcRraw -= phaseCorr;
-					// TDC time walk
-					tTdcLraw = tTdcLraw - (parA_L[barID]/sqrt(adcLraw) + parB_L[barID]);
-					tTdcRraw = tTdcRraw - (parA_R[barID]/sqrt(adcRraw) + parB_R[barID]);
-					// TDiff:
-					byHand_difftimeTdc = (tTdcLraw-tTdcRraw) - TDC_TDIFF[barID];
-					byHand_difftimeFadc = (tFadcLraw-tFadcRraw) - FADC_TDIFF[barID];
-					// Meantime:
-					byHand_meantimeTdc = (tTdcLraw+tTdcRraw)/2. - fabs(TDC_TDIFF[barID]/2.) - TDC_P2P[barID] - TDC_L2L[barID];
-					byHand_meantimeFadc = (tFadcLraw+tFadcRraw)/2. - fabs(FADC_TDIFF[barID]/2.) - FADC_P2P[barID] - FADC_L2L[barID];
-					//cout << "Raw, corrected TDC mean time: " << (tTdcLraw+tTdcRraw)/2. << " " << byHand_meantimeTdc << "\n";
-					//cout << sector << " " << layer << " " << component << " " 
-						//<< parA_L[barID] << " " << parB_L[barID] << " "
-						//<< parA_R[barID] << " " << parB_R[barID] << " "
-						//<< TDC_TDIFF[barID] << " " << FADC_TDIFF[barID] << " "
-						//<< TDC_TDIFF[barID] << " " 
-						//<< TDC_P2P[barID] << " " << TDC_L2L[barID] << "\n"; 
-						//<< FADC_P2P[barID] << " " << FADC_L2L[barID] << "\n";
-						//<< TDC_VEFF[barID] << " " << FADC_VEFF[barID] << " "
-						//<< FADC_ATTEN_LENGTH[barID] << " "
-						//<< globPos[barID][0] << " " << globPos[barID][1] << " " << globPos[barID][2] << "\n";
-					//cout << "HitFinder mean time: " << meantimeTdc << "\n";
-					//cout << "difference : " << fabs(meantimeTdc-byHand_meantimeTdc) << "\n\n";
-					//if( fabs(meantimeTdc-byHand_meantimeTdc) > 1 ) cout << "********BIG DIFF********\n\n";
-													
-					// ADC attenuation corr:
-					double xpos_tdc = (-1./2) * byHand_difftimeTdc * TDC_VEFF[barID];
-					double xpos_fadc = (-1./2) * byHand_difftimeFadc * FADC_VEFF[barID];
-					double sectorLen = BARLENGTHS[sector-1];
-					double mu_cm = FADC_ATTEN_LENGTH[barID];
-					byHand_adcL = adcLraw * exp( (sectorLen/2.-xpos_fadc) / mu_cm );
-					byHand_adcR = adcRraw * exp( (sectorLen/2.+xpos_fadc) / mu_cm );
-					// Path length:
-					byHand_x = (xpos_tdc+xpos_fadc)/2.;
-					byHand_x += globPos[barID][0];
-					byHand_y = globPos[barID][1];
-					byHand_z = globPos[barID][2];
-					byHand_dL = sqrt( byHand_x*byHand_x + byHand_y*byHand_y + byHand_z*byHand_z );
+					TVector3 pN( pN_mag*sin(theta_n)*sin(phi_n) , pN_mag*sin(theta_n)*cos(phi_n) , pN_mag*cos(theta_n) );
+					TLorentzVector pN_4( pN , En );
 
-				}
-			} // end if for raw ADC==2 and TDC =2
-
-		} // end if for nHits == 1 for BAND
-
-		outTree->Fill();
+					// Now look at electron-neutron quantities to build the physics
+					phi_en = phi_n - phi_e;
+					if (phi_en < -M_PI) phi_en += 2.*M_PI;
+					if (phi_en >  M_PI) phi_en -= 2.*M_PI;
+					CosTheta_qn = cos(theta_n)*cos(theta_q) - sin(theta_n)*sin(theta_q)*cos(phi_en);
+					theta_qn = acos(CosTheta_qn);
+					Xp = Q2/(2.*( nu*(mD-En) + pN_mag*q*CosTheta_qn));
+					Wp = sqrt((mD*mD) - Q2 + (mP*mP) + 2.*mD*(nu-En) -2.* nu * En + 2.*q*pN_mag*CosTheta_qn);
+					As = (En - pN_mag*CosTheta_qn)/mN;
 
 
-	}// end file
 
+					//if (Q2 < 2)       				continue;
+					//if (acos(CosTheta_qn)*180./M_PI < 110.)		continue;
+					//if (Xp > 0.8)      				continue;
+					//if (Wp < 1.8)     	 			continue;
+
+					//if( beta > 1 ) 					continue;
+					//if( ToF > 100 && ToF < 250 )			continue;
+					//if( ToF < 0 )	 				continue; 	// these are below our photon peak, so ignore
+					//if( ToF < 3*1.19734e+00) 			continue; 	// this is our photon peak, so ignore
+					//if( pN_mag < 0.2)				continue;
+					//if (pN_mag < 0.25) 				continue;
+					//if (pN_mag > 0.6)  	    			continue;
+
+
+				}// end loop over band hits in an event
+
+				// Now check the corresponding ADC banks -- we should only have 2 ADCs, 2 TDCs:
+				if( doByHand ){
+					nADC = BAND_ADC.getSize();
+					nTDC = BAND_TDC.getSize();
+					if( nADC == 2 && nTDC == 2){
+						//RUN_config.show();
+						long timestamp = RUN_config.getLong(4,0);
+						phaseCorr = getTriggerPhase(timestamp);
+						int adc_barKey, tdc_barKey;
+
+						// Get the raw ADC information, uncorrected
+						//BAND_ADC.show();
+						for(int aIdx = 0 ; aIdx < nADC ; aIdx++){
+							int   ADC_order     = BAND_ADC.getInt  (3,aIdx);
+							int   ADC_sector    = BAND_ADC.getInt  (0,aIdx);
+							int   ADC_layer     = BAND_ADC.getInt  (1,aIdx);
+							int   ADC_component = BAND_ADC.getInt  (2,aIdx);
+							if( ADC_order == 0 ){
+								adcLraw = (float)(BAND_ADC.getInt(4,aIdx));
+								tFadcLraw = BAND_ADC.getFloat(5,aIdx);
+								adc_barKey = ADC_sector*100 + ADC_layer*10 + ADC_component;
+							}
+							if( ADC_order == 1 ){
+								adcRraw = (float)(BAND_ADC.getInt(4,aIdx));
+								tFadcRraw = BAND_ADC.getFloat(5,aIdx);
+								adc_barKey = ADC_sector*100 + ADC_layer*10 + ADC_component;
+							}
+						}
+
+						// Get the raw TDC information, uncorrected
+						//BAND_TDC.show();
+						for(int tIdx = 0 ; tIdx < nTDC ; tIdx++){
+							int   TDC_order     = BAND_TDC.getInt  (3,tIdx);
+							int   TDC_sector    = BAND_TDC.getInt  (0,tIdx);
+							int   TDC_layer     = BAND_TDC.getInt  (1,tIdx);
+							int   TDC_component = BAND_TDC.getInt  (2,tIdx);
+							TDC_order -= 2;
+							if( TDC_order == 0 ){
+								tTdcLraw = (float)(BAND_TDC.getInt(4,tIdx))*0.02345;
+								tdc_barKey = TDC_sector*100 + TDC_layer*10 + TDC_component;
+							}
+							if( TDC_order == 1 ){
+								tTdcRraw = (float)(BAND_TDC.getInt(4,tIdx))*0.02345;
+								tdc_barKey = TDC_sector*100 + TDC_layer*10 + TDC_component;
+							}
+
+						}
+
+						// Correct everything by hand using tables in include DIR
+						if( 	adcLraw != 0. && adcRraw != 0. && 			// ADC non zero
+								tFadcLraw != 0. && tFadcRraw != 0. &&			// ADC time non zero
+								tTdcLraw != 0. && tTdcRraw != 0. && 			// TDC time non zero
+								adc_barKey == sector*100+layer*10+component && 		// matching bar ID for ADC
+								tdc_barKey == sector*100+layer*10+component ){		/// matching bar ID for TDC
+
+							int barID = sector*100+layer*10+component;					
+
+							// TDC phase correction:
+							tTdcLraw -= phaseCorr;
+							tTdcRraw -= phaseCorr;
+							// TDC time walk
+							tTdcLraw = tTdcLraw - (parA_L[barID]/sqrt(adcLraw) + parB_L[barID]);
+							tTdcRraw = tTdcRraw - (parA_R[barID]/sqrt(adcRraw) + parB_R[barID]);
+							// TDiff:
+							byHand_difftimeTdc = (tTdcLraw-tTdcRraw) - TDC_TDIFF[barID];
+							byHand_difftimeFadc = (tFadcLraw-tFadcRraw) - FADC_TDIFF[barID];
+							// Meantime:
+							byHand_meantimeTdc = (tTdcLraw+tTdcRraw)/2. - fabs(TDC_TDIFF[barID]/2.) - TDC_P2P[barID] - TDC_L2L[barID];
+							byHand_meantimeFadc = (tFadcLraw+tFadcRraw)/2. - fabs(FADC_TDIFF[barID]/2.) - FADC_P2P[barID] - FADC_L2L[barID];
+							//cout << "Raw, corrected TDC mean time: " << (tTdcLraw+tTdcRraw)/2. << " " << byHand_meantimeTdc << "\n";
+							//cout << sector << " " << layer << " " << component << " " 
+								//<< parA_L[barID] << " " << parB_L[barID] << " "
+								//<< parA_R[barID] << " " << parB_R[barID] << " "
+								//<< TDC_TDIFF[barID] << " " << FADC_TDIFF[barID] << " "
+								//<< TDC_TDIFF[barID] << " " 
+								//<< TDC_P2P[barID] << " " << TDC_L2L[barID] << "\n"; 
+								//<< FADC_P2P[barID] << " " << FADC_L2L[barID] << "\n";
+								//<< TDC_VEFF[barID] << " " << FADC_VEFF[barID] << " "
+								//<< FADC_ATTEN_LENGTH[barID] << " "
+								//<< globPos[barID][0] << " " << globPos[barID][1] << " " << globPos[barID][2] << "\n";
+							//cout << "HitFinder mean time: " << meantimeTdc << "\n";
+							//cout << "difference : " << fabs(meantimeTdc-byHand_meantimeTdc) << "\n\n";
+							//if( fabs(meantimeTdc-byHand_meantimeTdc) > 1 ) cout << "********BIG DIFF********\n\n";
+															
+							// ADC attenuation corr:
+							double xpos_tdc = (-1./2) * byHand_difftimeTdc * TDC_VEFF[barID];
+							double xpos_fadc = (-1./2) * byHand_difftimeFadc * FADC_VEFF[barID];
+							double sectorLen = BARLENGTHS[sector-1];
+							double mu_cm = FADC_ATTEN_LENGTH[barID];
+							byHand_adcL = adcLraw * exp( (sectorLen/2.-xpos_fadc) / mu_cm );
+							byHand_adcR = adcRraw * exp( (sectorLen/2.+xpos_fadc) / mu_cm );
+							// Path length:
+							byHand_x = (xpos_tdc+xpos_fadc)/2.;
+							byHand_x += globPos[barID][0];
+							byHand_y = globPos[barID][1];
+							byHand_z = globPos[barID][2];
+							byHand_dL = sqrt( byHand_x*byHand_x + byHand_y*byHand_y + byHand_z*byHand_z );
+
+						}
+					} // end if for raw ADC==2 and TDC =2
+				}// end if doByHand
+
+			} // end if for nHits == 1 for BAND
+
+			outTree->Fill();
+
+
+		}// end file
+	}// end loop over files
 
 
 	outFile->cd();
