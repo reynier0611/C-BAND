@@ -28,20 +28,20 @@
 #include "colors.h"
 
 using namespace std;
-double parA_L[600];		// loaded
-double parB_L[600];		// loaded
-double parA_R[600];		// loaded
-double parB_R[600];		// loaded
-double TDC_TDIFF[600];		// loaded
-double FADC_TDIFF[600];		// loaded
-double TDC_P2P[600];		// loaded
-double TDC_L2L[600];		// loaded
-double FADC_P2P[600];		// loaded
-double FADC_L2L[600];		// loaded
-double TDC_VEFF[600];		// loaded
-double FADC_VEFF[600];		// loaded
-double FADC_ATTEN_LENGTH[600];	// loaded
-double globPos[600][3];		
+double parA_L[600] = {0.};		// loaded
+double parB_L[600] = {0.};		// loaded
+double parA_R[600] = {0.};		// loaded
+double parB_R[600] = {0.};		// loaded
+double TDC_TDIFF[600] = {0.};		// loaded
+double FADC_TDIFF[600] = {0.};		// loaded
+double TDC_P2P[600] = {0.};		// loaded
+double TDC_L2L[600] = {0.};		// loaded
+double FADC_P2P[600] = {0.};		// loaded
+double FADC_L2L[600] = {0.};		// loaded
+double TDC_VEFF[600] = {0.};		// loaded
+double FADC_VEFF[600] = {0.};		// loaded
+double FADC_ATTEN_LENGTH[600] = {0,};	// loaded
+double globPos[600][3] = {0.};		
 double BARLENGTHS[]  = {163.7,201.9,51.2,51.2,201.9};
 
 double getTriggerPhase( long timeStamp );
@@ -64,10 +64,10 @@ int main(int argc, char** argv) {
 	if( doByHand ){
 		// Load calibration constants from include DIR:
 		cout << BOLD(FYEL("Doing byHand -- Loading constants...\n"));
-		LoadTimeWalk();
+		//LoadTimeWalk();
 		LoadLROffsets();
-		LoadPaddleOffsets();
-		LoadLayerOffsets();
+		//LoadPaddleOffsets();
+		//LoadLayerOffsets();
 		LoadVelocityMap();
 		LoadAttenuation();
 		CreateGeo();
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
 		BBand         band_hits   ("BAND::hits"       ,reader);
 		hipo::bank BAND_ADC  ("BAND::adc"  ,reader);
 		hipo::bank BAND_TDC  ("BAND::tdc"  ,reader);
-		hipo::bank RUN_config("RUN::config",reader);
+		//hipo::bank RUN_config("RUN::config",reader);
 
 		// Setup initial vector for beam
 		TVector3 e0(0,0,Ebeam);
@@ -355,8 +355,8 @@ int main(int argc, char** argv) {
 					nTDC = BAND_TDC.getSize();
 					if( nADC == 2 && nTDC == 2){
 						//RUN_config.show();
-						long timestamp = RUN_config.getLong(4,0);
-						phaseCorr = getTriggerPhase(timestamp);
+						//long timestamp = RUN_config.getLong(4,0);
+						//phaseCorr = getTriggerPhase(timestamp);
 						int adc_barKey, tdc_barKey;
 
 						// Get the raw ADC information, uncorrected
