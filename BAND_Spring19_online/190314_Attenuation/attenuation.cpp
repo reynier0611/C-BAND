@@ -121,8 +121,8 @@ int main(int argc, char** argv) {
 		// Skip all laser events
 		if(nADC>100||nTDC>100) continue;
 
-		long timestamp = RUN_config.getLong(4,0);
-		double phaseCorr = getTriggerPhase(timestamp);
+		//long timestamp = RUN_config.getLong(4,0);
+		//double phaseCorr = getTriggerPhase(timestamp);
 
 		for(int aIdx1 = 0 ; aIdx1 < nADC ; aIdx1++){
 
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
 						float TDC1_tdc       = (float)(BAND_TDC.getInt(4,tIdx1));
 						float TDC1_time      = TDC1_tdc*0.02345;
 
-						TDC1_time -= phaseCorr;
+						//TDC1_time -= phaseCorr;
 
 						// Matching these ADCs to a TDC
 						if(             (ADC1_sector   ==TDC1_sector   )&&
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
 								float TDC2_tdc       = (float)(BAND_TDC.getInt(4,tIdx2));
 								float TDC2_time      = TDC2_tdc*0.02345; 
 
-								TDC2_time -= phaseCorr;
+								//TDC2_time -= phaseCorr;
 
 								if(             (!matchedBarTDC                       )&&
 										(TDC1_sector   ==TDC2_sector          )&&
@@ -274,6 +274,8 @@ int main(int argc, char** argv) {
 					TLatex * tex_mu = new TLatex(-1.4,-0.1,Form("#mu = %.3f #pm %.4f m",par[identifier][0],par[identifier][1]));
 					tex_mu -> SetTextSize(0.08);
 					tex_mu -> Draw("same");
+
+					cout << identifier << "\t" << par[identifier][0] << "\t" << par[identifier][1] << endl;
 
 					h1_E_minus_R_mu -> Fill(mu_efrain[identifier]/100.-par[identifier][0]);
 				
