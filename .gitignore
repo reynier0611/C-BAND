@@ -41,5 +41,7 @@ Examples/example
 lib/libclas12banks.a
 lib/libhipo.a
 lib/libclasphysics.a
+lib/libhipo4.a
+lib/libclas12banks4.a
 *.o
 .DS_Store
