@@ -4,7 +4,7 @@ ROOTLIBS    := $(shell root-config --libs) -lEG
 ROOTGLIBS   := $(shell root-config --glibs)
 
 CXX       := g++
-CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
+CXXFLAGS  += -std=c++11 -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 

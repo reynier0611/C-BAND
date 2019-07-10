@@ -6,11 +6,10 @@ ROOTGLIBS   := $(shell root-config --glibs)
 HIPOCFLAGS  := -I../../Hipo -I../../Banks -I../../Physics
 HIPOLIBS    := -L../../lib -lhipo -lclas12banks -lclasphysics
 
-LZ4LIBS     := -L/group/clas12/packages/lz4/lib -llz4
-LZ4INCLUDES := -I/group/clas12/packages/lz4/lib
+LZ4LIBS     := -llz4
 
 CXX       := g++
-CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
+CXXFLAGS  += -std=c++11 -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
