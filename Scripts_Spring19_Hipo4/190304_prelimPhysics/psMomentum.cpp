@@ -14,7 +14,6 @@
 #include "TCanvas.h"
 
 #include "reader.h"
-#include "node.h"
 #include "bank.h"
 
 #include "BParticle.h"
@@ -119,17 +118,26 @@ int main(int argc, char** argv) {
 	TH1F * hToF_sig 	= new TH1F("hToF_sig","hToF",40,20,60);
 	TH1F * hToF_full 	= new TH1F("hToF_full","hToF",450,-100,350);
 	
-
 	// Load input file
 	TString inputFile = argv[1];
 	hipo::reader reader;
 	reader.open(inputFile);
+	
+	//Read Dictionary of Hipo File  // new hipo4
+        hipo::dictionary  factory;      // new hipo4
+        reader.readDictionary(factory); // new hipo4
+        //factory.show();               // new hipo4
+
 	// Banks for EMC-SRC physics
-	BEvent        event       ("REC::Event"       ,reader);
-	BParticle     particles   ("REC::Particle"    ,reader);
-	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
-	BScintillator scintillator("REC::Scintillator",reader);
-	BBand         band_hits   ("BAND::hits"       ,reader);
+	BEvent        event       (factory.getSchema("REC::Event"       ));	// new hipo4
+	BParticle     particles   (factory.getSchema("REC::Particle"    ));	// new hipo4
+	BCalorimeter  calo        (factory.getSchema("REC::Calorimeter" ));	// new hipo4
+	BScintillator scintillator(factory.getSchema("REC::Scintillator"));	// new hipo4
+	BBand         band_hits   (factory.getSchema("BAND::hits"       ));	// new hipo4
+
+	//One also needs a hipo::event object which is called from the reader for each event to get
+        //the information for each bank
+        hipo::event readevent;  // new hipo4
 
 	// Setup initial vector for beam
 	TVector3 e0(0,0,Ebeam);
@@ -138,6 +146,19 @@ int main(int argc, char** argv) {
 	// Loop over events in hipo fil
 	int event_counter = 0;
 	while(reader.next()==true){
+		//Reader has to load information about event in hipo::event class
+                reader.read(readevent); // new hipo4
+
+                //Load explicitly all information for each bank for the event
+                readevent.getStructure(event       );   // new hipo4
+                readevent.getStructure(particles   );   // new hipo4
+                readevent.getStructure(calo        );   // new hipo4
+                readevent.getStructure(scintillator);   // new hipo4
+		readevent.getStructure(band_hits   );   // new hipo4
+
+                //Now everything is loaded and can be used as before with HIPO3 files. There is only one difference:
+                //The number of hits in each bank is determined by the function "getRows()" and not by "getSize" as before.
+
 		nHits,sector,layer,component,adcLcorr,adcRcorr			= 0.;
 		meantimeFadc,meantimeTdc,difftimeFadc,difftimeTdc 		= 0.;
 		x,y,z,dL,ToF,beta,pN_mag,theta_n,phi_n,En,pN_cosTheta 		= 0.;
@@ -204,7 +225,7 @@ int main(int argc, char** argv) {
 
 
 		// Looking in BAND
-		nHits = band_hits.getSize();
+		nHits = band_hits.getRows();
 		if( nHits == 1){
 			for(int hit = 0; hit < nHits; hit++) {
 
