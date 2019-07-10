@@ -36,7 +36,7 @@ bandPhoton2CLAS: bandPhoton2CLAS.o
 
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o epPipPim eppPim bandPhoton2CLAS ePip *~
+	@rm -rf *.o ep epPipPim_new epPipPim eppPim bandPhoton2CLAS ePip *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
