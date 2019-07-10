@@ -45,3 +45,7 @@ lib/libhipo4.a
 lib/libclas12banks4.a
 *.o
 .DS_Store
+Examples_Hipo3/example
+Scripts_Spring19_Hipo4/190226_Looking_for_reactions/ep
+Scripts_Spring19_Hipo4/190226_Looking_for_reactions/epPipPim_new
+Scripts_Spring19_Hipo4/190226_Looking_for_reactions/eppPim.cpp
