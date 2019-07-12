@@ -643,7 +643,8 @@ int main(int argc, char** argv) {
 	c20 -> Print("results_eppPi.pdf" );
 	c21 -> Print("results_eppPi.pdf" );
 	c22 -> Print("results_eppPi.pdf" );
-	c23 -> Print("results_eppPi.pdf)");
+	c23 -> Print("results_eppPi.pdf" );
+	c24 -> Print("results_eppPi.pdf)");
 
 	myapp -> Run();
 	return 0;
