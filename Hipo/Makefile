@@ -4,7 +4,6 @@ OBJECTS := $(SOURCES:.cpp=.o)
 
 LIBDIR  = ../lib
 
-LZ4INCLUDES := -I/group/clas12/packages/lz4/lib/
 
 CXXFLAGS = -std=c++11
 
@@ -26,4 +25,4 @@ clean:
 	@rm -rf *~ *.o
 
 %.o: %.cpp
-	$(CXX) -fPIC -c $< -O2 -D__LZ4__ $(CXXFLAGS) $(LZ4INCLUDES)
+	$(CXX) -fPIC -c $< -O2 -D__LZ4__ $(CXXFLAGS) 

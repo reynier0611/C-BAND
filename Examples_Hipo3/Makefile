@@ -9,7 +9,7 @@ HIPOLIBS    := -L../lib -lhipo -lclas12banks
 LZ4FLAGS    := -llz4
 
 CXX         := g++
-CXXFLAGS    := $(HIPOCFLAGS) $(ROOTLDFLAGS) $(ROOTCFLAGS)
+CXXFLAGS    := -std=c++11 $(HIPOCFLAGS) $(ROOTLDFLAGS) $(ROOTCFLAGS)
 LDFLAGS     := $(ROOTLDFLAGS)
 LD	    := g++
 

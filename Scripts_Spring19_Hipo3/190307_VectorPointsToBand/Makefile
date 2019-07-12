@@ -6,7 +6,7 @@ ROOTLDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
 ROOTGLIBS   := $(shell $(ROOTCONFIG) --glibs)
 
 CXX         := g++
-CXXFLAGS    := -O2 -Wall -fPIC $(ROOTCFLAGS)
+CXXFLAGS  += -std=c++11 -Wall -fPIC $(ROOTCFLAGS)
 LD          := g++
 LDFLAGS     := -O2 $(ROOTLDFLAGS) 
 
