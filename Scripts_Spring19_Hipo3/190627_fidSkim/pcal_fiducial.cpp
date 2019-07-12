@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <cmath>
 
 #include "TRint.h"
 #include "TApplication.h"
@@ -65,6 +66,9 @@ int main(int argc, char** argv) {
 	TH2D ** h_EoP_u = new TH2D*[6];
 	TH2D ** h_EoP_v = new TH2D*[6];
 	TH2D ** h_EoP_w = new TH2D*[6];
+	TH2D * h_thph_noCut = new TH2D("h_thph_noCut","Electron Theta-Phi, No Cut",80,-30,50,400,0,40);
+	TH2D * h_thph_vw7 = new TH2D("h_thph_vw7","Electron Theta-Phi, Loose Cut",80,-30,50,400,0,40);
+	TH2D * h_thph_vw15 = new TH2D("h_thph_vw15","Electron Theta-Phi, Tight Cut",80,-30,50,400,0,40);
 	for( int i = 0 ; i < 6 ; i ++){
 		h_EoP_u[i] = new TH2D(Form("h_EoP_u%i",i),Form("Electron E/p vs u Coord., Sector %i; u [cm]; E/p",(i+1)),450,0,450,400,0,0.4);
 		h_EoP_v[i] = new TH2D(Form("h_EoP_v%i",i),Form("Electron E/p vs v Coord., Sector %i; v [cm]; E/p",(i+1)),450,0,450,400,0,0.4);
@@ -103,7 +107,7 @@ int main(int argc, char** argv) {
 	while(reader.next()==true){
 
 		if( event_counter % 10000 == 0 ) cout << "Working on event: " << event_counter << endl;
-		if( event_counter > 1000000) break;
+		if( event_counter > 100000) break;
 		event_counter++;
 
 		// Get electron-particle quantities
@@ -138,13 +142,16 @@ int main(int argc, char** argv) {
 					case PCal:
 						h_EoP_noCut[secIdx] -> Fill( En / ep );
 						h_PIDchi_noCut[secIdx] -> Fill( chi2pid );
+						h_thph_noCut -> Fill( V3_ep.Phi()*180./M_PI , V3_ep.Theta()*180./M_PI );
 						if( wC < (418.-7.5) && vC < (418.-7.5) ){
 							h_EoP_vw7[secIdx]  -> Fill( En / ep );
 							h_PIDchi_vw7[secIdx] -> Fill( chi2pid );
+							h_thph_vw7 -> Fill( V3_ep.Phi()*180./M_PI, V3_ep.Theta()*180./M_PI );
 						}
 						if( wC < (418.-15) && vC < (418.-15) ){
 							h_EoP_vw15[secIdx] -> Fill( En / ep );
 							h_PIDchi_vw15[secIdx] -> Fill( chi2pid );
+							h_thph_vw15 -> Fill( V3_ep.Phi()*180./M_PI, V3_ep.Theta()*180./M_PI );
 						}
 
 						h_EoP_u[secIdx] -> Fill( uC , En / ep );
@@ -218,7 +225,24 @@ int main(int argc, char** argv) {
 		h_PIDchi_noCut[i]->Draw();
 		h_PIDchi_vw7[i]->Draw("same");
 		h_PIDchi_vw15[i]->Draw("same");
+
 	}
+	h_thph_noCut->Write();
+	h_thph_vw7->Write();
+	h_thph_vw15->Write();
+	TCanvas * thetaphi = new TCanvas("thetaphi");
+	thetaphi->Divide(3,1);
+	thetaphi->cd(1);
+	h_thph_noCut->Draw("col");
+	thetaphi->cd(2);
+	h_thph_vw7->Draw("col");
+	thetaphi->cd(3);
+	h_thph_vw15->Draw("col");
+	thetaphi->Update();
+	thetaphi->Modified();
+	thetaphi->Write();
+	
+	
 
 	pcalU->Update(); 
 	pcalV->Update(); 
