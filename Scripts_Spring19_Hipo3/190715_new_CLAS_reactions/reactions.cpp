@@ -369,19 +369,19 @@ int main(int argc, char** argv) {
 
 		// -------------------------------------------------------------------------
 		// Only keep events for which the first particle is an electron
-		if(             (pid0!=11              )||
-				(chr0!=-1              )||
-				(chi2pid>=cut_chi2pid  )||
-				(ep<=cut_ep            )||
-				(ep>=Ebeam             )||
-				(V3_ev.Z()>cut_max_vz  )||
-				(V3_ev.Z()<cut_min_vz  )||
-				(lU<cut_uvw            )||
-				(lV<cut_uvw            )||
-				(lW<cut_uvw            )||
-				(Epcal<cut_Epcal       )||
-				(TMath::Sqrt(W2)<=cut_W)||
-				(tof_e<cut_tof_e       )
+		if(             (pid0!=11                   )||
+				(chr0!=-1                   )||
+				(abs(chi2pid)>=cut_chi2pid  )||
+				(ep<=cut_ep                 )||
+				(ep>=Ebeam                  )||
+				(V3_ev.Z()>cut_max_vz       )||
+				(V3_ev.Z()<cut_min_vz       )||
+				(lU<cut_uvw                 )||
+				(lV<cut_uvw                 )||
+				(lW<cut_uvw                 )||
+				(Epcal<cut_Epcal            )||
+				(TMath::Sqrt(W2)<=cut_W     )||
+				(tof_e<cut_tof_e            )
 		  ) continue;
 
 		ctr_electrons++;
@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
 			// -------------------------------------------------------------------------
 			// PID for particles other than electrons
 			// Count number of protons, π˖, and π˗
-			if((chi2pidi<cut_chi2pid)&&(V3_pi.Mag()<Ebeam)){
+			if((abs(chi2pidi)<cut_chi2pid)&&(V3_pi.Mag()<Ebeam)){
 				// -------
 				// Protons
 				if(pidi==2212){
