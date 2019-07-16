@@ -278,6 +278,11 @@ int main(int argc, char** argv) {
 	TVectorT<double> part_mass(nFSPart-1);
 	TVectorT<double> part_char(nFSPart-1);
 	TVectorT<double> part_pid (nFSPart-1);
+	TVectorT<double> m_target (1        );
+	TVectorT<double> Ebeam_GeV(1        );
+
+	m_target [0] = mtar; 
+	Ebeam_GeV[0] = Ebeam;
 
 	if(ReacPDF=="ePip"){
 		part_mass[0] = mPiC;
@@ -786,11 +791,15 @@ int main(int argc, char** argv) {
 	c24 -> Print(out_pdf_name + ")");
 
 	out -> cd();
+	m_target .Write("m_target_GeV"    );
+        Ebeam_GeV.Write("E_beam_GeV"      );
 	part_pid .Write("particles_pid"   );
 	part_mass.Write("particles_mass"  );
 	part_char.Write("particles_charge");
 	tree -> Write();
 	out -> Close();
+
+	cout << "Finished with the output root file" << endl;
 
 	myapp -> Run();
 	return 0;
