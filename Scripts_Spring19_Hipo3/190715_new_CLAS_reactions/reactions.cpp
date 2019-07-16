@@ -767,7 +767,20 @@ int main(int argc, char** argv) {
 	cout << "Selected reaction: " << ctr_selectedReaction << endl;
 
 	// -------------------------------------------------------------------------------------------
-	// Saving plots to system
+        // Saving info to root file
+	out -> cd();	
+        m_target .Write("m_target_GeV"    );
+        Ebeam_GeV.Write("E_beam_GeV"      );
+        part_pid .Write("particles_pid"   );
+        part_mass.Write("particles_mass"  );
+        part_char.Write("particles_charge");
+        tree -> Write();
+        out -> Close();
+
+        cout << "Finished with the output root file" << endl;
+
+	// -------------------------------------------------------------------------------------------
+	// Saving plots to pdf
 	TString out_pdf_name = "results_" + ReacPDF + ".pdf";
 	c0  -> Print(out_pdf_name + "(");
 	c1  -> Print(out_pdf_name );
@@ -789,17 +802,6 @@ int main(int argc, char** argv) {
 	c22 -> Print(out_pdf_name );
 	c23 -> Print(out_pdf_name );
 	c24 -> Print(out_pdf_name + ")");
-
-	out -> cd();
-	m_target .Write("m_target_GeV"    );
-        Ebeam_GeV.Write("E_beam_GeV"      );
-	part_pid .Write("particles_pid"   );
-	part_mass.Write("particles_mass"  );
-	part_char.Write("particles_charge");
-	tree -> Write();
-	out -> Close();
-
-	cout << "Finished with the output root file" << endl;
 
 	myapp -> Run();
 	return 0;
