@@ -143,15 +143,19 @@ int main(int argc, char** argv) {
 	TH1F * h1_e_lw      = new TH1F("h1_e_lw"     ,"distance on W-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lw     ,4);
 	
 	// 2D histograms
-	TH2F * h2_e_Ep_p_0  = new TH2F("h2_e_Ep_p_0"   ,"before cuts;p_{e} [GeV];E_{e}/p_{e}" ,100,1 , 10,100,  0,0.4);	PrettyTH2(h2_e_Ep_p_0);
-        TH2F * h2_e_Ep_p_1  = new TH2F("h2_e_Ep_p_1"   ,"after cuts;p_{e} [GeV];E_{e}/p_{e}"  ,100,1 , 10,100,  0,0.4);	PrettyTH2(h2_e_Ep_p_1);
+	TH2F * h2_e_Ep_p_0  = new TH2F("h2_e_Ep_p_0" ,"before cuts;p_{e} [GeV];E_{e}/p_{e}"         ,100,1   , 10,100,  0,0.4 );	PrettyTH2(h2_e_Ep_p_0);
+        TH2F * h2_e_Ep_p_1  = new TH2F("h2_e_Ep_p_1" ,"after cuts;p_{e} [GeV];E_{e}/p_{e}"          ,100,1   , 10,100,  0,0.4 );	PrettyTH2(h2_e_Ep_p_1);
+	TH2F * h2_e_th_phi  = new TH2F("h2_e_th_phi" ,";electron #phi [deg];electron #theta [deg]"  ,100,-190,190,100,  0, 30 );	PrettyTH2(h2_e_th_phi);
+	TH2F * h2_e_vz_phi  = new TH2F("h2_e_vz_phi" ,";electron #phi [deg];electron v_{z} [cm]"    ,100,-190,190,100,-50, 50 );	PrettyTH2(h2_e_vz_phi);
+	TH2F * h2_e_tof_p   = new TH2F("h2_e_tof_p"  ,";p_{e} [GeV];electron TOF [ns]"              ,100,1   ,  7,100, 20, 27 );	PrettyTH2(h2_e_tof_p );
+	TH2F * h2_pe_the    = new TH2F("h2_pe_the"   ,";#theta_e [deg];p_{e} [GeV]"                 ,100,0   , 30,100, 1 , 10 );	PrettyTH2(h2_pe_the  );
 
 	// Missing histograms
 	// 1D histograms
-	TH1F * h1_pmiss     = new TH1F("h1_pmiss"    ,";p_{miss};Counts"               ,100,   0,  5);	PrettyTH1(h1_pmiss    ,4);
-        TH1F * h1_pmx       = new TH1F("h1_pmx"      ,";p_{miss,x};Counts"             ,100,  -2,  2);	PrettyTH1(h1_pmx      ,4);
-        TH1F * h1_pmy       = new TH1F("h1_pmy"      ,";p_{miss,y};Counts"             ,100,  -2,  2);	PrettyTH1(h1_pmy      ,4);
-        TH1F * h1_pmz       = new TH1F("h1_pmz"      ,";p_{miss,z};Counts"             ,100,  -3,  3);	PrettyTH1(h1_pmz      ,4);
+	TH1F * h1_pmiss     = new TH1F("h1_pmiss"    ,";p_{miss} [GeV];Counts"         ,100,   0,  5);	PrettyTH1(h1_pmiss    ,4);
+        TH1F * h1_pmx       = new TH1F("h1_pmx"      ,";p_{miss,x} [GeV];Counts"       ,100,  -2,  2);	PrettyTH1(h1_pmx      ,4);
+        TH1F * h1_pmy       = new TH1F("h1_pmy"      ,";p_{miss,y} [GeV];Counts"       ,100,  -2,  2);	PrettyTH1(h1_pmy      ,4);
+        TH1F * h1_pmz       = new TH1F("h1_pmz"      ,";p_{miss,z} [GeV];Counts"       ,100,  -3,  3);	PrettyTH1(h1_pmz      ,4);
 	TH1F * h1_Mm        = new TH1F("h1_Mm"       ,";m_{miss} [GeV];Counts"         ,100,  -3,  3);	PrettyTH1(h1_Mm       ,4);
 	TH1F * h1_MmSqr     = new TH1F("h1_MmSqr"    ,";m_{miss}^{2} [GeV^{2}];Counts" ,100,  -3,  3);	PrettyTH1(h1_MmSqr    ,4);
 	TH1F * h1_pm_th     = new TH1F("h1_pm_th"    ,";#theta_{Pm} [deg];Counts"      ,100,   0,180);	PrettyTH1(h1_pm_th    ,4);
@@ -160,6 +164,9 @@ int main(int argc, char** argv) {
 	TH1F * h1_W         = new TH1F("h1_W"        ,";W [GeV];Counts"                ,100,   0,  4);	PrettyTH1(h1_W        ,4);
 	TH1F * h1_xB        = new TH1F("h1_xB"       ,";x_{B};Counts"                  ,100,   0,  4);	PrettyTH1(h1_xB       ,4);
 	TH1F * h1_chi2pid_e = new TH1F("h1_chi2pid_e",";elecron #chi^{2} PID;Counts"   ,100, -30, 30);	PrettyTH1(h1_chi2pid_e,4);
+
+	// 2D histograms
+	TH2F * h2_Em_Pm     = new TH2F("h2_Em_Pm"    ,";p_{miss} [GeV];E_{miss} [GeV]" ,100,0 , 3,100,-2 , 2);	PrettyTH2(h2_Em_Pm);	
 
 	// Histograms for particles other than the electron
 	// 1D histograms	
@@ -177,6 +184,7 @@ int main(int argc, char** argv) {
 	TH2F ** h2_i_th_phi   = new TH2F*[nFSPart-1];
         TH2F ** h2_beta_i_p   = new TH2F*[nFSPart-1];
         TH2F ** h2_i_vz_phi   = new TH2F*[nFSPart-1];
+	TH2F ** h2_pe_pi      = new TH2F*[nFSPart-1];
 
 	for(int i = 0 ; i < nFSPart-1 ; i++){
 		h1_chi2pid_i[i] = new TH1F(Form("h1_chi2pid_%i",i),";"+par_names[i]+" #chi^{2} PID;Counts"    ,100, -30, 30); 	PrettyTH1(h1_chi2pid_i[i],i);
@@ -192,33 +200,20 @@ int main(int argc, char** argv) {
 		// 2D histograms
 		h2_i_th_phi [i] = new TH2F(Form("h2_%i_th_phi" ,i),";"+par_names[i]+" #phi [deg];"+par_names[i]+" #theta [deg]" ,100,-190,190,100,  0, 80);	
 		h2_beta_i_p [i] = new TH2F(Form("h2_beta_%i_p" ,i),";"+par_names[i]+" p [GeV];"   +par_names[i]+" #beta"        ,100,0   ,  6,100,0.1,1.1);
-        	h2_i_vz_phi [i] = new TH2F(Form("h2_%i_vz_phi" ,i),";"+par_names[i]+" #phi [deg];"+par_names[i]+" v_{z} [cm]"   ,100,-190,190,100,-50, 50);
+        	h2_i_vz_phi [i] = new TH2F(Form("h2_%i_vz_phi" ,i),";"+par_names[i]+" #phi [deg];"+par_names[i]+" v_{z} [cm]"   ,100,-190,190,100,-50, 50);	
+		h2_pe_pi    [i] = new TH2F(Form("h2_pe_p%i"    ,i),";"+par_names[i]+" p [GeV];"   +par_names[i]+"E [GeV]"       ,100,0   ,  6,100, 1 , 10);
+
+		PrettyTH2(h2_i_th_phi[i]);
+		PrettyTH2(h2_beta_i_p[i]);
+		PrettyTH2(h2_i_vz_phi[i]);
+		PrettyTH2(h2_pe_pi   [i]);
 	}
 
+	// Other histograms
 	// 2D histograms
-	TH2F * h2_e_th_phi   = new TH2F("h2_e_th_phi"   ,"h2_e_th_phi"  ,100,-190,190,100,  0, 30);
-	TH2F * h2_beta_p_pos = new TH2F("h2_beta_p_pos" ,"h2_beta_p_pos",100,0   ,  6,100,0.1,1.1);
-	TH2F * h2_beta_p_neg = new TH2F("h2_beta_p_neg" ,"h2_beta_p_neg",100,0   ,  6,100,0.1,1.1);
-	TH2F * h2_e_vz_phi   = new TH2F("h2_e_vz_phi"   ,"h2_e_vz_phi"  ,100,-190,190,100,-50, 50);
-	TH2F * h2_e_tof_p    = new TH2F("h2_e_tof_p"    ,"h2_e_tof_p"   ,100,1   ,  7,100, 20, 27);
-	TH2F * h2_p_dtT_p_0  = new TH2F("h2_p_dtT_p_0"  ,"h2_p_dtT_p_0" ,100,0   ,  6,100,- 4,  4);
-	TH2F * h2_p_dtT_p_1  = new TH2F("h2_p_dtT_p_1"  ,"h2_p_dtT_p_1" ,100,0   ,  6,100,- 4,  4);
-	TH2F * h2_p_dtT_det  = new TH2F("h2_p_dtT_det"  ,"h2_p_dtT_det" , 72,0   , 36,100,-20, 20);
-	TH2F * h2_Em_Pm      = new TH2F("h2_Em_Pm"      ,"h2_Em_Pm"     ,100,0   ,  3,100,-2 ,  2);
-	TH2F * h2_pe_pp      = new TH2F("h2_pe_pp"      ,"h2_pe_pp"     ,100,0   ,  6,100, 1 , 10);
-	TH2F * h2_pe_the     = new TH2F("h2_pe_the"     ,"h2_pe_the"    ,100,0   , 30,100, 1 , 10);
+	TH2F * h2_beta_p_pos = new TH2F("h2_beta_p_pos" ,"p (positive) [GeV];#beta (positive)",100,0 , 6,100,0.1,1.1);	PrettyTH2(h2_beta_p_pos);
+	TH2F * h2_beta_p_neg = new TH2F("h2_beta_p_neg" ,"p (negative) [GeV];#beta (negative)",100,0 , 6,100,0.1,1.1);	PrettyTH2(h2_beta_p_neg);
 
-	PrettyTH2F(h2_e_th_phi  ,"#phi_e [deg]"  ,"#theta_e [deg]"      );
-	PrettyTH2F(h2_beta_p_pos,"p [GeV]"       ,"#beta"               );
-	PrettyTH2F(h2_beta_p_neg,"p [GeV]"       ,"#beta"               );
-	PrettyTH2F(h2_e_vz_phi  ,"#phi_e [deg]"  ,"e v_{z} [cm]"        );
-	PrettyTH2F(h2_e_tof_p   ,"p_{e} [GeV]"   ,"electron TOF [ns]"   );
-	PrettyTH2F(h2_p_dtT_p_0 ,"p_{e} [GeV]"   ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_p_dtT_p_1 ,"p_{e} [GeV]"   ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_p_dtT_det ,"detector id"   ,"p #Delta t [ns]"     );
-	PrettyTH2F(h2_Em_Pm     ,"Pm [GeV]"      ,"Em [GeV]"            );
-	PrettyTH2F(h2_pe_pp     ,"p p [GeV]"     ,"e p [GeV]"           );
-	PrettyTH2F(h2_pe_the    ,"#theta_e [deg]","p_{e} [GeV]"         );
 	// ----------------------------------------------------------------------------------
 	// Opening input HIPO file
 	hipo::reader reader;
@@ -522,6 +517,7 @@ int main(int argc, char** argv) {
 			double Emiss  = V4_Pm.E();
 
 			// Filling histograms
+			// 1D histograms
 			h1_pmx         -> Fill(V3_Pm.X()               );
 			h1_pmy         -> Fill(V3_Pm.Y()               );
 			h1_pmz         -> Fill(V3_Pm.Z()               );
@@ -532,11 +528,8 @@ int main(int argc, char** argv) {
 			h1_MmSqr       -> Fill(Mmiss2                  );
 			h1_Em          -> Fill(Emiss                   );
 
-			/*
-			//h2_p_dtT_p_1 -> Fill(pp          , delta_tP    );
-			//h2_Em_Pm     -> Fill(Pm          , Emiss       );
-			h2_pe_pp      -> Fill(V3_p1p .Mag(), ep          );	
-			*/
+			// 2D histograms
+			h2_Em_Pm       -> Fill(V3_Pm.Mag(), Emiss      );
 
 			for(int par = 0; par < nParticles-1; par++){
 				// 1D histograms
@@ -554,6 +547,7 @@ int main(int argc, char** argv) {
 				h2_i_th_phi [par] -> Fill(rad2deg*V3_par_p[par].Phi(),rad2deg*V3_par_p[par].Theta());
                			h2_beta_i_p [par] -> Fill(V3_par_p[par].Mag()        ,beta_par[par]                );
                 		h2_i_vz_phi [par] -> Fill(rad2deg*V3_par_p[par].Phi(),V3_par_v[par].Mag()          );
+				h2_pe_pi    [par] -> Fill(V3_par_p[par].Mag()        ,ep                           );
 			}
 
 			// ----------------------------------------------------------------------
@@ -718,18 +712,6 @@ int main(int argc, char** argv) {
 	c14 -> Modified();
 	c14 -> Update();
 
-	TCanvas * c15 = new TCanvas();
-	c15 -> Divide(2, 1);
-	c15 -> cd(1);	gPad -> SetLogz();	h2_p_dtT_p_0 -> Draw("COLZ");
-	c15 -> cd(2);	gPad -> SetLogz();	h2_p_dtT_p_1 -> Draw("COLZ");
-	c15 -> Modified();
-	c15 -> Update();
-
-	TCanvas * c17 = new TCanvas();
-	h2_p_dtT_det -> Draw("COLZ");
-	c17 -> Modified();
-	c17 -> Update();
-
 	TCanvas * c18 = new TCanvas();
 	h1_Em -> Draw();
 	c18 -> Modified();
@@ -740,8 +722,11 @@ int main(int argc, char** argv) {
 	c19 -> Modified();
 	c19 -> Update();
 
-	TCanvas * c20 = new TCanvas();
-	h2_pe_pp -> Draw("COLZ");
+	TCanvas * c20 = new TCanvas();	
+	for(int par = 0; par < nFSPart-1; par++){
+                c20 -> cd(par+1);
+                h2_pe_pi[par] -> Draw("COLZ");
+        }
 	c20 -> Modified();
 	c20 -> Update();
 
@@ -791,9 +776,7 @@ int main(int argc, char** argv) {
 	c10 -> Print(out_pdf_name );	
 	c12 -> Print(out_pdf_name );
 	c13 -> Print(out_pdf_name );
-	c14 -> Print(out_pdf_name );
-	c15 -> Print(out_pdf_name );	
-	c17 -> Print(out_pdf_name );
+	c14 -> Print(out_pdf_name );	
 	c18 -> Print(out_pdf_name );
 	c19 -> Print(out_pdf_name );
 	c20 -> Print(out_pdf_name );
