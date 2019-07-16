@@ -13,6 +13,7 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TVectorT.h"
 
 #include "reader.h"
 #include "node.h"
@@ -253,6 +254,30 @@ int main(int argc, char** argv) {
 	tree -> Branch("br_Pmz", &br_Pmz , "br_Pmz/D");
 	tree -> Branch("br_Mm" , &br_Mm  , "br_Mm/D" );
 	tree -> Branch("br_Mm2", &br_Mm2 , "br_Mm2/D");
+
+	TVectorT<double> part_mass(nFSPart-1);
+	TVectorT<double> part_char(nFSPart-1);
+
+	if(ReacPDF=="ePip"){
+		part_mass[0] = mPiC;
+		part_char[0] = 1   ;
+	}
+        if( (ReacPDF=="ep")||(ReacPDF=="epPipPim")||(ReacPDF=="eppPim") ){
+       		part_mass[0] = mp; 
+        	part_char[0] = 1 ;
+	}
+        if(ReacPDF=="epPipPim"){
+    		part_mass[1] = mPiC;
+		part_char[1] = 1   ;
+		part_mass[2] = mPiC;       
+        	part_char[2] = -1  ;
+	}
+        if(ReacPDF=="eppPim"){
+		part_mass[1] = mp  ;
+                part_char[1] = 1   ;
+		part_mass[2] = mPiC;
+		part_char[2] = -1  ;
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Loop over events and print them on the screen
@@ -740,6 +765,8 @@ int main(int argc, char** argv) {
 	c24 -> Print(out_pdf_name + ")");
 
 	out -> cd();
+	part_mass.Write("particles_mass");
+	part_char.Write("particles_charge");
 	tree -> Write();
 	out -> Close();
 
