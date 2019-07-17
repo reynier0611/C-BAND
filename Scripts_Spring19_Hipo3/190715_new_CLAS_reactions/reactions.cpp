@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
         TH1F * h1_Em        = new TH1F("h1_Em"       ,";E_{miss} [GeV];Counts"         ,100,  -3,  3);	PrettyTH1(h1_Em       ,4);
 	TH1F * h1_W         = new TH1F("h1_W"        ,";W [GeV];Counts"                ,100,   0,  4);	PrettyTH1(h1_W        ,4);
 	TH1F * h1_xB        = new TH1F("h1_xB"       ,";x_{B};Counts"                  ,100,   0,  4);	PrettyTH1(h1_xB       ,4);
-	TH1F * h1_chi2pid_e = new TH1F("h1_chi2pid_e",";elecron #chi^{2} PID;Counts"   ,100, -30, 30);	PrettyTH1(h1_chi2pid_e,4);
+	TH1F * h1_chi2pid_e = new TH1F("h1_chi2pid_e",";electron #chi^{2} PID;Counts"  ,100, -30, 30);	PrettyTH1(h1_chi2pid_e,4);
 
 	// 2D histograms
 	TH2F * h2_Em_Pm     = new TH2F("h2_Em_Pm"    ,";p_{miss} [GeV];E_{miss} [GeV]" ,100,0 , 3,100,-2 , 2);	PrettyTH2(h2_Em_Pm);	
@@ -542,15 +542,15 @@ int main(int argc, char** argv) {
 
 			for(int par = 0; par < nParticles-1; par++){
 				// 1D histograms
-				h1_chi2pid_i[par] -> Fill(chi2pid_par[par]);
-				h1_i_vz     [par] -> Fill(V3_par_v[par].Z    ());
-				h1_i_dlt_vz [par] -> Fill(V3_par_v[par].Z()-V3_ev.Z());
-                		h1_i_px     [par] -> Fill(V3_par_p[par].X    ());
-                		h1_i_py     [par] -> Fill(V3_par_p[par].Y    ());
-                		h1_i_pz     [par] -> Fill(V3_par_p[par].Z    ());
-                		h1_i_p      [par] -> Fill(V3_par_p[par].Mag  ());
-                		h1_i_th     [par] -> Fill(V3_par_p[par].Theta());
-                		h1_i_phi    [par] -> Fill(V3_par_p[par].Phi  ());
+				h1_chi2pid_i[par] -> Fill(chi2pid_par[par]             );
+				h1_i_vz     [par] -> Fill(V3_par_v[par].Z            ());
+				h1_i_dlt_vz [par] -> Fill(V3_par_v[par].Z()-V3_ev.Z  ());
+                		h1_i_px     [par] -> Fill(V3_par_p[par].X            ());
+                		h1_i_py     [par] -> Fill(V3_par_p[par].Y            ());
+                		h1_i_pz     [par] -> Fill(V3_par_p[par].Z            ());
+                		h1_i_p      [par] -> Fill(V3_par_p[par].Mag          ());
+                		h1_i_th     [par] -> Fill(rad2deg*V3_par_p[par].Theta());
+                		h1_i_phi    [par] -> Fill(rad2deg*V3_par_p[par].Phi  ());
 
 				// 2D histograms
 				h2_i_th_phi [par] -> Fill(rad2deg*V3_par_p[par].Phi(),rad2deg*V3_par_p[par].Theta());
