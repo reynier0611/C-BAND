@@ -235,13 +235,14 @@ int main(int argc, char** argv) {
         TTree * tree = new TTree("T","(e,"+ReacPDF+")");
 
         double br_pex, br_pey, br_pez, br_e_chi2pid;
-	double br_vex, br_vey, br_vez;
+	double br_vex, br_vey, br_vez, br_pe;
 	double br_qx , br_qy , br_qz ;
         double br_Q2 , br_Nu , br_W2 , br_xB;
 	tree -> Branch("br_e_chi2pid", &br_e_chi2pid , "br_e_chi2pid/D");
 	tree -> Branch("br_pex"      , &br_pex       , "br_pex/D"      );
 	tree -> Branch("br_pey"      , &br_pey       , "br_pey/D"      );
 	tree -> Branch("br_pez"      , &br_pez       , "br_pez/D"      );
+	tree -> Branch("br_pe"       , &br_pe        , "br_pe/D"       );
 	tree -> Branch("br_vex"      , &br_vex       , "br_vex/D"      );
         tree -> Branch("br_vey"      , &br_vey       , "br_vey/D"      );
         tree -> Branch("br_vez"      , &br_vez       , "br_vez/D"      );
@@ -253,16 +254,19 @@ int main(int argc, char** argv) {
 	tree -> Branch("br_W2"       , &br_W2        , "br_W2/D"       );
 	tree -> Branch("br_xB"       , &br_xB        , "br_xB/D"       );
 
-	double br_vix[nFSPart], br_viy[nFSPart], br_viz[nFSPart];
-	double br_pix[nFSPart], br_piy[nFSPart], br_piz[nFSPart], br_i_chi2pid[nFSPart];
+	double br_vix[nFSPart], br_viy   [nFSPart], br_viz[nFSPart];
+	double br_pix[nFSPart], br_piy   [nFSPart], br_piz[nFSPart], br_i_chi2pid[nFSPart];
+	double br_pi [nFSPart], br_beta_i[nFSPart];
 	for(int par = 0 ; par < nFSPart-1 ; par++){
 		tree -> Branch(Form("br_%i_chi2pid",par), &br_i_chi2pid[par] , Form("br_%i_chi2pid/D",par));
 		tree -> Branch(Form("br_p%ix"      ,par), &br_pix      [par] , Form("br_p%ix/D"      ,par));
 		tree -> Branch(Form("br_p%iy"      ,par), &br_piy      [par] , Form("br_p%iy/D"      ,par));
 		tree -> Branch(Form("br_p%iz"      ,par), &br_piz      [par] , Form("br_p%iz/D"      ,par));
+		tree -> Branch(Form("br_p%i"       ,par), &br_pi       [par] , Form("br_p%i/D"       ,par));
 		tree -> Branch(Form("br_v%ix"      ,par), &br_vix      [par] , Form("br_v%ix/D"      ,par));
                 tree -> Branch(Form("br_v%iy"      ,par), &br_viy      [par] , Form("br_v%iy/D"      ,par));
                 tree -> Branch(Form("br_v%iz"      ,par), &br_viz      [par] , Form("br_v%iz/D"      ,par));
+		tree -> Branch(Form("br_beta_%i"   ,par), &br_beta_i   [par] , Form("br_beta_%i/D"   ,par));
 	}
 
 	double br_thpm, br_phipm;
@@ -557,29 +561,32 @@ int main(int argc, char** argv) {
 
 			// ----------------------------------------------------------------------
 			// Filling tree
-			br_e_chi2pid = chi2pid  ;
-			br_pex       = V3_ep.X();
-			br_pey       = V3_ep.Y();
-			br_pez       = V3_ep.Z();
-			br_vex       = V3_ev.X();
-			br_vey       = V3_ev.Y();
-			br_vez       = V3_ev.Z();
-			br_qx        = V3_q .X();
-			br_qy        = V3_q .Y();
-			br_qz        = V3_q .Z();
-        		br_Q2        = Q2       ;
-        		br_Nu        = omega    ;
-        		br_W2        = W2       ;
-        		br_xB        = xB       ;
+			br_e_chi2pid = chi2pid    ;
+			br_pex       = V3_ep.X  ();
+			br_pey       = V3_ep.Y  ();
+			br_pez       = V3_ep.Z  ();
+			br_pe        = V3_ep.Mag();
+			br_vex       = V3_ev.X  ();
+			br_vey       = V3_ev.Y  ();
+			br_vez       = V3_ev.Z  ();
+			br_qx        = V3_q .X  ();
+			br_qy        = V3_q .Y  ();
+			br_qz        = V3_q .Z  ();
+        		br_Q2        = Q2         ;
+        		br_Nu        = omega      ;
+        		br_W2        = W2         ;
+        		br_xB        = xB         ;
 
 			for(int par = 0; par < nParticles-1; par++){
-				br_i_chi2pid[par] = chi2pid_par [par];
-				br_pix      [par] = V3_par_p[par].X();
-				br_piy      [par] = V3_par_p[par].Y();
-				br_piz      [par] = V3_par_p[par].Z();
-				br_vix      [par] = V3_par_v[par].X();
-				br_viy      [par] = V3_par_v[par].Y();
-				br_viz      [par] = V3_par_v[par].Z();
+				br_i_chi2pid[par] = chi2pid_par [par]  ;
+				br_pix      [par] = V3_par_p[par].X()  ;
+				br_piy      [par] = V3_par_p[par].Y()  ;
+				br_piz      [par] = V3_par_p[par].Z()  ;
+				br_pi       [par] = V3_par_p[par].Mag();
+				br_vix      [par] = V3_par_v[par].X()  ;
+				br_viy      [par] = V3_par_v[par].Y()  ;
+				br_viz      [par] = V3_par_v[par].Z()  ;
+				br_beta_i   [par] = beta_par[par]      ;
 			}
 
 			br_Pmx   = V3_Pm.X()    ;
