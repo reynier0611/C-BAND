@@ -130,17 +130,17 @@ int main(int argc, char** argv) {
 	// Declaring histograms
 	// Electron histograms
 	// 1D histograms
-	TH1F * h1_e_vz      = new TH1F("h1_e_vz"     ,"v_{z} [cm];Counts"              ,100, -50, 50);	PrettyTH1(h1_e_vz     ,4);
-	TH1F * h1_e_tof     = new TH1F("h1_e_tof"    ,"electron TOF [ns];Counts"       ,100,  20, 27);	PrettyTH1(h1_e_tof    ,4);
-	TH1F * h1_e_px      = new TH1F("h1_e_px"     ,"electron p_{x} [GeV];Counts"    ,100,  -2,  2);	PrettyTH1(h1_e_px     ,4);
-	TH1F * h1_e_py      = new TH1F("h1_e_py"     ,"electron p_{y} [GeV];Counts"    ,100,  -2,  2);	PrettyTH1(h1_e_py     ,4);
-	TH1F * h1_e_pz      = new TH1F("h1_e_pz"     ,"electron p_{z} [GeV];Counts"    ,100,   0, 10);	PrettyTH1(h1_e_pz     ,4);
-	TH1F * h1_e_p       = new TH1F("h1_e_p"      ,"electron |p| [GeV];Counts"      ,100,   0, 10);	PrettyTH1(h1_e_p      ,4);
-	TH1F * h1_e_th      = new TH1F("h1_e_th"     ,"#theta_{e} [deg];Counts"        ,100,   0, 30);	PrettyTH1(h1_e_th     ,4);
-	TH1F * h1_e_phi     = new TH1F("h1_e_phi"    ,"#phi_{e} [deg];Counts"          ,100,-190,190);	PrettyTH1(h1_e_phi    ,4);
-	TH1F * h1_e_lu      = new TH1F("h1_e_lu"     ,"distance on U-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lu     ,4);
-	TH1F * h1_e_lv      = new TH1F("h1_e_lv"     ,"distance on V-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lv     ,4);
-	TH1F * h1_e_lw      = new TH1F("h1_e_lw"     ,"distance on W-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lw     ,4);
+	TH1F * h1_e_vz      = new TH1F("h1_e_vz"     ,";v_{z} [cm];Counts"              ,100, -50, 50);	PrettyTH1(h1_e_vz     ,4);
+	TH1F * h1_e_tof     = new TH1F("h1_e_tof"    ,";electron TOF [ns];Counts"       ,100,  20, 27);	PrettyTH1(h1_e_tof    ,4);
+	TH1F * h1_e_px      = new TH1F("h1_e_px"     ,";electron p_{x} [GeV];Counts"    ,100,  -2,  2);	PrettyTH1(h1_e_px     ,4);
+	TH1F * h1_e_py      = new TH1F("h1_e_py"     ,";electron p_{y} [GeV];Counts"    ,100,  -2,  2);	PrettyTH1(h1_e_py     ,4);
+	TH1F * h1_e_pz      = new TH1F("h1_e_pz"     ,";electron p_{z} [GeV];Counts"    ,100,   0, 10);	PrettyTH1(h1_e_pz     ,4);
+	TH1F * h1_e_p       = new TH1F("h1_e_p"      ,";electron |p| [GeV];Counts"      ,100,   0, 10);	PrettyTH1(h1_e_p      ,4);
+	TH1F * h1_e_th      = new TH1F("h1_e_th"     ,";#theta_{e} [deg];Counts"        ,100,   0, 30);	PrettyTH1(h1_e_th     ,4);
+	TH1F * h1_e_phi     = new TH1F("h1_e_phi"    ,";#phi_{e} [deg];Counts"          ,100,-190,190);	PrettyTH1(h1_e_phi    ,4);
+	TH1F * h1_e_lu      = new TH1F("h1_e_lu"     ,";distance on U-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lu     ,4);
+	TH1F * h1_e_lv      = new TH1F("h1_e_lv"     ,";distance on V-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lv     ,4);
+	TH1F * h1_e_lw      = new TH1F("h1_e_lw"     ,";distance on W-side;Counts"      ,100,   0,500);	PrettyTH1(h1_e_lw     ,4);
 	
 	// 2D histograms
 	TH2F * h2_e_Ep_p_0  = new TH2F("h2_e_Ep_p_0" ,"before cuts;p_{e} [GeV];E_{e}/p_{e}"         ,100,1   , 10,100,  0,0.4 );	PrettyTH2(h2_e_Ep_p_0);
