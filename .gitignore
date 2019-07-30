@@ -39,6 +39,7 @@ Scripts_Spring19_Hipo3/190329_vEff_lrOff/offsets_veff_rawBanks
 Scripts_Spring19_Hipo3/190402_Paddle2Paddle_bandHits/parameter_extraction
 Scripts_Spring19_Hipo3/190715_new_CLAS_reactions/reactions
 Scripts_Spring19_Hipo3/190715_new_CLAS_reactions/outRoot_eppPim.root
+Scripts_Spring19_Hipo3/190715_new_CLAS_reactions/reactions_BAND
 Examples/example
 lib/libclas12banks.a
 lib/libhipo.a
