@@ -54,22 +54,21 @@ int main(int argc, char** argv) {
 
 	// ----------------------------------------------------------------------------------
 	// Getting input arguments
-	TString inputFile, Reac, ReacPDF, par_names[4];
+	TString inputFile, outputFile, Reac, ReacPDF, par_names[4];
 	double Ebeam, mtar;
 	int nFSPart = 0;
 
-	if(argc==4){
+	if(argc==5){
 		// First argument
-		if(atoi(argv[1])==1){
-			cout << "Will assume this hipo file corresponds to: Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
-			Ebeam = 6.4; //GeV
-			mtar  = mp;
-		}
-		else if(atoi(argv[1])==2){
-			cout << "Will assume this hipo file corresponds to: Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl;
+		if(atoi(argv[1])<6420){
 			Ebeam = 10.6; //GeV
-			mtar  = mD;
+                        mtar  = mD;
 		}
+		else{
+			Ebeam = 10.2; //GeV
+		}
+		mtar  = mD;
+		cout << "Will assume this hipo file corresponds to: Ebeam = " << Ebeam << " GeV, target = D (i.e. RGB)" << endl;
 		// Second argument
 		if(atoi(argv[2])==1){
 			Reac = "(e,e'p )";	ReacPDF = "ep";
@@ -96,13 +95,12 @@ int main(int argc, char** argv) {
 			par_names[2] = "#pi^{-}";
 		}
 		cout << "Will be looking for the reaction: " << Reac << endl;
-		// Third argument
-		inputFile = argv[3];
+		inputFile  = argv[3]; // input hipo file
+		outputFile = argv[4]; // output hipo file
 	}
 	else {
-		cout << "=========================\nRun this code as:\n./code A B path/to/input/file\n" << endl;
-		cout << "where: A = 1 -> Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
-		cout << "         = 2 -> Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl << endl;
+		cout << "=========================\nRun this code as:\n./code A B path/to/input/file path/to/output/file\n" << endl;
+		cout << "where: A = Run number" << endl << endl;
 		cout << "       B = 1 -> (e,e'p )" << endl;
 		cout << "         = 2 -> (e,e'π˖)" << endl;
 		cout << "         = 3 -> (e,e'pπ˖π˗)" << endl;
@@ -232,10 +230,10 @@ int main(int argc, char** argv) {
 
 	// ----------------------------------------------------------------------------------
 	// Setting up output root file
-	TFile * out = new TFile("outRoot_"+ReacPDF+".root","RECREATE");
+	TFile * out = new TFile(outputFile+"_"+ReacPDF+".root","RECREATE");
 	TTree * tree = new TTree("T","(e,"+ReacPDF+")");
 
-	double br_pex, br_pey, br_pez, br_e_chi2pid;
+	double br_pex, br_pey, br_pez, br_e_chi2pid, br_Ee_EC, br_Ee_pcal, br_tof_e;
 	double br_vex, br_vey, br_vez, br_pe;
 	double br_qx , br_qy , br_qz ;
 	double br_Q2 , br_Nu , br_W2 , br_xB;
@@ -248,6 +246,9 @@ int main(int argc, char** argv) {
 	tree -> Branch("br_vex"      , &br_vex       , "br_vex/D"      );
 	tree -> Branch("br_vey"      , &br_vey       , "br_vey/D"      );
 	tree -> Branch("br_vez"      , &br_vez       , "br_vez/D"      );
+	tree -> Branch("br_Ee_EC"    , &br_Ee_EC     , "br_Ee_EC/D"    );
+	tree -> Branch("br_Ee_pcal"  , &br_Ee_pcal   , "br_Ee_pcal/D"  );
+	tree -> Branch("br_tof_e"    , &br_tof_e     , "br_tof_e/D"    );
 	tree -> Branch("br_qx"       , &br_qx        , "br_qx/D"       );
 	tree -> Branch("br_qy"       , &br_qy        , "br_qy/D"       );
 	tree -> Branch("br_qz"       , &br_qz        , "br_qz/D"       );
@@ -572,6 +573,9 @@ int main(int argc, char** argv) {
 			br_vex       = V3_ev.X  ();
 			br_vey       = V3_ev.Y  ();
 			br_vez       = V3_ev.Z  ();
+			br_Ee_EC     = Ee         ;
+        		br_Ee_pcal   = Epcal      ;
+        		br_tof_e     = tof_e      ;
 			br_qx        = V3_q .X  ();
 			br_qy        = V3_q .Y  ();
 			br_qz        = V3_q .Z  ();
