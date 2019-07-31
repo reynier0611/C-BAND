@@ -60,13 +60,8 @@ int main(int argc, char** argv) {
 
 	if(argc==5){
 		// First argument
-		if(atoi(argv[1])<6420){
-			Ebeam = 10.6; //GeV
-                        mtar  = mD;
-		}
-		else{
-			Ebeam = 10.2; //GeV
-		}
+		if(atoi(argv[1])<6420){Ebeam = 10.6;} // GeV
+		else{                  Ebeam = 10.2;} // GeV
 		mtar  = mD;
 		cout << "Will assume this hipo file corresponds to: Ebeam = " << Ebeam << " GeV, target = D (i.e. RGB)" << endl;
 		// Second argument
