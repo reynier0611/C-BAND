@@ -234,6 +234,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	ofstream output;
+	output.open("output/attenuation_lengths.txt");
+
 	// -------------------------------------------------------------------------------------------------
 	// Printing results onto canvases
 	TCanvas * c0 = new TCanvas("c0","c0",900,900);
@@ -275,7 +278,7 @@ int main(int argc, char** argv) {
 					tex_mu -> SetTextSize(0.08);
 					tex_mu -> Draw("same");
 
-					cout << identifier << "\t" << par[identifier][0] << "\t" << par[identifier][1] << endl;
+					output << identifier << "\t" << par[identifier][0] << "\t" << par[identifier][1] << endl;
 
 					h1_E_minus_R_mu -> Fill(mu_efrain[identifier]/100.-par[identifier][0]);
 				
@@ -320,6 +323,8 @@ int main(int argc, char** argv) {
 	}
 	c0 -> Print("results_attenuation.pdf)");
 	c0 -> Print("results_adc_spectra.pdf)");
+
+	output.close();
 
 	myapp -> Run();
 	return 0;
