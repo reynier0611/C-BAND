@@ -14,17 +14,14 @@ CXXFLAGS  += -Wall -fPIC $(ROOTCFLAGS)
 LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
-all: reactions reactions_BAND
+all: reactions 
 
 reactions: reactions.o
 	$(CXX) -o reactions $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
-reactions_BAND: reactions_BAND.o
-	$(CXX) -o reactions_BAND $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
-
 clean:
 	@echo 'Removing all build files'
-	@rm -rf *.o reactions reactions_BAND *~
+	@rm -rf *.o reactions *~
 
 %.o: %.cpp
 	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

@@ -57,18 +57,14 @@ int main(int argc, char** argv) {
 	double Ebeam, mtar;
 	int nFSPart = 0;
 
+	int runNumber = 0;
+
 	if(argc==4){
 		// First argument
-		if(atoi(argv[1])==1){
-			cout << "Will assume this hipo file corresponds to: Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
-			Ebeam = 6.4; //GeV
-			mtar  = mp;
-		}
-		else if(atoi(argv[1])==2){
-			cout << "Will assume this hipo file corresponds to: Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl;
-			Ebeam = 10.6; //GeV
-			mtar  = mD;
-		}
+		runNumber = atoi(argv[1]);
+		if(runNumber<6420) Ebeam = 10.6; // GeV
+		else               Ebeam = 10.2; // GeV
+		
 		// Second argument
 		if(atoi(argv[2])==1){
 			Reac = "(e,e'p )";	ReacPDF = "ep";
@@ -100,8 +96,7 @@ int main(int argc, char** argv) {
 	}
 	else {
 		cout << "=========================\nRun this code as:\n./code A B path/to/input/file\n" << endl;
-		cout << "where: A = 1 -> Ebeam =  6.4 GeV, target = H (i.e. RGA)" << endl;
-		cout << "         = 2 -> Ebeam = 10.6 GeV, target = D (i.e. RGB)" << endl << endl;
+		cout << "where: A = Run number" << endl << endl;
 		cout << "       B = 1 -> (e,e'p )" << endl;
 		cout << "         = 2 -> (e,e'π˖)" << endl;
 		cout << "         = 3 -> (e,e'pπ˖π˗)" << endl;
@@ -109,6 +104,15 @@ int main(int argc, char** argv) {
 		cout << "=========================" << endl;
 		exit(0);
 	}
+
+	// Connect to the RCDB
+	//rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
+
+	// Using run number of current file, grab the beam energy from RCDB
+	//auto cnd = connection.GetCondition(runNum, "beam_energy");
+	//Ebeam = cnd->ToDouble() / 1000.; // [GeV] 
+
+	mtar  = mD;
 
 	TVector3 V3_Ebeam(0,0,Ebeam);
 	TLorentzVector V4_Ebeam(V3_Ebeam,Ebeam);
@@ -223,21 +227,26 @@ int main(int argc, char** argv) {
 	reader.readDictionary(factory); // new hipo4
 	//factory.show();                        // new hipo4
 
-	BEvent        event       ("REC::Event"       ,reader);
-	BParticle     particles   ("REC::Particle"    ,reader);
-	BCalorimeter  calo        ("REC::Calorimeter" ,reader);
-	BScintillator scintillator("REC::Scintillator",reader);
+	//Create Banks. Constructor needs now the Schema information from the dictionary. This is one of the
+	//main differences than the Hipo3 file reading !!!
+	BEvent        event       (factory.getSchema("REC::Event"       ));     // new hipo4
+	BParticle     particles   (factory.getSchema("REC::Particle"    ));     // new hipo4
+	BCalorimeter  calo        (factory.getSchema("REC::Calorimeter" ));     // new hipo4
+	BScintillator scintillator(factory.getSchema("REC::Scintillator"));     // new hipo4
+	hipo::bank	scaler	  (factory.getSchema("RUN::scaler"	));
 
 	int event_counter = 0;
 	int ctr_triggers = 0;
 	int ctr_electrons = 0;
 	int ctr_selectedReaction = 0;
 
+	double gated_charge	= 0;
+
 	hipo::event readevent;  // new hipo4
 
 	// ----------------------------------------------------------------------------------
 	// Setting up output root file
-	TFile * out = new TFile("outRoot_"+ReacPDF+".root","RECREATE");
+	TFile * out = new TFile("outRoot_"+ReacPDF+"_"+Form("%i",runNumber)+".root","RECREATE");
 	TTree * tree = new TTree("T","(e,"+ReacPDF+")");
 
 	double br_pex, br_pey, br_pez, br_e_chi2pid;
@@ -259,6 +268,7 @@ int main(int argc, char** argv) {
 	tree -> Branch("br_Nu"       , &br_Nu        , "br_Nu/D"       );
 	tree -> Branch("br_W2"       , &br_W2        , "br_W2/D"       );
 	tree -> Branch("br_xB"       , &br_xB        , "br_xB/D"       );
+	tree -> Branch("gated_charge", &gated_charge , "gated_charge/D");
 
 	double br_vix[nFSPart], br_viy   [nFSPart], br_viz[nFSPart];
 	double br_pix[nFSPart], br_piy   [nFSPart], br_piz[nFSPart], br_i_chi2pid[nFSPart];
@@ -329,9 +339,13 @@ int main(int argc, char** argv) {
 		reader.read(readevent); // new hipo4
 
 		//Load explicitly all information for each bank for the event
-		readevent.getStructure(BAND_ADC   );   // new hipo4
-		readevent.getStructure(BAND_TDC   );   // new hipo4
-		readevent.getStructure(RUN_config );   // new hipo4 
+		readevent.getStructure(event       );   // new hipo4
+		readevent.getStructure(particles   );   // new hipo4
+		readevent.getStructure(calo        );   // new hipo4
+		readevent.getStructure(scintillator);   // new hipo4
+		readevent.getStructure(scaler      );	// new hipo4
+
+		gated_charge = scaler.getFloat(0,0) * 0.001; // [microC] -- this seems to be ~10-20% accurate
 
 		//Now everything is loaded and can be used as before with HIPO3 files. There is only one difference:
 		//The number of hits in each bank is determined by the function "getRows()" and not by "getSize" as before.
@@ -805,6 +819,7 @@ int main(int argc, char** argv) {
 
 	// -------------------------------------------------------------------------------------------
 	// Saving plots to pdf
+	/*
 	TString out_pdf_name = "results_" + ReacPDF + ".pdf";
 	c0  -> Print(out_pdf_name + "(");
 	c1  -> Print(out_pdf_name );
@@ -826,8 +841,9 @@ int main(int argc, char** argv) {
 	c22 -> Print(out_pdf_name );
 	c23 -> Print(out_pdf_name );
 	c24 -> Print(out_pdf_name + ")");
+	*/
 
-	myapp -> Run();
+	//myapp -> Run();
 	return 0;
 }
 // ========================================================================================================================================
